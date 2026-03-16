@@ -16,12 +16,13 @@ const NAV_ITEMS: { id: string; label: string; icon: string; href: string; separa
 
 type Stats = { total: number; actifs: number; artisans: number; comptesRendus: number }
 
-type CompteRendu = {
+type ChantierEnCours = {
   id: string
-  chantier_id: string
-  date_visite: string
-  progression: number
-  chantiers: { nom: string } | null
+  nom: string
+  adresse: string
+  client: string
+  statut: string
+  avancement?: number
 }
 
 type Evenement = {
@@ -110,12 +111,12 @@ export function Sidebar({ user }: { user: User }) {
 export default function DashboardClient({
   user: _user,
   stats,
-  derniersCompteRendus,
+  chantiersEnCours,
   prochainsEvenements,
 }: {
   user: User
   stats: Stats
-  derniersCompteRendus: CompteRendu[]
+  chantiersEnCours: ChantierEnCours[]
   prochainsEvenements: Evenement[]
 }) {
   const statCards = [
@@ -241,7 +242,7 @@ export default function DashboardClient({
       {/* Two-column layout for bottom sections */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
 
-        {/* Derniers comptes rendus */}
+        {/* Chantiers en cours */}
         <div
           className="transition-all duration-300 hover:scale-[1.01] hover:border-[#E8C547] hover:shadow-[0_0_30px_rgba(232,197,71,0.2)]"
           style={{
@@ -261,10 +262,10 @@ export default function DashboardClient({
                 margin: 0,
               }}
             >
-              {'\u{1F4CB}'} Derniers comptes rendus
+              {'\u{1F3D7}\uFE0F'} Chantiers en cours
             </h3>
             <Link
-              href="/dashboard/comptes-rendus"
+              href="/dashboard/chantiers"
               className="transition-all duration-200 hover:opacity-70"
               style={{ fontSize: '13px', color: '#E8C547', textDecoration: 'none', fontFamily: 'var(--font-dm-sans), sans-serif', fontWeight: 500 }}
             >
@@ -272,54 +273,64 @@ export default function DashboardClient({
             </Link>
           </div>
 
-          {derniersCompteRendus.length === 0 ? (
+          {chantiersEnCours.length === 0 ? (
             <p style={{ fontSize: '14px', color: '#8A8880', fontFamily: 'var(--font-dm-sans), sans-serif' }}>
-              Aucun compte rendu pour l&apos;instant.
+              Aucun chantier en cours.
             </p>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-              {derniersCompteRendus.map((cr) => (
-                <div
-                  key={cr.id}
-                  className="transition-all duration-200 hover:translate-x-2 hover:bg-[rgba(232,197,71,0.06)] cursor-pointer"
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    padding: '12px 14px',
-                    backgroundColor: '#0D0D0B',
-                    borderRadius: '8px',
-                    border: '1px solid #1E1E1C',
-                  }}
-                >
-                  <div>
-                    <p
+              {chantiersEnCours.map((c) => {
+                const avancement = c.avancement ?? 0
+                return (
+                  <Link
+                    key={c.id}
+                    href={`/dashboard/chantiers/${c.id}`}
+                    className="block hover:bg-[rgba(232,197,71,0.04)] transition-all duration-150 cursor-pointer"
+                    style={{ textDecoration: 'none' }}
+                  >
+                    <div
                       style={{
-                        fontSize: '14px',
-                        color: '#F0EDE6',
-                        fontFamily: 'var(--font-dm-sans), sans-serif',
-                        fontWeight: 500,
-                        margin: '0 0 4px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        gap: '16px',
+                        padding: '12px 14px',
+                        backgroundColor: '#0D0D0B',
+                        borderRadius: '8px',
+                        border: '1px solid #1E1E1C',
                       }}
                     >
-                      {cr.chantiers?.nom ?? cr.chantier_id}
-                    </p>
-                    <p style={{ fontSize: '12px', color: '#8A8880', fontFamily: 'var(--font-dm-sans), sans-serif', margin: 0 }}>
-                      {new Date(cr.date_visite).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' })}
-                    </p>
-                  </div>
-                  <span
-                    style={{
-                      fontSize: '13px',
-                      fontWeight: 600,
-                      fontFamily: 'var(--font-syne), sans-serif',
-                      color: '#E8C547',
-                    }}
-                  >
-                    {cr.progression}%
-                  </span>
-                </div>
-              ))}
+                      <div style={{ minWidth: 0, flex: 1 }}>
+                        <p
+                          style={{
+                            fontSize: '14px',
+                            color: '#F0EDE6',
+                            fontFamily: 'var(--font-dm-sans), sans-serif',
+                            fontWeight: 600,
+                            margin: '0 0 4px',
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                            whiteSpace: 'nowrap',
+                          }}
+                        >
+                          {c.nom}
+                        </p>
+                        <p style={{ fontSize: '13px', color: '#7A7870', fontFamily: 'var(--font-dm-sans), sans-serif', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                          {c.adresse}
+                        </p>
+                      </div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexShrink: 0, width: '110px' }}>
+                        <div style={{ flex: 1, height: '6px', backgroundColor: '#1E1E1C', borderRadius: '999px', overflow: 'hidden' }}>
+                          <div style={{ height: '6px', backgroundColor: '#E8C547', borderRadius: '999px', width: `${avancement}%`, transition: 'width 0.3s ease' }} />
+                        </div>
+                        <span style={{ fontSize: '12px', fontWeight: 600, color: '#E8C547', fontFamily: 'var(--font-syne), sans-serif', flexShrink: 0, width: '30px', textAlign: 'right' }}>
+                          {avancement}%
+                        </span>
+                      </div>
+                    </div>
+                  </Link>
+                )
+              })}
             </div>
           )}
         </div>
@@ -362,47 +373,52 @@ export default function DashboardClient({
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
               {prochainsEvenements.map((ev) => (
-                <div
+                <Link
                   key={ev.id}
-                  className="transition-all duration-200 hover:translate-x-2 hover:bg-[rgba(232,197,71,0.06)] cursor-pointer"
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    padding: '12px 14px',
-                    backgroundColor: '#0D0D0B',
-                    borderRadius: '8px',
-                    border: '1px solid #1E1E1C',
-                  }}
+                  href="/dashboard/planning"
+                  className="block hover:bg-[rgba(232,197,71,0.04)] transition-all duration-150 cursor-pointer"
+                  style={{ textDecoration: 'none' }}
                 >
-                  <div>
-                    <p
-                      style={{
-                        fontSize: '14px',
-                        color: '#F0EDE6',
-                        fontFamily: 'var(--font-dm-sans), sans-serif',
-                        fontWeight: 500,
-                        margin: '0 0 4px',
-                      }}
-                    >
-                      {ev.titre}
-                    </p>
-                    <p style={{ fontSize: '12px', color: '#8A8880', fontFamily: 'var(--font-dm-sans), sans-serif', margin: 0 }}>
-                      {ev.chantiers?.nom ?? ev.chantier_id}
-                    </p>
-                  </div>
-                  <span
+                  <div
                     style={{
-                      fontSize: '12px',
-                      color: '#8A8880',
-                      fontFamily: 'var(--font-dm-sans), sans-serif',
-                      whiteSpace: 'nowrap',
-                      marginLeft: '12px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      padding: '12px 14px',
+                      backgroundColor: '#0D0D0B',
+                      borderRadius: '8px',
+                      border: '1px solid #1E1E1C',
                     }}
                   >
-                    {new Date(ev.date_debut).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short' })}
-                  </span>
-                </div>
+                    <div>
+                      <p
+                        style={{
+                          fontSize: '14px',
+                          color: '#F0EDE6',
+                          fontFamily: 'var(--font-dm-sans), sans-serif',
+                          fontWeight: 500,
+                          margin: '0 0 4px',
+                        }}
+                      >
+                        {ev.titre}
+                      </p>
+                      <p style={{ fontSize: '12px', color: '#8A8880', fontFamily: 'var(--font-dm-sans), sans-serif', margin: 0 }}>
+                        {ev.chantiers?.nom ?? ev.chantier_id}
+                      </p>
+                    </div>
+                    <span
+                      style={{
+                        fontSize: '12px',
+                        color: '#8A8880',
+                        fontFamily: 'var(--font-dm-sans), sans-serif',
+                        whiteSpace: 'nowrap',
+                        marginLeft: '12px',
+                      }}
+                    >
+                      {new Date(ev.date_debut).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short' })}
+                    </span>
+                  </div>
+                </Link>
               ))}
             </div>
           )}

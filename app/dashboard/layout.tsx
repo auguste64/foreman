@@ -8,11 +8,11 @@ export default async function DashboardLayout({ children }: { children: React.Re
   if (!user) redirect('/login')
 
   const navItems = [
-    { href: '/dashboard', label: 'Tableau de bord', emoji: '🏠' },
-    { href: '/dashboard/chantiers', label: 'Chantiers', emoji: '🏗️' },
-    { href: '/dashboard/comptes-rendus', label: 'Comptes rendus', emoji: '📋' },
-    { href: '/dashboard/artisans', label: 'Artisans', emoji: '👷' },
-    { href: '/dashboard/planning', label: 'Planning', emoji: '📅' },
+    { href: '/dashboard', label: 'Tableau de bord', colorClass: 'text-[#F0EDE6]' },
+    { href: '/dashboard/chantiers', label: 'Chantiers', colorClass: 'text-[#F0EDE6]' },
+    { href: '/dashboard/comptes-rendus', label: 'Comptes rendus', colorClass: 'text-[#F0EDE6]' },
+    { href: '/dashboard/artisans', label: 'Artisans', colorClass: 'text-[#F0EDE6]' },
+    { href: '/dashboard/planning', label: 'Planning', colorClass: 'text-[#F0EDE6]' },
   ]
 
   return (
@@ -23,21 +23,19 @@ export default async function DashboardLayout({ children }: { children: React.Re
         </div>
         <nav className="flex-1 p-4 flex flex-col gap-1">
           {navItems.map((item) => (
-            <Link key={item.href} href={item.href} className="group flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-[#7A7870] transition-all duration-200 hover:bg-[rgba(232,197,71,0.08)] hover:text-[#E8C547] hover:translate-x-1">
-              <span className="text-base transition-transform duration-200 group-hover:scale-125">{item.emoji}</span>
+            <Link key={item.href} href={item.href} className={`flex items-center px-4 py-3 rounded-lg text-sm transition-all duration-200 hover:bg-[rgba(232,197,71,0.08)] hover:text-[#E8C547] hover:translate-x-1 ${item.colorClass}`} style={{ fontFamily: 'var(--font-syne)', fontWeight: 500, letterSpacing: '0.02em' }}>
               {item.label}
             </Link>
           ))}
           <div className="border-t border-[#1E1E1C] my-2" />
-          <Link href="/dashboard/parametres" className="group flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-[#7A7870] transition-all duration-200 hover:bg-[rgba(232,197,71,0.08)] hover:text-[#E8C547] hover:translate-x-1">
-            <span className="text-base transition-transform duration-200 group-hover:scale-125">⚙️</span>
+          <Link href="/dashboard/parametres" className="flex items-center px-4 py-3 rounded-lg text-sm text-[#F0EDE6] transition-all duration-200 hover:bg-[rgba(232,197,71,0.08)] hover:text-[#E8C547] hover:translate-x-1" style={{ fontFamily: 'var(--font-syne)', fontWeight: 500, letterSpacing: '0.02em' }}>
             Paramètres
           </Link>
         </nav>
         <div className="p-4 border-t border-[#1E1E1C] flex flex-col gap-2">
           <div className="bg-[rgba(232,197,71,0.04)] border border-[#1E1E1C] rounded-lg px-3 py-2 text-xs text-[#7A7870] truncate">{user.email}</div>
           <form action="/auth/signout" method="post">
-            <button type="submit" className="w-full text-left text-xs text-[#7A7870] px-3 py-2 rounded-lg transition-all duration-200 hover:text-[#E8C547] hover:bg-[rgba(232,197,71,0.08)]">← Déconnexion</button>
+            <button type="submit" className="w-full text-left text-xs text-[#7A7870] px-3 py-2 rounded-lg transition-all duration-200 hover:text-[#E8C547] hover:bg-[rgba(232,197,71,0.08)]">Déconnexion</button>
           </form>
         </div>
       </aside>

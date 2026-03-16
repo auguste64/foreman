@@ -13,7 +13,7 @@ export default async function DashboardPage() {
     { count: chantiersActifsCount },
     { count: artisansCount },
     { count: comptesRendusCount },
-    { data: derniersCompteRendus },
+    { data: chantiersEnCours },
     { data: prochainsEvenements },
   ] = await Promise.all([
     supabase.from('chantiers').select('*', { count: 'exact', head: true }),
@@ -21,9 +21,10 @@ export default async function DashboardPage() {
     supabase.from('artisans').select('*', { count: 'exact', head: true }),
     supabase.from('comptes_rendus').select('*', { count: 'exact', head: true }),
     supabase
-      .from('comptes_rendus')
-      .select('id, chantier_id, date_visite, progression, chantiers(nom)')
-      .order('date_visite', { ascending: false })
+      .from('chantiers')
+      .select('*')
+      .eq('statut', 'En cours')
+      .order('created_at', { ascending: false })
       .limit(3),
     supabase
       .from('evenements')
@@ -42,7 +43,7 @@ export default async function DashboardPage() {
         artisans: artisansCount ?? 0,
         comptesRendus: comptesRendusCount ?? 0,
       }}
-      derniersCompteRendus={derniersCompteRendus ?? []}
+      chantiersEnCours={chantiersEnCours ?? []}
       prochainsEvenements={prochainsEvenements ?? []}
     />
   )

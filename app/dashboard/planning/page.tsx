@@ -1,6 +1,7 @@
 'use client'
 
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useCallback, useRef, Children } from 'react'
+import type { ReactNode } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import {
   createEvenement, updateEvenement, deleteEvenement,
@@ -9,6 +10,76 @@ import {
 import type { Evenement, TypeEvenement, CreateEvenementInput } from '@/lib/supabase/planning'
 import type { Chantier } from '@/lib/supabase/chantiers'
 import type { Artisan } from '@/lib/supabase/artisans'
+
+// ─── StyledSelect ──────────────────────────────────────────────────────────
+
+function StyledSelect({ value, onChange, children, placeholder }: {
+  value: string
+  onChange: (v: string) => void
+  children: ReactNode
+  placeholder?: string
+}) {
+  const [open, setOpen] = useState(false)
+  const ref = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    const handler = (e: MouseEvent) => { if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false) }
+    document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
+  }, [])
+
+  const options = Children.toArray(children).filter((c: any) => c.props?.value !== undefined)
+  const selected = options.find((c: any) => c.props.value === value) as any
+
+  return (
+    <div ref={ref} style={{ position: 'relative', width: '100%' }}>
+      <div
+        onClick={() => setOpen(!open)}
+        style={{
+          width: '100%', padding: '12px 16px', background: '#111110',
+          border: `1px solid ${open ? '#E8C547' : '#1E1E1C'}`,
+          boxShadow: open ? '0 0 0 2px rgba(232,197,71,0.15)' : 'none',
+          borderRadius: '6px', color: selected ? '#F0EDE6' : '#7A7870',
+          fontSize: '14px', cursor: 'pointer', display: 'flex',
+          justifyContent: 'space-between', alignItems: 'center',
+          transition: 'all 0.2s ease', userSelect: 'none',
+          boxSizing: 'border-box',
+        }}
+      >
+        <span>{selected ? selected.props.children : placeholder ?? 'Sélectionner...'}</span>
+        <span style={{ color: '#E8C547', transition: 'transform 0.2s', transform: open ? 'rotate(180deg)' : 'rotate(0deg)', fontSize: '10px' }}>▼</span>
+      </div>
+      {open && (
+        <div style={{
+          position: 'absolute', top: 'calc(100% + 4px)', left: 0, right: 0,
+          background: '#111110', border: '1px solid #E8C547',
+          borderRadius: '6px', zIndex: 999, overflow: 'hidden',
+          boxShadow: '0 8px 32px rgba(0,0,0,0.4)',
+          animation: 'dropdownIn 0.15s ease both',
+        }}>
+          {options.map((opt: any, i: number) => (
+            <div
+              key={i}
+              onClick={() => { onChange(opt.props.value); setOpen(false) }}
+              style={{
+                padding: '11px 16px', fontSize: '14px', cursor: 'pointer',
+                color: opt.props.value === value ? '#E8C547' : '#F0EDE6',
+                background: opt.props.value === value ? 'rgba(232,197,71,0.08)' : 'transparent',
+                transition: 'all 0.15s ease',
+                borderBottom: i < options.length - 1 ? '1px solid #1E1E1C' : 'none',
+                fontFamily: 'var(--font-dm-sans), sans-serif',
+              }}
+              onMouseEnter={e => { if (opt.props.value !== value) (e.currentTarget as HTMLElement).style.background = 'rgba(232,197,71,0.04)' }}
+              onMouseLeave={e => { if (opt.props.value !== value) (e.currentTarget as HTMLElement).style.background = 'transparent' }}
+            >
+              {opt.props.children}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
 
 // ─── Calendar helpers ──────────────────────────────────────────────────────
 
@@ -88,7 +159,7 @@ type FormState = {
 }
 
 function emptyForm(): FormState {
-  return { titre: '', type: 'visite_architecte', chantier_id: '', artisan_id: '', date_debut_local: '', date_fin_local: '', notes: '' }
+  return { titre: '', type: 'reunion', chantier_id: '', artisan_id: '', date_debut_local: '', date_fin_local: '', notes: '' }
 }
 
 function formToInput(f: FormState): CreateEvenementInput {
@@ -171,32 +242,17 @@ function EventFormFields({
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
         <div>
           <label style={lbl}>Type *</label>
-          <select
-            value={form.type}
-            onChange={e => onChange('type', e.target.value)}
-            style={{ ...inp, cursor: 'pointer' }}
-            onFocus={onFocus}
-            onBlur={onBlur}
-          >
-            {TYPES.map(t => (
-              <option key={t} value={t} style={{ backgroundColor: '#111110' }}>{TYPE_LABELS[t]}</option>
-            ))}
-          </select>
+          <StyledSelect value={form.type} onChange={v => onChange('type', v)}>
+            <option value="reunion">Réunion de chantier</option>
+            <option value="presence_artisan">Présence artisan</option>
+            <option value="prochaine_visite">Prochaine visite</option>
+          </StyledSelect>
         </div>
         <div>
           <label style={lbl}>Chantier</label>
-          <select
-            value={form.chantier_id}
-            onChange={e => onChange('chantier_id', e.target.value)}
-            style={{ ...inp, cursor: 'pointer' }}
-            onFocus={onFocus}
-            onBlur={onBlur}
-          >
-            <option value="">— Aucun —</option>
-            {chantiers.map(c => (
-              <option key={c.id} value={c.id} style={{ backgroundColor: '#111110' }}>{c.nom}</option>
-            ))}
-          </select>
+          <StyledSelect value={form.chantier_id} onChange={v => onChange('chantier_id', v)} placeholder="— Aucun —">
+            {chantiers.map(c => <option key={c.id} value={c.id}>{c.nom}</option>)}
+          </StyledSelect>
         </div>
       </div>
 
@@ -206,9 +262,16 @@ function EventFormFields({
           <select
             value={form.artisan_id}
             onChange={e => onChange('artisan_id', e.target.value)}
-            style={{ ...inp, cursor: 'pointer' }}
-            onFocus={onFocus}
-            onBlur={onBlur}
+            style={{
+              width: '100%', padding: '12px 16px', background: '#111110',
+              border: '1px solid #1E1E1C', borderRadius: '6px', color: '#F0EDE6',
+              fontSize: '14px', appearance: 'none',
+              backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23E8C547' d='M6 8L1 3h10z'/%3E%3C/svg%3E")`,
+              backgroundRepeat: 'no-repeat', backgroundPosition: 'right 14px center',
+              paddingRight: '36px', cursor: 'pointer', outline: 'none',
+            }}
+            onFocus={e => { e.currentTarget.style.borderColor = '#E8C547'; e.currentTarget.style.boxShadow = '0 0 0 2px rgba(232,197,71,0.15)'; }}
+            onBlur={e => { e.currentTarget.style.borderColor = '#1E1E1C'; e.currentTarget.style.boxShadow = 'none'; }}
           >
             <option value="">— Sélectionner —</option>
             {artisans.map(a => (
