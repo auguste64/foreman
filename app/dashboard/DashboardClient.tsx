@@ -165,7 +165,7 @@ export default function DashboardClient({
         {statCards.map((card) => (
           <div
             key={card.label}
-            className="transition-all duration-300 hover:scale-105 hover:border-[#E8C547] hover:shadow-[0_0_30px_rgba(232,197,71,0.2)]"
+            className="stat-card transition-all duration-300 hover:scale-105 hover:border-[#E8C547] hover:shadow-[0_0_30px_rgba(232,197,71,0.2)]"
             style={{
               backgroundColor: '#111110',
               border: '1px solid #1E1E1C',
@@ -184,6 +184,7 @@ export default function DashboardClient({
               {card.label}
             </p>
             <p
+              className="stat-number"
               style={{
                 fontFamily: 'var(--font-syne), sans-serif',
                 fontSize: '32px',
@@ -202,7 +203,8 @@ export default function DashboardClient({
       <div style={{ display: 'flex', gap: '12px', marginBottom: '40px' }}>
         <Link
           href="/dashboard/comptes-rendus/nouveau"
-          className="transition-all duration-200 hover:scale-105 hover:shadow-[0_0_25px_rgba(232,197,71,0.5)] active:scale-95"
+          onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-3px)'; e.currentTarget.style.boxShadow = '0 0 28px rgba(232,197,71,0.55)'; }}
+          onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = 'none'; }}
           style={{
             display: 'inline-block',
             padding: '10px 20px',
@@ -214,13 +216,15 @@ export default function DashboardClient({
             textDecoration: 'none',
             fontFamily: 'var(--font-dm-sans), sans-serif',
             letterSpacing: '0.01em',
+            transition: 'all 0.2s ease',
           }}
         >
           + Nouveau compte rendu
         </Link>
         <Link
           href="/dashboard/chantiers/nouveau"
-          className="transition-all duration-200 hover:scale-105 hover:shadow-[0_0_25px_rgba(232,197,71,0.5)] active:scale-95"
+          onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-3px)'; e.currentTarget.style.boxShadow = '0 0 28px rgba(232,197,71,0.55)'; }}
+          onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = 'none'; }}
           style={{
             display: 'inline-block',
             padding: '10px 20px',
@@ -233,6 +237,7 @@ export default function DashboardClient({
             textDecoration: 'none',
             fontFamily: 'var(--font-dm-sans), sans-serif',
             letterSpacing: '0.01em',
+            transition: 'all 0.2s ease',
           }}
         >
           + Nouveau chantier
@@ -244,7 +249,7 @@ export default function DashboardClient({
 
         {/* Chantiers en cours */}
         <div
-          className="transition-all duration-300 hover:scale-[1.01] hover:border-[#E8C547] hover:shadow-[0_0_30px_rgba(232,197,71,0.2)]"
+          className="card-animated transition-all duration-300 hover:scale-[1.01] hover:border-[#E8C547] hover:shadow-[0_0_30px_rgba(232,197,71,0.2)]"
           style={{
             backgroundColor: '#111110',
             border: '1px solid #1E1E1C',
@@ -285,7 +290,7 @@ export default function DashboardClient({
                   <Link
                     key={c.id}
                     href={`/dashboard/chantiers/${c.id}`}
-                    className="block hover:bg-[rgba(232,197,71,0.04)] transition-all duration-150 cursor-pointer"
+                    className="row-animated block hover:bg-[rgba(232,197,71,0.04)] transition-all duration-150 cursor-pointer"
                     style={{ textDecoration: 'none' }}
                   >
                     <div
@@ -337,7 +342,7 @@ export default function DashboardClient({
 
         {/* Prochains événements */}
         <div
-          className="transition-all duration-300 hover:scale-[1.01] hover:border-[#E8C547] hover:shadow-[0_0_30px_rgba(232,197,71,0.2)]"
+          className="card-animated transition-all duration-300 hover:scale-[1.01] hover:border-[#E8C547] hover:shadow-[0_0_30px_rgba(232,197,71,0.2)]"
           style={{
             backgroundColor: '#111110',
             border: '1px solid #1E1E1C',
