@@ -607,13 +607,15 @@ export default function PlanningPage() {
         </div>
         <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
           {/* View toggle */}
-          <div style={{ display: 'flex', backgroundColor: '#111110', border: '1px solid #1E1E1C', borderRadius: '8px', overflow: 'hidden' }}>
+          <div style={{ display: 'flex', borderRadius: '8px', overflow: 'hidden', border: '1px solid #1E1E1C' }}>
             {(['month', 'week'] as const).map(v => (
               <button key={v} onClick={() => setView(v)} style={{
-                padding: '7px 14px', border: 'none', cursor: 'pointer', fontSize: '13px',
-                fontFamily: 'var(--font-dm-sans), sans-serif', fontWeight: 500,
+                padding: '7px 14px', cursor: 'pointer', fontSize: '13px', transition: 'all 0.15s',
+                fontFamily: 'var(--font-dm-sans), sans-serif',
+                fontWeight: view === v ? 600 : 500,
                 backgroundColor: view === v ? '#E8C547' : 'transparent',
-                color: view === v ? '#0D0D0B' : '#8A8880', transition: 'all 0.15s',
+                color: view === v ? '#0D0D0B' : '#7A7870',
+                border: view === v ? 'none' : '1px solid transparent',
               }}>
                 {v === 'month' ? 'Mois' : 'Semaine'}
               </button>
@@ -629,7 +631,9 @@ export default function PlanningPage() {
           </div>
           <button
             onClick={() => { setCreateForm(emptyForm()); setCreateError(null); setShowCreate(true) }}
-            style={{ padding: '8px 16px', backgroundColor: '#E8C547', color: '#0D0D0B', border: 'none', borderRadius: '8px', fontSize: '13px', fontWeight: 600, cursor: 'pointer', fontFamily: 'var(--font-dm-sans), sans-serif' }}
+            style={{ padding: '8px 16px', backgroundColor: '#E8C547', color: '#0D0D0B', border: 'none', borderRadius: '8px', fontSize: '13px', fontWeight: 600, cursor: 'pointer', fontFamily: 'var(--font-dm-sans), sans-serif', transition: 'all 0.2s ease' }}
+            onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 0 24px rgba(232,197,71,0.5)'; }}
+            onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = 'none'; }}
           >
             + Nouvel événement
           </button>
@@ -638,7 +642,7 @@ export default function PlanningPage() {
 
       {/* Legend */}
       <div style={{ display: 'flex', gap: '12px', marginBottom: '20px', flexWrap: 'wrap' }}>
-        {TYPES.map(t => {
+        {TYPES.filter(t => t !== 'visite_architecte').map(t => {
           const c = TYPE_COLORS[t]
           return (
             <div key={t} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>

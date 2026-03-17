@@ -6,44 +6,115 @@ import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import { createCompteRendu } from '@/lib/supabase/comptes-rendus'
 import type { Chantier } from '@/lib/supabase/chantiers'
-import MetierSelect from '@/components/MetierSelect'
+import PhotoAnnotator from '@/components/PhotoAnnotator'
+
+// ─── Types ────────────────────────────────────────────────────────────────────
+
+type Tab = 'general' | 'presences' | 'reserves' | 'decisions' | 'lots' | 'photos' | 'profil'
+type StatutPresence = 'P' | 'A' | 'E' | 'C'
+
+interface PresenceRow {
+  artisanId: string
+  nom: string
+  societe: string
+  statut: StatutPresence
+  convoque: boolean
+}
+
+interface Reserve {
+  id: string
+  description: string
+  lot: string
+  responsable: string
+  statut: 'Ouvert' | 'Levé'
+  dateCreation: string
+  photos: string[]
+}
+
+interface Lot {
+  id: string
+  nom: string
+  intervenant: string
+  dateDemarrage: string
+  dateFin: string
+  avancement: number
+}
+
+interface Decision {
+  id: string
+  description: string
+  responsable: string
+  echeance: string
+}
+
+interface Profile {
+  nom: string
+  societe: string
+  adresse: string
+  telephone: string
+  email: string
+  logo: string
+}
+
+// ─── Constants ────────────────────────────────────────────────────────────────
+
+const STATUT_ORDER: StatutPresence[] = ['P', 'A', 'E', 'C']
+const STATUT_META: Record<StatutPresence, { bg: string; color: string; label: string }> = {
+  P: { bg: 'rgba(74,222,128,0.15)',  color: '#4ade80', label: 'Présent'  },
+  A: { bg: 'rgba(248,113,113,0.15)', color: '#f87171', label: 'Absent'   },
+  E: { bg: 'rgba(251,191,36,0.15)',  color: '#fbbf24', label: 'Excusé'   },
+  C: { bg: 'rgba(96,165,250,0.15)',  color: '#60a5fa', label: 'Convoqué' },
+}
 
 const inputStyle: React.CSSProperties = {
-  width: '100%',
-  padding: '10px 14px',
-  backgroundColor: '#0D0D0B',
-  border: '1px solid #1E1E1C',
-  borderRadius: '8px',
-  color: '#F0EDE6',
-  fontSize: '14px',
-  outline: 'none',
-  fontFamily: 'var(--font-dm-sans), sans-serif',
+  width: '100%', padding: '10px 14px', backgroundColor: '#0D0D0B',
+  border: '1px solid #1E1E1C', borderRadius: '8px', color: '#F0EDE6',
+  fontSize: '14px', outline: 'none', fontFamily: 'var(--font-dm-sans), sans-serif',
+  boxSizing: 'border-box', transition: 'border-color 0.15s, box-shadow 0.15s',
 }
 
 const labelStyle: React.CSSProperties = {
-  display: 'block',
-  fontSize: '13px',
-  color: '#8A8880',
-  marginBottom: '6px',
-  fontFamily: 'var(--font-dm-sans), sans-serif',
+  display: 'block', fontSize: '13px', color: '#8A8880',
+  marginBottom: '6px', fontFamily: 'var(--font-dm-sans), sans-serif',
 }
 
-const focus = (e: React.FocusEvent<HTMLElement>) => ((e.target as HTMLElement).style.borderColor = '#E8C547')
-const blur = (e: React.FocusEvent<HTMLElement>) => ((e.target as HTMLElement).style.borderColor = '#1E1E1C')
+const pdfSectionTitle: React.CSSProperties = {
+  fontWeight: 700, fontSize: '9px', textTransform: 'uppercase',
+  letterSpacing: '0.06em', marginBottom: '6px',
+  borderBottom: '1px solid #ccc', paddingBottom: '3px', color: '#1a1a1a',
+}
+
+const focus = (e: React.FocusEvent<HTMLElement>) => {
+  const t = e.target as HTMLElement
+  t.style.borderColor = '#E8C547'
+  t.style.boxShadow = '0 0 0 2px rgba(232,197,71,0.15)'
+  t.style.outline = 'none'
+}
+const blur = (e: React.FocusEvent<HTMLElement>) => {
+  const t = e.target as HTMLElement
+  t.style.borderColor = '#1E1E1C'
+  t.style.boxShadow = 'none'
+}
+
+function uid() { return Math.random().toString(36).slice(2) }
+const emptyProfile = (): Profile => ({ nom: '', societe: '', adresse: '', telephone: '', email: '', logo: '' })
+
+// ─── Component ────────────────────────────────────────────────────────────────
 
 export default function NouveauCompteRenduPage() {
   const router = useRouter()
+  const [tab, setTab] = useState<Tab>('general')
   const [chantiers, setChantiers] = useState<Chantier[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [artisansList, setArtisansList] = useState<{ id: string; nom: string }[]>([])
-  const [artisansOpen, setArtisansOpen] = useState(false)
-  const artisansRef = useRef<HTMLDivElement>(null)
-  const [showNewArtisan, setShowNewArtisan] = useState(false)
-  const [newArtisan, setNewArtisan] = useState({ nom: '', email: '', telephone: '', metier: '' })
-  const [creatingArtisan, setCreatingArtisan] = useState(false)
   const [photoFiles, setPhotoFiles] = useState<File[]>([])
   const [photoPreviews, setPhotoPreviews] = useState<string[]>([])
+  const [annotatorState, setAnnotatorState] = useState<{ reserveId: string; imageSrc: string } | null>(null)
+  const [profile, setProfile] = useState<Profile>(emptyProfile())
+  const [presences, setPresences] = useState<PresenceRow[]>([])
+  const [reserves, setReserves] = useState<Reserve[]>([])
+  const [decisions, setDecisions] = useState<Decision[]>([])
+  const [lots, setLots] = useState<Lot[]>([])
 
   const [form, setForm] = useState({
     chantier_id: '',
@@ -56,72 +127,98 @@ export default function NouveauCompteRenduPage() {
     photos: [] as string[],
   })
 
+  // Load chantiers + artisans
   useEffect(() => {
     const supabase = createClient()
     supabase.from('chantiers').select('*').order('nom')
       .then(({ data }) => setChantiers((data ?? []) as Chantier[]))
-    supabase.from('artisans').select('id, nom').order('nom')
-      .then(({ data }) => setArtisansList((data ?? []) as { id: string; nom: string }[]))
+    supabase.from('artisans').select('id, nom, metier').order('nom')
+      .then(({ data }) => {
+        const list = (data ?? []) as { id: string; nom: string; metier?: string }[]
+        setPresences(list.map((a) => ({
+          artisanId: a.id, nom: a.nom, societe: a.metier ?? '', statut: 'A', convoque: false,
+        })))
+      })
   }, [])
 
+  // Load profile from localStorage
   useEffect(() => {
-    function handleClickOutside(e: MouseEvent) {
-      if (artisansRef.current && !artisansRef.current.contains(e.target as Node)) {
-        setArtisansOpen(false)
-      }
-    }
-    document.addEventListener('mousedown', handleClickOutside)
-    return () => document.removeEventListener('mousedown', handleClickOutside)
+    try {
+      const saved = localStorage.getItem('foreman_profile')
+      if (saved) setProfile(JSON.parse(saved))
+    } catch {}
   }, [])
 
-  function set(field: string, value: unknown) {
+  const selectedChantier = chantiers.find((c) => c.id === form.chantier_id)
+
+  function setField(field: string, value: unknown) {
     setForm((prev) => ({ ...prev, [field]: value }))
   }
 
-  function toggleArtisan(nom: string) {
-    set('artisans_presents', form.artisans_presents.includes(nom)
-      ? form.artisans_presents.filter((a) => a !== nom)
-      : [...form.artisans_presents, nom]
-    )
+  function saveProfile(p: Profile) {
+    setProfile(p)
+    localStorage.setItem('foreman_profile', JSON.stringify(p))
   }
 
-  async function handleCreateArtisan(e: React.FormEvent) {
-    e.preventDefault()
-    if (!newArtisan.nom.trim()) return
-    setCreatingArtisan(true)
-    try {
-      const supabase = createClient()
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) throw new Error('Non authentifié')
-      const { data, error: insertError } = await supabase
-        .from('artisans')
-        .insert({ ...newArtisan, nom: newArtisan.nom.trim(), user_id: user.id })
-        .select('id, nom')
-        .single()
-      if (insertError) throw insertError
-      const created = data as { id: string; nom: string }
-      setArtisansList((prev) => [...prev, created].sort((a, b) => a.nom.localeCompare(b.nom)))
-      set('artisans_presents', [...form.artisans_presents, created.nom])
-      setNewArtisan({ nom: '', email: '', telephone: '', metier: '' })
-      setShowNewArtisan(false)
-    } finally {
-      setCreatingArtisan(false)
-    }
+  // ── Presences ──
+  function cycleStatut(id: string) {
+    setPresences((prev) => prev.map((p) =>
+      p.artisanId === id
+        ? { ...p, statut: STATUT_ORDER[(STATUT_ORDER.indexOf(p.statut) + 1) % STATUT_ORDER.length] }
+        : p
+    ))
+  }
+  function toggleConvoque(id: string) {
+    setPresences((prev) => prev.map((p) => p.artisanId === id ? { ...p, convoque: !p.convoque } : p))
   }
 
+  // ── Reserves ──
+  function addReserve() {
+    setReserves((prev) => [...prev, {
+      id: uid(), description: '', lot: '', responsable: '',
+      statut: 'Ouvert', dateCreation: new Date().toISOString().split('T')[0], photos: [],
+    }])
+  }
+  function updateReserve(id: string, field: keyof Reserve, value: unknown) {
+    setReserves((prev) => prev.map((r) => r.id === id ? { ...r, [field]: value } : r))
+  }
+  function deleteReserve(id: string) { setReserves((prev) => prev.filter((r) => r.id !== id)) }
+  function handleAnnotated(dataUrl: string) {
+    if (!annotatorState) return
+    setReserves((prev) => prev.map((r) =>
+      r.id === annotatorState.reserveId ? { ...r, photos: [...r.photos, dataUrl] } : r
+    ))
+    setAnnotatorState(null)
+  }
+  function removeReservePhoto(reserveId: string, idx: number) {
+    setReserves((prev) => prev.map((r) =>
+      r.id === reserveId ? { ...r, photos: r.photos.filter((_, i) => i !== idx) } : r
+    ))
+  }
+
+  // ── Decisions ──
+  function addDecision() { setDecisions((prev) => [...prev, { id: uid(), description: '', responsable: '', echeance: '' }]) }
+  function updateDecision(id: string, field: keyof Decision, value: string) {
+    setDecisions((prev) => prev.map((d) => d.id === id ? { ...d, [field]: value } : d))
+  }
+  function deleteDecision(id: string) { setDecisions((prev) => prev.filter((d) => d.id !== id)) }
+
+  // ── Lots ──
+  function addLot() { setLots((prev) => [...prev, { id: uid(), nom: '', intervenant: '', dateDemarrage: '', dateFin: '', avancement: 0 }]) }
+  function updateLot(id: string, field: keyof Lot, value: unknown) {
+    setLots((prev) => prev.map((l) => l.id === id ? { ...l, [field]: value } : l))
+  }
+  function deleteLot(id: string) { setLots((prev) => prev.filter((l) => l.id !== id)) }
+
+  // ── Photos ──
   function handlePhotoChange(e: React.ChangeEvent<HTMLInputElement>) {
     const files = Array.from(e.target.files ?? [])
     setPhotoFiles((prev) => [...prev, ...files])
-    const previews = files.map((f) => URL.createObjectURL(f))
-    setPhotoPreviews((prev) => [...prev, ...previews])
+    setPhotoPreviews((prev) => [...prev, ...files.map((f) => URL.createObjectURL(f))])
   }
-
-  function removePhoto(index: number) {
-    setPhotoFiles((prev) => prev.filter((_, i) => i !== index))
-    setPhotoPreviews((prev) => {
-      URL.revokeObjectURL(prev[index])
-      return prev.filter((_, i) => i !== index)
-    })
+  function removePhoto(i: number) {
+    setPhotoFiles((prev) => prev.filter((_, j) => j !== i))
+    setPhotoPreviews((prev) => { URL.revokeObjectURL(prev[i]); return prev.filter((_, j) => j !== i) })
   }
 
   async function uploadPhotos(): Promise<string[]> {
@@ -139,6 +236,7 @@ export default function NouveauCompteRenduPage() {
     return urls
   }
 
+  // ── Submit ──
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     if (!form.chantier_id) { setError('Veuillez sélectionner un chantier.'); return }
@@ -146,44 +244,41 @@ export default function NouveauCompteRenduPage() {
     setLoading(true)
     try {
       const photoUrls = await uploadPhotos()
-      const cr = await createCompteRendu({ ...form, photos: photoUrls })
+      const artisansPresentsList = presences.filter((p) => p.statut === 'P').map((p) => p.nom)
+      const structuredData = {
+        presences, reserves: reserves.map((r) => ({ ...r, photos: [] })),
+        decisions, lots, observations: form.observations, travaux_a_faire: form.travaux_a_faire,
+      }
+      const cr = await createCompteRendu({
+        ...form,
+        artisans_presents: artisansPresentsList,
+        observations: JSON.stringify(structuredData),
+        photos: photoUrls,
+      })
 
       // Auto-create planning events
       const supabase = createClient()
       const { data: { user } } = await supabase.auth.getUser()
       if (user) {
-        const chantier = chantiers.find((c) => c.id === form.chantier_id)
-        const nomChantier = chantier?.nom ?? 'Chantier'
-
+        const nomChantier = selectedChantier?.nom ?? 'Chantier'
         const visitDate = new Date(form.date_visite)
         visitDate.setHours(9, 0, 0, 0)
         supabase.from('evenements').insert({
-          user_id: user.id,
-          chantier_id: form.chantier_id,
-          titre: `Visite — ${nomChantier}`,
-          type: 'visite_architecte',
-          date_debut: visitDate.toISOString(),
-          date_fin: null,
-          artisan_id: null,
+          user_id: user.id, chantier_id: form.chantier_id,
+          titre: `Visite — ${nomChantier}`, type: 'visite_architecte',
+          date_debut: visitDate.toISOString(), date_fin: null, artisan_id: null,
           notes: form.observations || null,
         }).then(() => {}).catch(() => {})
-
         if (form.date_prochaine_visite) {
           const nextDate = new Date(form.date_prochaine_visite)
           nextDate.setHours(9, 0, 0, 0)
           supabase.from('evenements').insert({
-            user_id: user.id,
-            chantier_id: form.chantier_id,
-            titre: `Prochaine visite — ${nomChantier}`,
-            type: 'prochaine_visite',
-            date_debut: nextDate.toISOString(),
-            date_fin: null,
-            artisan_id: null,
-            notes: null,
+            user_id: user.id, chantier_id: form.chantier_id,
+            titre: `Prochaine visite — ${nomChantier}`, type: 'prochaine_visite',
+            date_debut: nextDate.toISOString(), date_fin: null, artisan_id: null, notes: null,
           }).then(() => {}).catch(() => {})
         }
       }
-
       router.push(`/dashboard/comptes-rendus/${cr.id}`)
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Une erreur est survenue.')
@@ -191,10 +286,30 @@ export default function NouveauCompteRenduPage() {
     }
   }
 
+  // ── Tab definitions ──
+  const TABS: { id: Tab; label: string }[] = [
+    { id: 'general',   label: 'Général' },
+    { id: 'presences', label: 'Présences' },
+    { id: 'reserves',  label: reserves.length  ? `Réserves (${reserves.length})`   : 'Réserves'  },
+    { id: 'decisions', label: decisions.length ? `Décisions (${decisions.length})` : 'Décisions' },
+    { id: 'lots',      label: 'Lots' },
+    { id: 'photos',    label: photoPreviews.length ? `Photos (${photoPreviews.length})` : 'Photos' },
+    { id: 'profil',    label: 'Profil' },
+  ]
+
+  // Inline cell style for Lots table
+  const cellInput: React.CSSProperties = {
+    ...inputStyle, padding: '6px 10px', fontSize: '13px',
+    backgroundColor: 'transparent', border: '1px solid transparent',
+  }
+
+  // ─────────────────────────────────────────────────────────────────────────────
   return (
-    <div style={{ flex: 1, padding: '40px', overflowY: 'auto' }}>
-      <div style={{ marginBottom: '40px' }}>
-        <Link href="/dashboard/comptes-rendus" style={{ fontSize: '13px', color: '#8A8880', textDecoration: 'none', fontFamily: 'var(--font-dm-sans), sans-serif', display: 'inline-flex', alignItems: 'center', gap: '6px', marginBottom: '16px' }}>
+    <div style={{ flex: 1, padding: '32px 40px', overflowY: 'auto' }}>
+
+      {/* Page header */}
+      <div style={{ marginBottom: '28px' }}>
+        <Link href="/dashboard/comptes-rendus" style={{ fontSize: '13px', color: '#8A8880', textDecoration: 'none', fontFamily: 'var(--font-dm-sans), sans-serif', display: 'inline-flex', alignItems: 'center', gap: '6px', marginBottom: '12px' }}>
           ← Retour aux comptes rendus
         </Link>
         <h1 style={{ fontFamily: 'var(--font-syne), sans-serif', fontSize: '24px', fontWeight: 700, color: '#F0EDE6', margin: 0 }}>
@@ -202,339 +317,667 @@ export default function NouveauCompteRenduPage() {
         </h1>
       </div>
 
-      <form onSubmit={handleSubmit} style={{ maxWidth: '680px', display: 'flex', flexDirection: 'column', gap: '28px' }}>
+      {/* 2-column layout */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 400px', gap: '28px', alignItems: 'start' }}>
 
-        {/* Chantier + dates */}
-        <div style={{ backgroundColor: '#111110', border: '1px solid #1E1E1C', borderRadius: '12px', padding: '28px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
-          <h2 style={{ fontFamily: 'var(--font-syne), sans-serif', fontSize: '15px', fontWeight: 600, color: '#F0EDE6', margin: 0 }}>Informations générales</h2>
+        {/* ── Left : tabbed form ── */}
+        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+          <div style={{ backgroundColor: '#111110', border: '1px solid #1E1E1C', borderRadius: '12px', overflow: 'hidden' }}>
 
-          <div>
-            <label style={labelStyle}>Chantier associé *</label>
-            <div style={{ position: 'relative' }}>
-              <select
-                value={form.chantier_id}
-                onChange={(e) => set('chantier_id', e.target.value)}
-                required
-                style={{
-                  ...inputStyle,
-                  cursor: 'pointer',
-                  appearance: 'none',
-                  WebkitAppearance: 'none',
-                  MozAppearance: 'none',
-                  paddingRight: '40px',
-                }}
-                onFocus={(e) => { focus(e); (e.target.nextSibling as HTMLElement).style.opacity = '1' }}
-                onBlur={(e) => { blur(e); (e.target.nextSibling as HTMLElement).style.opacity = '0.5' }}
-              >
-                <option value="" style={{ backgroundColor: '#111110' }}>Sélectionner un chantier…</option>
-                {chantiers.map((c) => (
-                  <option key={c.id} value={c.id} style={{ backgroundColor: '#111110' }}>{c.nom} — {c.client}</option>
-                ))}
-              </select>
-              <svg
-                width="16" height="16" viewBox="0 0 16 16" fill="none"
-                style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none', opacity: 0.5, transition: 'opacity 0.15s' }}
-              >
-                <path d="M4 6L8 10L12 6" stroke="#E8C547" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
-            </div>
-          </div>
-
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
-            <div>
-              <label style={labelStyle}>Date de visite *</label>
-              <input type="date" value={form.date_visite} onChange={(e) => set('date_visite', e.target.value)} required style={{ ...inputStyle, colorScheme: 'dark' }} onFocus={focus} onBlur={blur} />
-            </div>
-            <div>
-              <label style={labelStyle}>Prochaine visite</label>
-              <input type="date" value={form.date_prochaine_visite} onChange={(e) => set('date_prochaine_visite', e.target.value)} style={{ ...inputStyle, colorScheme: 'dark' }} onFocus={focus} onBlur={blur} />
-            </div>
-          </div>
-        </div>
-
-        {/* Progression */}
-        <div style={{ backgroundColor: '#111110', border: '1px solid #1E1E1C', borderRadius: '12px', padding: '28px' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-            <h2 style={{ fontFamily: 'var(--font-syne), sans-serif', fontSize: '15px', fontWeight: 600, color: '#F0EDE6', margin: 0 }}>Avancement du chantier</h2>
-            <span style={{ fontFamily: 'var(--font-syne), sans-serif', fontSize: '24px', fontWeight: 700, color: '#E8C547' }}>{form.progression}%</span>
-          </div>
-          <input
-            type="range" min={0} max={100} step={5}
-            value={form.progression}
-            onChange={(e) => set('progression', parseInt(e.target.value))}
-            style={{ width: '100%', accentColor: '#E8C547', cursor: 'pointer' }}
-          />
-          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', color: '#8A8880', fontFamily: 'var(--font-dm-sans), sans-serif', marginTop: '6px' }}>
-            <span>0%</span><span>25%</span><span>50%</span><span>75%</span><span>100%</span>
-          </div>
-        </div>
-
-        {/* Observations + travaux */}
-        <div style={{ backgroundColor: '#111110', border: '1px solid #1E1E1C', borderRadius: '12px', padding: '28px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
-          <h2 style={{ fontFamily: 'var(--font-syne), sans-serif', fontSize: '15px', fontWeight: 600, color: '#F0EDE6', margin: 0 }}>Rapport de visite</h2>
-
-          <div>
-            <label style={labelStyle}>Observations / remarques</label>
-            <textarea
-              value={form.observations}
-              onChange={(e) => set('observations', e.target.value)}
-              rows={5}
-              placeholder="Décrivez l'état du chantier, les points importants observés…"
-              style={{ ...inputStyle, resize: 'vertical', lineHeight: '1.6' }}
-              onFocus={focus} onBlur={blur}
-            />
-          </div>
-
-          <div>
-            <label style={labelStyle}>Travaux à réaliser</label>
-            <textarea
-              value={form.travaux_a_faire}
-              onChange={(e) => set('travaux_a_faire', e.target.value)}
-              rows={4}
-              placeholder="Listez les tâches à effectuer avant la prochaine visite…"
-              style={{ ...inputStyle, resize: 'vertical', lineHeight: '1.6' }}
-              onFocus={focus} onBlur={blur}
-            />
-          </div>
-        </div>
-
-        {/* Artisans */}
-        <div style={{ backgroundColor: '#111110', border: '1px solid #1E1E1C', borderRadius: '12px', padding: '28px' }}>
-          <h2 style={{ fontFamily: 'var(--font-syne), sans-serif', fontSize: '15px', fontWeight: 600, color: '#F0EDE6', margin: '0 0 16px' }}>Artisans présents</h2>
-
-          <div ref={artisansRef} style={{ position: 'relative' }}>
-            {/* Trigger button */}
-            <button
-              type="button"
-              onClick={() => setArtisansOpen((o) => !o)}
-              style={{
-                width: '100%',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                padding: '10px 14px',
-                backgroundColor: '#0D0D0B',
-                border: `1px solid ${artisansOpen ? '#E8C547' : '#2A2A28'}`,
-                borderRadius: '8px',
-                color: form.artisans_presents.length > 0 ? '#F0EDE6' : '#8A8880',
-                fontSize: '14px',
-                fontFamily: 'var(--font-dm-sans), sans-serif',
-                cursor: 'pointer',
-                textAlign: 'left',
-              }}
-            >
-              <span>
-                {form.artisans_presents.length > 0
-                  ? `${form.artisans_presents.length} artisan${form.artisans_presents.length > 1 ? 's' : ''} sélectionné${form.artisans_presents.length > 1 ? 's' : ''}`
-                  : 'Sélectionner des artisans…'}
-              </span>
-              <span style={{ fontSize: '10px', color: '#8A8880', transition: 'transform 0.15s', display: 'inline-block', transform: artisansOpen ? 'rotate(180deg)' : 'none' }}>▼</span>
-            </button>
-
-            {/* Dropdown list */}
-            {artisansOpen && (
-              <div style={{
-                position: 'absolute',
-                top: 'calc(100% + 4px)',
-                left: 0,
-                right: 0,
-                backgroundColor: '#1A1A18',
-                border: '1px solid #2A2A28',
-                borderRadius: '8px',
-                zIndex: 50,
-                overflow: 'hidden',
-                boxShadow: '0 8px 24px rgba(0,0,0,0.4)',
-              }}>
-                {artisansList.length === 0 && (
-                  <div style={{ padding: '12px 14px', fontSize: '13px', color: '#8A8880', fontFamily: 'var(--font-dm-sans), sans-serif' }}>
-                    Aucun artisan enregistré.
-                  </div>
-                )}
-                {artisansList.map((artisan, i) => {
-                  const checked = form.artisans_presents.includes(artisan.nom)
-                  return (
-                    <button
-                      key={artisan.id}
-                      type="button"
-                      onClick={() => toggleArtisan(artisan.nom)}
-                      style={{
-                        width: '100%',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '10px',
-                        padding: '10px 14px',
-                        backgroundColor: checked ? '#232320' : 'transparent',
-                        borderTop: i > 0 ? '1px solid #2A2A28' : 'none',
-                        border: 'none',
-                        borderRadius: 0,
-                        cursor: 'pointer',
-                        textAlign: 'left',
-                      }}
-                      onMouseEnter={(e) => { if (!checked) e.currentTarget.style.backgroundColor = '#2A2A28' }}
-                      onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = checked ? '#232320' : 'transparent' }}
-                    >
-                      <span style={{
-                        width: '16px', height: '16px', borderRadius: '4px', flexShrink: 0,
-                        border: `2px solid ${checked ? '#E8C547' : '#3A3A38'}`,
-                        backgroundColor: checked ? '#E8C547' : 'transparent',
-                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        transition: 'all 0.1s',
-                      }}>
-                        {checked && <span style={{ color: '#0D0D0B', fontSize: '10px', fontWeight: 700, lineHeight: 1 }}>✓</span>}
-                      </span>
-                      <span style={{ fontSize: '14px', color: '#F0EDE6', fontFamily: 'var(--font-dm-sans), sans-serif' }}>
-                        {artisan.nom}
-                      </span>
-                    </button>
-                  )
-                })}
-
-                {/* Nouvel artisan */}
-                {!showNewArtisan ? (
-                  <button
-                    type="button"
-                    onClick={() => setShowNewArtisan(true)}
-                    style={{
-                      width: '100%', display: 'flex', alignItems: 'center', gap: '8px',
-                      padding: '10px 14px', backgroundColor: 'transparent',
-                      borderTop: '1px solid #2A2A28', border: 'none', borderRadius: 0,
-                      cursor: 'pointer', textAlign: 'left', color: '#E8C547',
-                      fontSize: '13px', fontFamily: 'var(--font-dm-sans), sans-serif',
-                      fontWeight: 500,
-                    }}
-                    onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#2A2A28' }}
-                    onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'transparent' }}
-                  >
-                    + Nouvel artisan
-                  </button>
-                ) : (
-                  <form
-                    onSubmit={handleCreateArtisan}
-                    style={{ borderTop: '1px solid #2A2A28', padding: '14px', display: 'flex', flexDirection: 'column', gap: '8px' }}
-                  >
-                    <input
-                      autoFocus
-                      required
-                      placeholder="Nom *"
-                      value={newArtisan.nom}
-                      onChange={(e) => setNewArtisan((p) => ({ ...p, nom: e.target.value }))}
-                      style={{ width: '100%', padding: '8px 10px', backgroundColor: '#0D0D0B', border: '1px solid #2A2A28', borderRadius: '6px', color: '#F0EDE6', fontSize: '13px', outline: 'none', fontFamily: 'var(--font-dm-sans), sans-serif', boxSizing: 'border-box' }}
-                    />
-                    <MetierSelect
-                      value={newArtisan.metier}
-                      onChange={(v) => setNewArtisan((p) => ({ ...p, metier: v }))}
-                      compact
-                    />
-                    <input
-                      type="email"
-                      placeholder="Email"
-                      value={newArtisan.email}
-                      onChange={(e) => setNewArtisan((p) => ({ ...p, email: e.target.value }))}
-                      style={{ width: '100%', padding: '8px 10px', backgroundColor: '#0D0D0B', border: '1px solid #2A2A28', borderRadius: '6px', color: '#F0EDE6', fontSize: '13px', outline: 'none', fontFamily: 'var(--font-dm-sans), sans-serif', boxSizing: 'border-box' }}
-                    />
-                    <input
-                      placeholder="Téléphone"
-                      value={newArtisan.telephone}
-                      onChange={(e) => setNewArtisan((p) => ({ ...p, telephone: e.target.value }))}
-                      style={{ width: '100%', padding: '8px 10px', backgroundColor: '#0D0D0B', border: '1px solid #2A2A28', borderRadius: '6px', color: '#F0EDE6', fontSize: '13px', outline: 'none', fontFamily: 'var(--font-dm-sans), sans-serif', boxSizing: 'border-box' }}
-                    />
-                    <div style={{ display: 'flex', gap: '6px', marginTop: '2px' }}>
-                      <button
-                        type="submit"
-                        disabled={creatingArtisan || !newArtisan.nom.trim()}
-                        style={{ flex: 1, padding: '8px', backgroundColor: creatingArtisan ? '#9E8630' : '#E8C547', color: '#0D0D0B', border: 'none', borderRadius: '6px', fontSize: '12px', fontWeight: 600, cursor: creatingArtisan ? 'not-allowed' : 'pointer', fontFamily: 'var(--font-dm-sans), sans-serif' }}
-                      >
-                        {creatingArtisan ? 'Création…' : 'Créer et ajouter'}
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => { setShowNewArtisan(false); setNewArtisan({ nom: '', email: '', telephone: '', metier: '' }) }}
-                        style={{ padding: '8px 12px', backgroundColor: 'transparent', color: '#8A8880', border: '1px solid #2A2A28', borderRadius: '6px', fontSize: '12px', cursor: 'pointer', fontFamily: 'var(--font-dm-sans), sans-serif' }}
-                      >
-                        Annuler
-                      </button>
-                    </div>
-                  </form>
-                )}
-              </div>
-            )}
-          </div>
-
-          {/* Selected tags */}
-          {form.artisans_presents.length > 0 && (
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginTop: '10px' }}>
-              {form.artisans_presents.map((nom) => (
-                <span key={nom} style={{
-                  display: 'inline-flex', alignItems: 'center', gap: '6px',
-                  padding: '4px 10px', backgroundColor: '#1E1E1C', borderRadius: '20px',
-                  fontSize: '13px', color: '#E8C547', fontFamily: 'var(--font-dm-sans), sans-serif',
+            {/* Tab bar */}
+            <div style={{ display: 'flex', borderBottom: '1px solid #1E1E1C', overflowX: 'auto', padding: '0 4px' }}>
+              {TABS.map((t) => (
+                <button key={t.id} type="button" onClick={() => setTab(t.id)} style={{
+                  padding: '12px 16px', fontSize: '13px', background: 'none', border: 'none',
+                  borderBottom: tab === t.id ? '2px solid #E8C547' : '2px solid transparent',
+                  color: tab === t.id ? '#E8C547' : '#7A7870',
+                  fontFamily: 'var(--font-dm-sans), sans-serif', fontWeight: tab === t.id ? 600 : 400,
+                  cursor: 'pointer', whiteSpace: 'nowrap', marginBottom: '-1px', transition: 'color 0.15s',
                 }}>
-                  {nom}
-                  <button
-                    type="button"
-                    onClick={() => toggleArtisan(nom)}
-                    style={{ background: 'none', border: 'none', color: '#8A8880', cursor: 'pointer', fontSize: '14px', lineHeight: 1, padding: 0, display: 'flex' }}
-                  >×</button>
-                </span>
+                  {t.label}
+                </button>
               ))}
             </div>
-          )}
-        </div>
 
-        {/* Photos */}
-        <div style={{ backgroundColor: '#111110', border: '1px solid #1E1E1C', borderRadius: '12px', padding: '28px' }}>
-          <h2 style={{ fontFamily: 'var(--font-syne), sans-serif', fontSize: '15px', fontWeight: 600, color: '#F0EDE6', margin: '0 0 16px' }}>Photos du chantier</h2>
+            {/* Tab content */}
+            <div style={{ padding: '28px' }}>
 
-          <label
-            style={{
-              display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px',
-              padding: '24px', border: '1px dashed #1E1E1C', borderRadius: '8px', cursor: 'pointer',
-              color: '#8A8880', fontSize: '13px', fontFamily: 'var(--font-dm-sans), sans-serif',
-              marginBottom: photoPreviews.length ? '16px' : 0,
-            }}
-          >
-            <span style={{ fontSize: '24px' }}>↑</span>
-            <span>Cliquer pour ajouter des photos</span>
-            <span style={{ fontSize: '12px' }}>JPG, PNG, WEBP — plusieurs fichiers acceptés</span>
-            <input type="file" accept="image/*" multiple onChange={handlePhotoChange} style={{ display: 'none' }} />
-          </label>
+              {/* ── GÉNÉRAL ── */}
+              {tab === 'general' && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                  <div>
+                    <label style={labelStyle}>Chantier associé *</label>
+                    <div style={{ position: 'relative' }}>
+                      <select value={form.chantier_id} onChange={(e) => setField('chantier_id', e.target.value)} required
+                        style={{ ...inputStyle, cursor: 'pointer', appearance: 'none', WebkitAppearance: 'none', paddingRight: '40px' } as React.CSSProperties}
+                        onFocus={(e) => { focus(e); (e.target.nextSibling as HTMLElement).style.opacity = '1' }}
+                        onBlur={(e) => { blur(e); (e.target.nextSibling as HTMLElement).style.opacity = '0.5' }}>
+                        <option value="" style={{ backgroundColor: '#111110' }}>Sélectionner un chantier…</option>
+                        {chantiers.map((c) => (
+                          <option key={c.id} value={c.id} style={{ backgroundColor: '#111110' }}>{c.nom} — {c.client}</option>
+                        ))}
+                      </select>
+                      <svg width="16" height="16" viewBox="0 0 16 16" fill="none"
+                        style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none', opacity: 0.5, transition: 'opacity 0.15s' }}>
+                        <path d="M4 6L8 10L12 6" stroke="#E8C547" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                      </svg>
+                    </div>
+                  </div>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                    <div>
+                      <label style={labelStyle}>Date de visite *</label>
+                      <input type="date" value={form.date_visite} onChange={(e) => setField('date_visite', e.target.value)} required
+                        style={{ ...inputStyle, colorScheme: 'dark' } as React.CSSProperties} onFocus={focus} onBlur={blur} />
+                    </div>
+                    <div>
+                      <label style={labelStyle}>Prochaine visite</label>
+                      <input type="date" value={form.date_prochaine_visite} onChange={(e) => setField('date_prochaine_visite', e.target.value)}
+                        style={{ ...inputStyle, colorScheme: 'dark' } as React.CSSProperties} onFocus={focus} onBlur={blur} />
+                    </div>
+                  </div>
+                  <div>
+                    <label style={labelStyle}>Observations / remarques</label>
+                    <textarea value={form.observations} onChange={(e) => setField('observations', e.target.value)} rows={4}
+                      placeholder="Décrivez l'état du chantier, les points importants observés…"
+                      style={{ ...inputStyle, resize: 'vertical', lineHeight: '1.6' }} onFocus={focus} onBlur={blur} />
+                  </div>
+                  <div>
+                    <label style={labelStyle}>Travaux à réaliser</label>
+                    <textarea value={form.travaux_a_faire} onChange={(e) => setField('travaux_a_faire', e.target.value)} rows={3}
+                      placeholder="Listez les tâches à effectuer avant la prochaine visite…"
+                      style={{ ...inputStyle, resize: 'vertical', lineHeight: '1.6' }} onFocus={focus} onBlur={blur} />
+                  </div>
+                </div>
+              )}
 
-          {photoPreviews.length > 0 && (
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '10px' }}>
-              {photoPreviews.map((src, i) => (
-                <div key={i} style={{ position: 'relative', borderRadius: '6px', overflow: 'hidden', aspectRatio: '1' }}>
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={src} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                  <button
-                    type="button"
-                    onClick={() => removePhoto(i)}
-                    style={{ position: 'absolute', top: '4px', right: '4px', width: '20px', height: '20px', borderRadius: '50%', border: 'none', backgroundColor: 'rgba(0,0,0,0.7)', color: '#fff', cursor: 'pointer', fontSize: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-                  >
-                    ×
+              {/* ── PRÉSENCES ── */}
+              {tab === 'presences' && (
+                <div>
+                  {presences.length === 0 ? (
+                    <p style={{ color: '#8A8880', fontSize: '14px', fontFamily: 'var(--font-dm-sans), sans-serif' }}>
+                      Aucun artisan enregistré. Ajoutez-en dans la section Artisans.
+                    </p>
+                  ) : (
+                    <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                      <thead>
+                        <tr>
+                          {['Nom', 'Société / Métier', 'Statut', 'Convoqué'].map((h) => (
+                            <th key={h} style={{
+                              fontFamily: 'var(--font-syne), sans-serif', fontWeight: 700,
+                              fontSize: '11px', letterSpacing: '0.08em', textTransform: 'uppercase',
+                              color: '#7A7870', textAlign: 'left', padding: '8px 12px', borderBottom: '1px solid #1E1E1C',
+                            }}>{h}</th>
+                          ))}
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {presences.map((p, i) => {
+                          const meta = STATUT_META[p.statut]
+                          return (
+                            <tr key={p.artisanId} style={{ backgroundColor: i % 2 === 0 ? '#0D0D0B' : '#111110' }}>
+                              <td style={{ padding: '10px 12px', fontSize: '14px', color: '#F0EDE6', fontFamily: 'var(--font-dm-sans), sans-serif' }}>
+                                {p.nom}
+                              </td>
+                              <td style={{ padding: '10px 12px', fontSize: '13px', color: '#8A8880', fontFamily: 'var(--font-dm-sans), sans-serif' }}>
+                                {p.societe || '—'}
+                              </td>
+                              <td style={{ padding: '10px 12px' }}>
+                                <button type="button" onClick={() => cycleStatut(p.artisanId)} title={meta.label}
+                                  style={{
+                                    width: '34px', height: '34px', borderRadius: '8px', border: 'none', cursor: 'pointer',
+                                    backgroundColor: meta.bg, color: meta.color,
+                                    fontFamily: 'var(--font-syne), sans-serif', fontWeight: 700, fontSize: '13px', transition: 'all 0.15s',
+                                  }}>
+                                  {p.statut}
+                                </button>
+                              </td>
+                              <td style={{ padding: '10px 12px' }}>
+                                <button type="button" onClick={() => toggleConvoque(p.artisanId)}
+                                  style={{
+                                    width: '20px', height: '20px', borderRadius: '4px', cursor: 'pointer',
+                                    border: `2px solid ${p.convoque ? '#E8C547' : '#3A3A38'}`,
+                                    backgroundColor: p.convoque ? '#E8C547' : 'transparent',
+                                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                  }}>
+                                  {p.convoque && <span style={{ color: '#0D0D0B', fontSize: '10px', fontWeight: 700, lineHeight: 1 }}>✓</span>}
+                                </button>
+                              </td>
+                            </tr>
+                          )
+                        })}
+                      </tbody>
+                    </table>
+                  )}
+                  <div style={{ display: 'flex', gap: '16px', marginTop: '14px', fontSize: '12px', fontFamily: 'var(--font-dm-sans), sans-serif' }}>
+                    {STATUT_ORDER.map((s) => (
+                      <span key={s} style={{ color: STATUT_META[s].color }}>● {s} = {STATUT_META[s].label}</span>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* ── RÉSERVES ── */}
+              {tab === 'reserves' && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                  {reserves.map((r, idx) => (
+                    <div key={r.id} style={{ backgroundColor: '#0D0D0B', border: '1px solid #1E1E1C', borderRadius: '10px', padding: '20px' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
+                        <span style={{ fontFamily: 'var(--font-syne), sans-serif', fontWeight: 700, fontSize: '14px', color: '#E8C547' }}>
+                          Réserve 1.{idx + 1}
+                        </span>
+                        <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                          <button type="button"
+                            onClick={() => updateReserve(r.id, 'statut', r.statut === 'Ouvert' ? 'Levé' : 'Ouvert')}
+                            style={{
+                              padding: '3px 10px', borderRadius: '20px', fontSize: '12px', fontWeight: 500,
+                              border: 'none', cursor: 'pointer', fontFamily: 'var(--font-dm-sans), sans-serif',
+                              backgroundColor: r.statut === 'Ouvert' ? 'rgba(248,113,113,0.15)' : 'rgba(74,222,128,0.15)',
+                              color: r.statut === 'Ouvert' ? '#f87171' : '#4ade80',
+                            }}>
+                            {r.statut}
+                          </button>
+                          <button type="button" onClick={() => deleteReserve(r.id)}
+                            style={{ background: 'none', border: 'none', color: '#8A8880', cursor: 'pointer', fontSize: '18px', padding: '0 4px', lineHeight: 1 }}>
+                            ×
+                          </button>
+                        </div>
+                      </div>
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '14px' }}>
+                        <div style={{ gridColumn: '1 / -1' }}>
+                          <label style={labelStyle}>Description</label>
+                          <textarea value={r.description} onChange={(e) => updateReserve(r.id, 'description', e.target.value)}
+                            rows={2} placeholder="Décrire la réserve…"
+                            style={{ ...inputStyle, resize: 'vertical', lineHeight: '1.5', fontSize: '13px' }}
+                            onFocus={focus} onBlur={blur} />
+                        </div>
+                        <div>
+                          <label style={labelStyle}>Lot concerné</label>
+                          <select value={r.lot} onChange={(e) => updateReserve(r.id, 'lot', e.target.value)}
+                            style={{ ...inputStyle, appearance: 'none', fontSize: '13px' } as React.CSSProperties}
+                            onFocus={focus} onBlur={blur}>
+                            <option value="">— Sélectionner —</option>
+                            {lots.map((l) => <option key={l.id} value={l.nom} style={{ backgroundColor: '#111110' }}>{l.nom || '(sans nom)'}</option>)}
+                          </select>
+                        </div>
+                        <div>
+                          <label style={labelStyle}>Responsable</label>
+                          <input value={r.responsable} onChange={(e) => updateReserve(r.id, 'responsable', e.target.value)}
+                            placeholder="Entreprise / Artisan" style={{ ...inputStyle, fontSize: '13px' }} onFocus={focus} onBlur={blur} />
+                        </div>
+                      </div>
+                      {/* Reserve photos */}
+                      <div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px' }}>
+                          <span style={{ ...labelStyle, marginBottom: 0 }}>Photos annotées</span>
+                          <label style={{ cursor: 'pointer' }}>
+                            <span style={{
+                              padding: '3px 10px', backgroundColor: 'rgba(232,197,71,0.1)', color: '#E8C547',
+                              borderRadius: '6px', fontSize: '12px', fontWeight: 500,
+                              fontFamily: 'var(--font-dm-sans), sans-serif',
+                            }}>
+                              📷 Ajouter photo
+                            </span>
+                            <input type="file" accept="image/*" style={{ display: 'none' }}
+                              onChange={(e) => {
+                                const file = e.target.files?.[0]
+                                if (!file) return
+                                const src = URL.createObjectURL(file)
+                                setAnnotatorState({ reserveId: r.id, imageSrc: src })
+                                e.target.value = ''
+                              }} />
+                          </label>
+                        </div>
+                        {r.photos.length > 0 && (
+                          <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                            {r.photos.map((src, pi) => (
+                              <div key={pi} style={{ position: 'relative', width: '80px', height: '80px' }}>
+                                {/* eslint-disable-next-line @next/next/no-img-element */}
+                                <img src={src} alt="" style={{ width: '80px', height: '80px', objectFit: 'cover', borderRadius: '6px', border: '1px solid #1E1E1C' }} />
+                                <button type="button" onClick={() => removeReservePhoto(r.id, pi)}
+                                  style={{ position: 'absolute', top: '3px', right: '3px', width: '18px', height: '18px', borderRadius: '50%', border: 'none', backgroundColor: 'rgba(0,0,0,0.75)', color: '#fff', cursor: 'pointer', fontSize: '11px', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0 }}>
+                                  ×
+                                </button>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                  <button type="button" onClick={addReserve}
+                    style={{ padding: '14px', border: '1px dashed #1E1E1C', borderRadius: '10px', backgroundColor: 'transparent', color: '#8A8880', fontSize: '13px', fontFamily: 'var(--font-dm-sans), sans-serif', cursor: 'pointer', transition: 'all 0.15s' }}
+                    onMouseEnter={(e) => { e.currentTarget.style.borderColor = 'rgba(232,197,71,0.4)'; e.currentTarget.style.color = '#E8C547' }}
+                    onMouseLeave={(e) => { e.currentTarget.style.borderColor = '#1E1E1C'; e.currentTarget.style.color = '#8A8880' }}>
+                    + Ajouter une réserve
                   </button>
                 </div>
-              ))}
+              )}
+
+              {/* ── DÉCISIONS ── */}
+              {tab === 'decisions' && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                  {decisions.map((d, idx) => (
+                    <div key={d.id} style={{ display: 'grid', gridTemplateColumns: '1fr 160px 140px 28px', gap: '10px', alignItems: 'end', backgroundColor: '#0D0D0B', border: '1px solid #1E1E1C', borderRadius: '8px', padding: '16px' }}>
+                      <div>
+                        <label style={labelStyle}>Décision {idx + 1}</label>
+                        <textarea value={d.description} onChange={(e) => updateDecision(d.id, 'description', e.target.value)}
+                          rows={2} placeholder="Décrire la décision prise…"
+                          style={{ ...inputStyle, resize: 'vertical', lineHeight: '1.5', fontSize: '13px' }} onFocus={focus} onBlur={blur} />
+                      </div>
+                      <div>
+                        <label style={labelStyle}>Responsable</label>
+                        <input value={d.responsable} onChange={(e) => updateDecision(d.id, 'responsable', e.target.value)}
+                          placeholder="Nom / Société" style={{ ...inputStyle, fontSize: '13px' }} onFocus={focus} onBlur={blur} />
+                      </div>
+                      <div>
+                        <label style={labelStyle}>Échéance</label>
+                        <input type="date" value={d.echeance} onChange={(e) => updateDecision(d.id, 'echeance', e.target.value)}
+                          style={{ ...inputStyle, colorScheme: 'dark', fontSize: '13px' } as React.CSSProperties} onFocus={focus} onBlur={blur} />
+                      </div>
+                      <button type="button" onClick={() => deleteDecision(d.id)}
+                        style={{ background: 'none', border: 'none', color: '#8A8880', cursor: 'pointer', fontSize: '18px', paddingBottom: '10px' }}>
+                        ×
+                      </button>
+                    </div>
+                  ))}
+                  <button type="button" onClick={addDecision}
+                    style={{ padding: '14px', border: '1px dashed #1E1E1C', borderRadius: '10px', backgroundColor: 'transparent', color: '#8A8880', fontSize: '13px', fontFamily: 'var(--font-dm-sans), sans-serif', cursor: 'pointer', transition: 'all 0.15s' }}
+                    onMouseEnter={(e) => { e.currentTarget.style.borderColor = 'rgba(232,197,71,0.4)'; e.currentTarget.style.color = '#E8C547' }}
+                    onMouseLeave={(e) => { e.currentTarget.style.borderColor = '#1E1E1C'; e.currentTarget.style.color = '#8A8880' }}>
+                    + Ajouter une décision
+                  </button>
+                </div>
+              )}
+
+              {/* ── LOTS ── */}
+              {tab === 'lots' && (
+                <div>
+                  {lots.length > 0 && (
+                    <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: '16px' }}>
+                      <thead>
+                        <tr>
+                          {['Lot', 'Intervenant', 'Démarrage', 'Fin', 'Avancement', ''].map((h) => (
+                            <th key={h} style={{
+                              fontFamily: 'var(--font-syne), sans-serif', fontWeight: 700, fontSize: '11px',
+                              letterSpacing: '0.08em', textTransform: 'uppercase', color: '#7A7870',
+                              textAlign: 'left', padding: '8px 10px', borderBottom: '1px solid #1E1E1C',
+                            }}>{h}</th>
+                          ))}
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {lots.map((l, i) => (
+                          <tr key={l.id} style={{ backgroundColor: i % 2 === 0 ? '#0D0D0B' : '#111110' }}>
+                            <td style={{ padding: '6px 8px' }}>
+                              <input value={l.nom} onChange={(e) => updateLot(l.id, 'nom', e.target.value)} placeholder="Nom du lot"
+                                style={cellInput}
+                                onFocus={(e) => { e.target.style.borderColor = '#E8C547'; e.target.style.backgroundColor = '#0D0D0B' }}
+                                onBlur={(e) => { e.target.style.borderColor = 'transparent'; e.target.style.backgroundColor = 'transparent' }} />
+                            </td>
+                            <td style={{ padding: '6px 8px' }}>
+                              <input value={l.intervenant} onChange={(e) => updateLot(l.id, 'intervenant', e.target.value)} placeholder="Entreprise"
+                                style={cellInput}
+                                onFocus={(e) => { e.target.style.borderColor = '#E8C547'; e.target.style.backgroundColor = '#0D0D0B' }}
+                                onBlur={(e) => { e.target.style.borderColor = 'transparent'; e.target.style.backgroundColor = 'transparent' }} />
+                            </td>
+                            <td style={{ padding: '6px 8px' }}>
+                              <input type="date" value={l.dateDemarrage} onChange={(e) => updateLot(l.id, 'dateDemarrage', e.target.value)}
+                                style={{ ...cellInput, colorScheme: 'dark' } as React.CSSProperties}
+                                onFocus={(e) => { e.target.style.borderColor = '#E8C547'; e.target.style.backgroundColor = '#0D0D0B' }}
+                                onBlur={(e) => { e.target.style.borderColor = 'transparent'; e.target.style.backgroundColor = 'transparent' }} />
+                            </td>
+                            <td style={{ padding: '6px 8px' }}>
+                              <input type="date" value={l.dateFin} onChange={(e) => updateLot(l.id, 'dateFin', e.target.value)}
+                                style={{ ...cellInput, colorScheme: 'dark' } as React.CSSProperties}
+                                onFocus={(e) => { e.target.style.borderColor = '#E8C547'; e.target.style.backgroundColor = '#0D0D0B' }}
+                                onBlur={(e) => { e.target.style.borderColor = 'transparent'; e.target.style.backgroundColor = 'transparent' }} />
+                            </td>
+                            <td style={{ padding: '6px 8px', minWidth: '130px' }}>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                <input type="range" min={0} max={100} step={5} value={l.avancement}
+                                  onChange={(e) => updateLot(l.id, 'avancement', parseInt(e.target.value))}
+                                  style={{ flex: 1, accentColor: '#E8C547', cursor: 'pointer' }} />
+                                <span style={{ fontSize: '12px', color: '#E8C547', fontWeight: 600, fontFamily: 'var(--font-syne), sans-serif', width: '32px', textAlign: 'right', flexShrink: 0 }}>
+                                  {l.avancement}%
+                                </span>
+                              </div>
+                            </td>
+                            <td style={{ padding: '6px 4px' }}>
+                              <button type="button" onClick={() => deleteLot(l.id)}
+                                style={{ background: 'none', border: 'none', color: '#8A8880', cursor: 'pointer', fontSize: '16px' }}>×</button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  )}
+                  <button type="button" onClick={addLot}
+                    style={{ padding: '14px', border: '1px dashed #1E1E1C', borderRadius: '10px', backgroundColor: 'transparent', color: '#8A8880', fontSize: '13px', fontFamily: 'var(--font-dm-sans), sans-serif', cursor: 'pointer', width: '100%', transition: 'all 0.15s' }}
+                    onMouseEnter={(e) => { e.currentTarget.style.borderColor = 'rgba(232,197,71,0.4)'; e.currentTarget.style.color = '#E8C547' }}
+                    onMouseLeave={(e) => { e.currentTarget.style.borderColor = '#1E1E1C'; e.currentTarget.style.color = '#8A8880' }}>
+                    + Ajouter un lot
+                  </button>
+                </div>
+              )}
+
+              {/* ── PHOTOS ── */}
+              {tab === 'photos' && (
+                <div>
+                  <label style={{
+                    display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px',
+                    padding: '28px', border: '1px dashed #1E1E1C', borderRadius: '8px', cursor: 'pointer',
+                    color: '#8A8880', fontSize: '13px', fontFamily: 'var(--font-dm-sans), sans-serif',
+                    marginBottom: photoPreviews.length ? '16px' : 0, transition: 'border-color 0.15s',
+                  }}
+                    onMouseEnter={(e) => (e.currentTarget.style.borderColor = 'rgba(232,197,71,0.3)')}
+                    onMouseLeave={(e) => (e.currentTarget.style.borderColor = '#1E1E1C')}>
+                    <span style={{ fontSize: '28px' }}>↑</span>
+                    <span>Cliquer pour ajouter des photos</span>
+                    <span style={{ fontSize: '12px' }}>JPG, PNG, WEBP — plusieurs fichiers acceptés</span>
+                    <input type="file" accept="image/*" multiple onChange={handlePhotoChange} style={{ display: 'none' }} />
+                  </label>
+                  {photoPreviews.length > 0 && (
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '10px' }}>
+                      {photoPreviews.map((src, i) => (
+                        <div key={i} style={{ position: 'relative', borderRadius: '6px', overflow: 'hidden', aspectRatio: '1' }}>
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img src={src} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                          <button type="button" onClick={() => removePhoto(i)}
+                            style={{ position: 'absolute', top: '4px', right: '4px', width: '20px', height: '20px', borderRadius: '50%', border: 'none', backgroundColor: 'rgba(0,0,0,0.75)', color: '#fff', cursor: 'pointer', fontSize: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                            ×
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* ── PROFIL ── */}
+              {tab === 'profil' && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                  <p style={{ color: '#8A8880', fontSize: '13px', fontFamily: 'var(--font-dm-sans), sans-serif', margin: 0 }}>
+                    Ces informations apparaissent dans l'en-tête du compte rendu. Sauvegardées automatiquement dans votre navigateur.
+                  </p>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                    <div>
+                      <label style={labelStyle}>Nom / Prénom</label>
+                      <input value={profile.nom} onChange={(e) => saveProfile({ ...profile, nom: e.target.value })}
+                        placeholder="Jean Dupont" style={inputStyle} onFocus={focus} onBlur={blur} />
+                    </div>
+                    <div>
+                      <label style={labelStyle}>Société</label>
+                      <input value={profile.societe} onChange={(e) => saveProfile({ ...profile, societe: e.target.value })}
+                        placeholder="Cabinet d'architecture" style={inputStyle} onFocus={focus} onBlur={blur} />
+                    </div>
+                    <div style={{ gridColumn: '1 / -1' }}>
+                      <label style={labelStyle}>Adresse</label>
+                      <input value={profile.adresse} onChange={(e) => saveProfile({ ...profile, adresse: e.target.value })}
+                        placeholder="12 rue de la Paix, 75001 Paris" style={inputStyle} onFocus={focus} onBlur={blur} />
+                    </div>
+                    <div>
+                      <label style={labelStyle}>Téléphone</label>
+                      <input value={profile.telephone} onChange={(e) => saveProfile({ ...profile, telephone: e.target.value })}
+                        placeholder="+33 6 00 00 00 00" style={inputStyle} onFocus={focus} onBlur={blur} />
+                    </div>
+                    <div>
+                      <label style={labelStyle}>Email</label>
+                      <input type="email" value={profile.email} onChange={(e) => saveProfile({ ...profile, email: e.target.value })}
+                        placeholder="contact@cabinet.fr" style={inputStyle} onFocus={focus} onBlur={blur} />
+                    </div>
+                    <div style={{ gridColumn: '1 / -1' }}>
+                      <label style={labelStyle}>Logo</label>
+                      <label style={{ display: 'flex', alignItems: 'center', gap: '14px', cursor: 'pointer' }}>
+                        {profile.logo ? (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img src={profile.logo} alt="Logo" style={{ height: '52px', width: 'auto', borderRadius: '6px', border: '1px solid #1E1E1C' }} />
+                        ) : (
+                          <div style={{ width: '52px', height: '52px', borderRadius: '6px', border: '1px dashed #1E1E1C', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#8A8880', fontSize: '22px' }}>↑</div>
+                        )}
+                        <span style={{ fontSize: '13px', color: '#8A8880', fontFamily: 'var(--font-dm-sans), sans-serif' }}>
+                          {profile.logo ? 'Changer le logo' : 'Importer un logo (PNG, SVG)'}
+                        </span>
+                        <input type="file" accept="image/*" style={{ display: 'none' }}
+                          onChange={(e) => {
+                            const file = e.target.files?.[0]
+                            if (!file) return
+                            const reader = new FileReader()
+                            reader.onload = (ev) => saveProfile({ ...profile, logo: ev.target?.result as string })
+                            reader.readAsDataURL(file)
+                          }} />
+                      </label>
+                    </div>
+                  </div>
+                </div>
+              )}
+
             </div>
+          </div>
+
+          {/* Error + Submit */}
+          {error && (
+            <p style={{ fontSize: '13px', color: '#E85447', fontFamily: 'var(--font-dm-sans), sans-serif', margin: 0 }}>{error}</p>
           )}
-        </div>
+          <div style={{ display: 'flex', gap: '12px' }}>
+            <button type="submit" disabled={loading}
+              style={{ flex: 1, padding: '12px', backgroundColor: loading ? '#9E8630' : '#E8C547', color: '#0D0D0B', border: 'none', borderRadius: '8px', fontSize: '14px', fontWeight: 600, cursor: loading ? 'not-allowed' : 'pointer', fontFamily: 'var(--font-dm-sans), sans-serif' }}>
+              {loading ? 'Enregistrement…' : 'Enregistrer le compte rendu'}
+            </button>
+            <Link href="/dashboard/comptes-rendus"
+              style={{ padding: '12px 20px', backgroundColor: 'transparent', color: '#8A8880', border: '1px solid #1E1E1C', borderRadius: '8px', fontSize: '14px', fontWeight: 500, textDecoration: 'none', fontFamily: 'var(--font-dm-sans), sans-serif', display: 'flex', alignItems: 'center' }}>
+              Annuler
+            </Link>
+          </div>
+        </form>
 
-        {error && (
-          <p style={{ fontSize: '13px', color: '#E85447', fontFamily: 'var(--font-dm-sans), sans-serif', margin: 0 }}>{error}</p>
-        )}
+        {/* ── Right : PDF preview ── */}
+        <div style={{ position: 'sticky', top: '0' }}>
+          <p style={{ fontFamily: 'var(--font-syne), sans-serif', fontWeight: 700, fontSize: '11px', letterSpacing: '0.1em', textTransform: 'uppercase', color: '#7A7870', margin: '0 0 12px' }}>
+            Aperçu PDF
+          </p>
+          <div style={{
+            backgroundColor: '#fff', borderRadius: '8px', padding: '24px',
+            fontSize: '10px', color: '#1a1a1a', fontFamily: 'Georgia, serif', lineHeight: 1.4,
+            boxShadow: '0 4px 32px rgba(0,0,0,0.5)',
+            maxHeight: 'calc(100vh - 140px)', overflowY: 'auto',
+          }}>
 
-        <div style={{ display: 'flex', gap: '12px' }}>
-          <button
-            type="submit"
-            disabled={loading}
-            style={{ flex: 1, padding: '12px', backgroundColor: loading ? '#9E8630' : '#E8C547', color: '#0D0D0B', border: 'none', borderRadius: '8px', fontSize: '14px', fontWeight: 600, cursor: loading ? 'not-allowed' : 'pointer', fontFamily: 'var(--font-dm-sans), sans-serif' }}
-          >
-            {loading ? 'Enregistrement…' : 'Enregistrer et générer PDF'}
-          </button>
-          <Link href="/dashboard/comptes-rendus" style={{ padding: '12px 20px', backgroundColor: 'transparent', color: '#8A8880', border: '1px solid #1E1E1C', borderRadius: '8px', fontSize: '14px', fontWeight: 500, textDecoration: 'none', fontFamily: 'var(--font-dm-sans), sans-serif', display: 'flex', alignItems: 'center' }}>
-            Annuler
-          </Link>
+            {/* PDF header */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '14px', paddingBottom: '10px', borderBottom: '2px solid #111' }}>
+              <div>
+                {profile.logo && (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={profile.logo} alt="" style={{ height: '32px', width: 'auto', display: 'block', marginBottom: '6px' }} />
+                )}
+                <div style={{ fontWeight: 700, fontSize: '10px' }}>{profile.societe || "Cabinet d'architecture"}</div>
+                {profile.nom      && <div style={{ color: '#555', fontSize: '9px' }}>{profile.nom}</div>}
+                {profile.adresse  && <div style={{ color: '#555', fontSize: '9px' }}>{profile.adresse}</div>}
+                {profile.telephone && <div style={{ color: '#555', fontSize: '9px' }}>{profile.telephone}</div>}
+                {profile.email    && <div style={{ color: '#555', fontSize: '9px' }}>{profile.email}</div>}
+              </div>
+              <div style={{ textAlign: 'right' }}>
+                <div style={{ fontWeight: 700, fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Compte Rendu de Visite</div>
+                <div style={{ fontSize: '10px', color: '#222', marginTop: '4px', fontWeight: 600 }}>{selectedChantier?.nom ?? '—'}</div>
+                {selectedChantier?.client && <div style={{ fontSize: '9px', color: '#555' }}>{selectedChantier.client}</div>}
+                <div style={{ fontSize: '9px', color: '#777', marginTop: '2px' }}>
+                  Visite du {form.date_visite ? new Date(form.date_visite + 'T12:00:00').toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' }) : '—'}
+                </div>
+                {form.date_prochaine_visite && (
+                  <div style={{ fontSize: '9px', color: '#999' }}>
+                    Prochaine : {new Date(form.date_prochaine_visite + 'T12:00:00').toLocaleDateString('fr-FR', { day: 'numeric', month: 'long' })}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* PDF presences */}
+            {presences.length > 0 && (
+              <div style={{ marginBottom: '12px' }}>
+                <div style={pdfSectionTitle}>Présences</div>
+                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '8px' }}>
+                  <thead>
+                    <tr style={{ backgroundColor: '#f5f5f5' }}>
+                      {['Nom', 'Société', 'Statut', 'Convoqué'].map((h) => (
+                        <th key={h} style={{ padding: '3px 6px', textAlign: 'left', border: '1px solid #e0e0e0', fontWeight: 600 }}>{h}</th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {presences.map((p) => {
+                      const meta = STATUT_META[p.statut]
+                      return (
+                        <tr key={p.artisanId}>
+                          <td style={{ padding: '2px 6px', border: '1px solid #e0e0e0' }}>{p.nom}</td>
+                          <td style={{ padding: '2px 6px', border: '1px solid #e0e0e0', color: '#555' }}>{p.societe || '—'}</td>
+                          <td style={{ padding: '2px 6px', border: '1px solid #e0e0e0', textAlign: 'center' }}>
+                            <span style={{ backgroundColor: meta.bg, color: meta.color, padding: '1px 5px', borderRadius: '3px', fontWeight: 700 }}>{p.statut}</span>
+                          </td>
+                          <td style={{ padding: '2px 6px', border: '1px solid #e0e0e0', textAlign: 'center' }}>{p.convoque ? '✓' : ''}</td>
+                        </tr>
+                      )
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            )}
+
+            {/* PDF reserves */}
+            {reserves.length > 0 && (
+              <div style={{ marginBottom: '12px' }}>
+                <div style={pdfSectionTitle}>
+                  Réserves — {reserves.filter((r) => r.statut === 'Ouvert').length} ouverte{reserves.filter((r) => r.statut === 'Ouvert').length !== 1 ? 's' : ''}
+                </div>
+                {reserves.map((r, i) => (
+                  <div key={r.id} style={{ marginBottom: '6px', padding: '6px', border: '1px solid #e0e0e0', borderRadius: '3px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '3px' }}>
+                      <span style={{ fontWeight: 700, fontSize: '8px' }}>Réserve 1.{i + 1}{r.lot ? ` — ${r.lot}` : ''}</span>
+                      <span style={{
+                        fontSize: '7px', padding: '1px 5px', borderRadius: '3px', fontWeight: 600,
+                        backgroundColor: r.statut === 'Ouvert' ? '#fee2e2' : '#dcfce7',
+                        color: r.statut === 'Ouvert' ? '#dc2626' : '#16a34a',
+                      }}>{r.statut}</span>
+                    </div>
+                    <div style={{ fontSize: '8px', color: '#333' }}>{r.description || '—'}</div>
+                    {r.responsable && <div style={{ fontSize: '7px', color: '#777', marginTop: '2px' }}>Resp. : {r.responsable}</div>}
+                    {r.photos.length > 0 && (
+                      <div style={{ display: 'flex', gap: '4px', marginTop: '5px' }}>
+                        {r.photos.slice(0, 4).map((src, pi) => (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img key={pi} src={src} alt="" style={{ width: '38px', height: '38px', objectFit: 'cover', borderRadius: '2px', border: '1px solid #ddd' }} />
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* PDF lots */}
+            {lots.length > 0 && (
+              <div style={{ marginBottom: '12px' }}>
+                <div style={pdfSectionTitle}>Avancement des lots</div>
+                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '8px' }}>
+                  <thead>
+                    <tr style={{ backgroundColor: '#f5f5f5' }}>
+                      {['Lot', 'Intervenant', 'Démarrage', 'Fin', 'Avancement'].map((h) => (
+                        <th key={h} style={{ padding: '3px 6px', textAlign: 'left', border: '1px solid #e0e0e0', fontWeight: 600 }}>{h}</th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {lots.map((l) => (
+                      <tr key={l.id}>
+                        <td style={{ padding: '2px 6px', border: '1px solid #e0e0e0', fontWeight: 500 }}>{l.nom || '—'}</td>
+                        <td style={{ padding: '2px 6px', border: '1px solid #e0e0e0', color: '#555' }}>{l.intervenant || '—'}</td>
+                        <td style={{ padding: '2px 6px', border: '1px solid #e0e0e0', color: '#555' }}>
+                          {l.dateDemarrage ? new Date(l.dateDemarrage + 'T12:00:00').toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: '2-digit' }) : '—'}
+                        </td>
+                        <td style={{ padding: '2px 6px', border: '1px solid #e0e0e0', color: '#555' }}>
+                          {l.dateFin ? new Date(l.dateFin + 'T12:00:00').toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: '2-digit' }) : '—'}
+                        </td>
+                        <td style={{ padding: '2px 6px', border: '1px solid #e0e0e0', minWidth: '60px' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                            <div style={{ flex: 1, height: '4px', backgroundColor: '#e5e7eb', borderRadius: '2px' }}>
+                              <div style={{ height: '4px', backgroundColor: '#b45309', borderRadius: '2px', width: `${l.avancement}%` }} />
+                            </div>
+                            <span style={{ fontSize: '7px', fontWeight: 700, color: '#b45309', flexShrink: 0 }}>{l.avancement}%</span>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+
+            {/* PDF decisions */}
+            {decisions.length > 0 && (
+              <div style={{ marginBottom: '12px' }}>
+                <div style={pdfSectionTitle}>Décisions</div>
+                {decisions.map((d, i) => (
+                  <div key={d.id} style={{ display: 'flex', gap: '6px', marginBottom: '4px', fontSize: '8px' }}>
+                    <span style={{ color: '#b45309', fontWeight: 700, flexShrink: 0 }}>{i + 1}.</span>
+                    <div style={{ flex: 1 }}>
+                      {d.description || '—'}
+                      {d.responsable && <span style={{ color: '#666' }}> — {d.responsable}</span>}
+                    </div>
+                    {d.echeance && (
+                      <span style={{ color: '#888', flexShrink: 0 }}>
+                        {new Date(d.echeance + 'T12:00:00').toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' })}
+                      </span>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* PDF observations */}
+            {form.observations && (
+              <div style={{ marginBottom: '12px' }}>
+                <div style={pdfSectionTitle}>Observations</div>
+                <p style={{ fontSize: '8px', color: '#333', lineHeight: 1.6, margin: 0, whiteSpace: 'pre-wrap' }}>{form.observations}</p>
+              </div>
+            )}
+
+            {/* PDF travaux */}
+            {form.travaux_a_faire && (
+              <div style={{ marginBottom: '12px' }}>
+                <div style={pdfSectionTitle}>Travaux à réaliser</div>
+                <p style={{ fontSize: '8px', color: '#333', lineHeight: 1.6, margin: 0, whiteSpace: 'pre-wrap' }}>{form.travaux_a_faire}</p>
+              </div>
+            )}
+
+            {/* PDF photos */}
+            {photoPreviews.length > 0 && (
+              <div>
+                <div style={pdfSectionTitle}>Photos</div>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '4px' }}>
+                  {photoPreviews.map((src, i) => (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img key={i} src={src} alt="" style={{ width: '100%', aspectRatio: '4/3', objectFit: 'cover', borderRadius: '2px', border: '1px solid #e0e0e0' }} />
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Empty state */}
+            {!form.chantier_id && presences.length === 0 && reserves.length === 0 && lots.length === 0 && !form.observations && (
+              <p style={{ textAlign: 'center', color: '#bbb', fontSize: '9px', padding: '20px 0', margin: 0 }}>
+                Remplissez le formulaire pour voir l'aperçu
+              </p>
+            )}
+          </div>
         </div>
-      </form>
+      </div>
+
+      {/* PhotoAnnotator modal */}
+      {annotatorState && (
+        <PhotoAnnotator
+          imageSrc={annotatorState.imageSrc}
+          onSave={handleAnnotated}
+          onClose={() => setAnnotatorState(null)}
+        />
+      )}
     </div>
   )
 }

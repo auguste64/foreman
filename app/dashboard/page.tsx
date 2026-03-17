@@ -8,6 +8,12 @@ export default async function DashboardPage() {
 
   if (!user) redirect('/login')
 
+  const { data: profile } = await supabase.from('profiles').select('nom_complet').eq('id', user.id).single()
+
+  const prenom = user.email?.split('.')[0] ?? ''
+  const prenomFormate = prenom.charAt(0).toUpperCase() + prenom.slice(1).replace(/[0-9]/g, '')
+  const displayName = profile?.nom_complet ?? prenomFormate
+
   const [
     { count: chantiersCount },
     { count: chantiersActifsCount },
@@ -37,6 +43,7 @@ export default async function DashboardPage() {
   return (
     <DashboardClient
       user={user}
+      displayName={displayName}
       stats={{
         total: chantiersCount ?? 0,
         actifs: chantiersActifsCount ?? 0,

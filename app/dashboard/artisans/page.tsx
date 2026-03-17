@@ -124,66 +124,38 @@ export default function ArtisansPage() {
       )}
 
       {!loading && artisans.length > 0 && (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '16px' }}>
-          {artisans.map((artisan) => (
-            <Link
-              key={artisan.id}
-              href={`/dashboard/artisans/${artisan.id}`}
-              className="transition-all duration-300 hover:scale-[1.02] hover:shadow-[0_0_30px_rgba(232,197,71,0.2)]"
-              style={{ textDecoration: 'none' }}
-            >
-              <div
-                style={{
-                  backgroundColor: '#111110',
-                  border: '1px solid #1E1E1C',
-                  borderRadius: '12px',
-                  padding: '24px',
-                  cursor: 'pointer',
-                  transition: 'border-color 0.15s',
-                  height: '100%',
-                  boxSizing: 'border-box',
-                }}
-                onMouseEnter={(e) => (e.currentTarget.style.borderColor = '#E8C547')}
-                onMouseLeave={(e) => (e.currentTarget.style.borderColor = '#1E1E1C')}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '20px' }}>
+          {artisans.map((artisan) => {
+            const initials = artisan.nom.split(' ').map((w: string) => w[0]).slice(0, 2).join('').toUpperCase()
+            return (
+              <Link
+                key={artisan.id}
+                href={`/dashboard/artisans/${artisan.id}`}
+                style={{ textDecoration: 'none', display: 'block', transition: 'all 0.25s ease' }}
+                onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-4px)'; e.currentTarget.style.borderColor = 'rgba(232,197,71,0.4)'; e.currentTarget.style.boxShadow = '0 12px 32px rgba(0,0,0,0.4)'; }}
+                onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.borderColor = '#1E1E1C'; e.currentTarget.style.boxShadow = 'none'; }}
               >
-                <div style={{ marginBottom: '14px' }}>
-                  <h3
-                    style={{
-                      fontFamily: 'var(--font-syne), sans-serif',
-                      fontSize: '16px',
-                      fontWeight: 600,
-                      color: '#F0EDE6',
-                      margin: '0 0 8px',
-                    }}
-                  >
+                <div style={{ backgroundColor: '#111110', border: '1px solid #1E1E1C', borderRadius: '12px', padding: '28px', height: '100%', boxSizing: 'border-box', transition: 'border-color 0.25s ease' }}>
+                  {/* Initials */}
+                  <div style={{ width: '48px', height: '48px', borderRadius: '50%', background: 'rgba(232,197,71,0.1)', color: '#E8C547', fontFamily: 'var(--font-syne), sans-serif', fontWeight: 700, fontSize: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '16px' }}>
+                    {initials}
+                  </div>
+                  {/* Name + badge */}
+                  <h3 style={{ fontFamily: 'var(--font-syne), sans-serif', fontSize: '16px', fontWeight: 700, color: '#F0EDE6', margin: '0 0 8px' }}>
                     {artisan.nom}
                   </h3>
-                  <span
-                    style={{
-                      display: 'inline-block',
-                      padding: '2px 10px',
-                      borderRadius: '20px',
-                      fontSize: '12px',
-                      fontWeight: 500,
-                      backgroundColor: '#1a2019',
-                      color: '#E8C547',
-                      fontFamily: 'var(--font-dm-sans), sans-serif',
-                    }}
-                  >
+                  <span style={{ display: 'inline-block', padding: '2px 10px', borderRadius: '20px', fontSize: '12px', fontWeight: 500, backgroundColor: 'rgba(232,197,71,0.1)', color: '#E8C547', fontFamily: 'var(--font-dm-sans), sans-serif', marginBottom: '14px' }}>
                     {artisan.metier}
                   </span>
+                  {/* Contact */}
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                    <p style={{ fontSize: '13px', color: '#8A8880', fontFamily: 'var(--font-dm-sans), sans-serif', margin: 0 }}>{artisan.email}</p>
+                    <p style={{ fontSize: '13px', color: '#8A8880', fontFamily: 'var(--font-dm-sans), sans-serif', margin: 0 }}>{artisan.telephone}</p>
+                  </div>
                 </div>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                  <p style={{ fontSize: '13px', color: '#8A8880', fontFamily: 'var(--font-dm-sans), sans-serif', margin: 0 }}>
-                    {artisan.email}
-                  </p>
-                  <p style={{ fontSize: '13px', color: '#8A8880', fontFamily: 'var(--font-dm-sans), sans-serif', margin: 0 }}>
-                    {artisan.telephone}
-                  </p>
-                </div>
-              </div>
-            </Link>
-          ))}
+              </Link>
+            )
+          })}
         </div>
       )}
     </div>

@@ -69,78 +69,70 @@ export default function ComptesRendusPage() {
         </div>
       )}
 
-      {!loading && items.length > 0 && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-          {items.map((cr) => (
-            <Link
-              key={cr.id}
-              href={`/dashboard/comptes-rendus/${cr.id}`}
-              className="transition-all duration-300 hover:scale-[1.02] hover:border-[#E8C547] hover:shadow-[0_0_30px_rgba(232,197,71,0.2)] cursor-pointer"
-              style={{
-                backgroundColor: '#111110',
-                border: '1px solid #1E1E1C',
-                borderRadius: '10px',
-                padding: '20px 24px',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '20px',
-                textDecoration: 'none',
-                transition: 'border-color 0.15s',
-              }}
-              onMouseEnter={(e) => (e.currentTarget.style.borderColor = '#E8C547')}
-              onMouseLeave={(e) => (e.currentTarget.style.borderColor = '#1E1E1C')}
-            >
-              {/* Progression circle */}
-              <div style={{
-                width: '48px',
-                height: '48px',
-                borderRadius: '50%',
-                border: '2px solid #E8C547',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                flexShrink: 0,
-              }}>
-                <span style={{ fontFamily: 'var(--font-syne), sans-serif', fontSize: '13px', fontWeight: 700, color: '#E8C547' }}>
-                  {cr.progression}%
-                </span>
-              </div>
+      {!loading && items.length > 0 && (() => {
+        const grouped = items.reduce((acc, cr) => {
+          const key = cr.chantier_id
+          if (!acc[key]) acc[key] = { chantier: cr.chantiers, items: [] }
+          acc[key].items.push(cr)
+          return acc
+        }, {} as Record<string, { chantier: any, items: any[] }>)
 
-              {/* Info */}
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '4px' }}>
-                  <span style={{ fontFamily: 'var(--font-syne), sans-serif', fontSize: '15px', fontWeight: 600, color: '#F0EDE6', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                    {cr.chantiers?.nom ?? '—'}
+        return (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0' }}>
+            {Object.entries(grouped).map(([key, group]) => (
+              <div key={key} style={{ marginBottom: '40px' }}>
+                {/* Section header */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px', paddingBottom: '12px', borderBottom: '1px solid #1E1E1C' }}>
+                  <span style={{ fontFamily: 'var(--font-syne), sans-serif', fontSize: '16px', fontWeight: 700, color: '#F0EDE6' }}>
+                    {group.chantier?.nom ?? '—'}
+                  </span>
+                  <span style={{ padding: '2px 8px', backgroundColor: 'rgba(232,197,71,0.1)', color: '#E8C547', borderRadius: '4px', fontSize: '11px', fontWeight: 600, fontFamily: 'var(--font-dm-sans), sans-serif' }}>
+                    {group.items.length} CR
                   </span>
                 </div>
-                <div style={{ display: 'flex', gap: '16px', fontSize: '13px', color: '#8A8880', fontFamily: 'var(--font-dm-sans), sans-serif' }}>
-                  <span>{cr.chantiers?.client ?? '—'}</span>
-                  {cr.artisans_presents?.length > 0 && (
-                    <span>{cr.artisans_presents.length} artisan{cr.artisans_presents.length !== 1 ? 's' : ''}</span>
-                  )}
+
+                {/* Rows */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                  {group.items.map((cr, index) => (
+                    <Link
+                      key={cr.id}
+                      href={`/dashboard/comptes-rendus/${cr.id}`}
+                      style={{ backgroundColor: '#111110', border: '1px solid #1E1E1C', borderRadius: '10px', padding: '16px 20px', display: 'flex', alignItems: 'center', gap: '20px', textDecoration: 'none', transition: 'all 0.15s ease' }}
+                      onMouseEnter={e => { e.currentTarget.style.transform = 'translateX(6px)'; e.currentTarget.style.background = 'rgba(232,197,71,0.03)'; e.currentTarget.style.borderColor = 'rgba(232,197,71,0.2)'; }}
+                      onMouseLeave={e => { e.currentTarget.style.transform = 'translateX(0)'; e.currentTarget.style.background = '#111110'; e.currentTarget.style.borderColor = '#1E1E1C'; }}
+                    >
+                      {/* Index badge */}
+                      <span style={{ padding: '2px 8px', backgroundColor: 'rgba(232,197,71,0.08)', color: '#E8C547', borderRadius: '4px', fontSize: '11px', fontWeight: 600, fontFamily: 'var(--font-dm-sans), sans-serif', flexShrink: 0 }}>
+                        CR #{index + 1}
+                      </span>
+
+                      {/* Info */}
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ display: 'flex', gap: '16px', fontSize: '13px', color: '#8A8880', fontFamily: 'var(--font-dm-sans), sans-serif' }}>
+                          <span>{cr.chantiers?.client ?? '—'}</span>
+                          {cr.artisans_presents?.length > 0 && (
+                            <span>{cr.artisans_presents.length} artisan{cr.artisans_presents.length !== 1 ? 's' : ''}</span>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Date */}
+                      <div style={{ fontSize: '13px', color: '#8A8880', fontFamily: 'var(--font-dm-sans), sans-serif', flexShrink: 0, textAlign: 'right' }}>
+                        <div>{new Date(cr.date_visite).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' })}</div>
+                        {cr.date_prochaine_visite && (
+                          <div style={{ fontSize: '12px', color: '#E8C547', marginTop: '2px' }}>
+                            Prochaine : {new Date(cr.date_prochaine_visite).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}
+                          </div>
+                        )}
+                      </div>
+                    </Link>
+                  ))}
                 </div>
               </div>
-
-              {/* Progress bar */}
-              <div style={{ width: '120px', flexShrink: 0 }}>
-                <div style={{ height: '4px', backgroundColor: '#1E1E1C', borderRadius: '2px', overflow: 'hidden' }}>
-                  <div style={{ height: '4px', backgroundColor: '#E8C547', borderRadius: '2px', width: `${cr.progression}%` }} />
-                </div>
-              </div>
-
-              {/* Date */}
-              <div style={{ fontSize: '13px', color: '#8A8880', fontFamily: 'var(--font-dm-sans), sans-serif', flexShrink: 0, textAlign: 'right' }}>
-                <div>{new Date(cr.date_visite).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' })}</div>
-                {cr.date_prochaine_visite && (
-                  <div style={{ fontSize: '12px', color: '#E8C547', marginTop: '2px' }}>
-                    Prochaine : {new Date(cr.date_prochaine_visite).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}
-                  </div>
-                )}
-              </div>
-            </Link>
-          ))}
-        </div>
-      )}
+            ))}
+          </div>
+        )
+      })()}
     </div>
   )
 }

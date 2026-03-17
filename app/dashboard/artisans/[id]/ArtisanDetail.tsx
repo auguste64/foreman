@@ -631,9 +631,9 @@ export default function ArtisanDetail({ artisan }: { artisan: Artisan }) {
                 <select
                   value={convocation.chantier_id}
                   onChange={(e) => setConvocation((prev) => ({ ...prev, chantier_id: e.target.value }))}
-                  style={{ ...inputStyle, cursor: 'pointer' }}
-                  onFocus={(e) => (e.target.style.borderColor = '#E8C547')}
-                  onBlur={(e) => (e.target.style.borderColor = '#1E1E1C')}
+                  style={{ width: '100%', padding: '12px 16px', background: '#111110', border: '1px solid #1E1E1C', borderRadius: '6px', color: '#F0EDE6', fontSize: '14px', appearance: 'none', WebkitAppearance: 'none', backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23E8C547' d='M6 8L1 3h10z'/%3E%3C/svg%3E")`, backgroundRepeat: 'no-repeat', backgroundPosition: 'right 14px center', paddingRight: '36px', cursor: 'pointer', outline: 'none', transition: 'border-color 0.2s ease, box-shadow 0.2s ease' }}
+                  onFocus={e => { e.currentTarget.style.borderColor = '#E8C547'; e.currentTarget.style.boxShadow = '0 0 0 2px rgba(232,197,71,0.15)'; }}
+                  onBlur={e => { e.currentTarget.style.borderColor = '#1E1E1C'; e.currentTarget.style.boxShadow = 'none'; }}
                 >
                   <option value="">— Sélectionner un chantier —</option>
                   {chantiers.map((c) => (
@@ -664,9 +664,9 @@ export default function ArtisanDetail({ artisan }: { artisan: Artisan }) {
                     type="date"
                     value={convocation.date}
                     onChange={(e) => setConvocation((prev) => ({ ...prev, date: e.target.value }))}
-                    style={{ ...inputStyle, colorScheme: 'dark' }}
-                    onFocus={(e) => (e.target.style.borderColor = '#E8C547')}
-                    onBlur={(e) => (e.target.style.borderColor = '#1E1E1C')}
+                    style={{ width: '100%', padding: '12px 16px', background: '#111110', border: '1px solid #1E1E1C', borderRadius: '6px', color: '#F0EDE6', fontSize: '14px', outline: 'none', colorScheme: 'dark', fontFamily: 'var(--font-dm-sans), sans-serif', boxSizing: 'border-box', transition: 'border-color 0.2s ease, box-shadow 0.2s ease' } as React.CSSProperties}
+                    onFocus={e => { e.currentTarget.style.borderColor = '#E8C547'; e.currentTarget.style.boxShadow = '0 0 0 2px rgba(232,197,71,0.15)'; }}
+                    onBlur={e => { e.currentTarget.style.borderColor = '#1E1E1C'; e.currentTarget.style.boxShadow = 'none'; }}
                   />
                 </div>
                 <div>
@@ -675,9 +675,9 @@ export default function ArtisanDetail({ artisan }: { artisan: Artisan }) {
                     type="time"
                     value={convocation.heure}
                     onChange={(e) => setConvocation((prev) => ({ ...prev, heure: e.target.value }))}
-                    style={{ ...inputStyle, colorScheme: 'dark' }}
-                    onFocus={(e) => (e.target.style.borderColor = '#E8C547')}
-                    onBlur={(e) => (e.target.style.borderColor = '#1E1E1C')}
+                    style={{ width: '100%', padding: '12px 16px', background: '#111110', border: '1px solid #1E1E1C', borderRadius: '6px', color: '#F0EDE6', fontSize: '14px', outline: 'none', colorScheme: 'dark', fontFamily: 'var(--font-dm-sans), sans-serif', boxSizing: 'border-box', transition: 'border-color 0.2s ease, box-shadow 0.2s ease' } as React.CSSProperties}
+                    onFocus={e => { e.currentTarget.style.borderColor = '#E8C547'; e.currentTarget.style.boxShadow = '0 0 0 2px rgba(232,197,71,0.15)'; }}
+                    onBlur={e => { e.currentTarget.style.borderColor = '#1E1E1C'; e.currentTarget.style.boxShadow = 'none'; }}
                   />
                 </div>
               </div>
@@ -689,9 +689,9 @@ export default function ArtisanDetail({ artisan }: { artisan: Artisan }) {
                   onChange={(e) => setConvocation((prev) => ({ ...prev, message: e.target.value }))}
                   placeholder="Instructions particulières, matériaux à apporter…"
                   rows={4}
-                  style={{ ...inputStyle, resize: 'vertical' } as React.CSSProperties}
-                  onFocus={(e) => (e.target.style.borderColor = '#E8C547')}
-                  onBlur={(e) => (e.target.style.borderColor = '#1E1E1C')}
+                  style={{ width: '100%', padding: '12px 16px', background: '#111110', border: '1px solid #1E1E1C', borderRadius: '6px', color: '#F0EDE6', fontSize: '14px', outline: 'none', fontFamily: 'var(--font-dm-sans), sans-serif', boxSizing: 'border-box', resize: 'vertical', lineHeight: '1.5', transition: 'border-color 0.2s ease, box-shadow 0.2s ease' } as React.CSSProperties}
+                  onFocus={e => { e.currentTarget.style.borderColor = '#E8C547'; e.currentTarget.style.boxShadow = '0 0 0 2px rgba(232,197,71,0.15)'; }}
+                  onBlur={e => { e.currentTarget.style.borderColor = '#1E1E1C'; e.currentTarget.style.boxShadow = 'none'; }}
                 />
               </div>
             </div>

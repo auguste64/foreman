@@ -5,8 +5,6 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { createChantier } from '@/lib/supabase/chantiers'
 
-const STATUTS = ['En cours', 'En pause', 'Terminé'] as const
-
 const inputStyle: React.CSSProperties = {
   width: '100%',
   padding: '10px 14px',
@@ -38,7 +36,7 @@ export default function NouveauChantierPage() {
     adresse: '',
     client: '',
     date_debut: '',
-    statut: 'En cours' as typeof STATUTS[number],
+    statut: 'En cours' as const,
   })
 
   function set(field: keyof typeof form) {
@@ -145,55 +143,20 @@ export default function NouveauChantierPage() {
             />
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
-            <div>
-              <label style={labelStyle}>Date de début *</label>
-              <input
-                type="date"
-                value={form.date_debut}
-                onChange={set('date_debut')}
-                required
-                style={{
-                  ...inputStyle,
-                  colorScheme: 'dark',
-                }}
-                onFocus={(e) => (e.target.style.borderColor = '#E8C547')}
-                onBlur={(e) => (e.target.style.borderColor = '#1E1E1C')}
-              />
-            </div>
-
-            <div>
-              <label style={labelStyle}>Statut</label>
-              <select
-                value={form.statut}
-                onChange={set('statut')}
-                style={{
-                  width: '100%',
-                  padding: '12px 40px 12px 16px',
-                  backgroundColor: '#111110',
-                  border: '1px solid #1E1E1C',
-                  borderRadius: '6px',
-                  color: '#F0EDE6',
-                  fontSize: '14px',
-                  outline: 'none',
-                  fontFamily: 'var(--font-dm-sans), sans-serif',
-                  cursor: 'pointer',
-                  appearance: 'none',
-                  WebkitAppearance: 'none',
-                  backgroundImage: "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 16 16' fill='none'%3E%3Cpath d='M4 6L8 10L12 6' stroke='%23E8C547' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E\")",
-                  backgroundRepeat: 'no-repeat',
-                  backgroundPosition: 'right 12px center',
-                }}
-                onFocus={(e) => { e.target.style.borderColor = '#E8C547'; e.target.style.boxShadow = '0 0 0 2px rgba(232,197,71,0.15)' }}
-                onBlur={(e) => { e.target.style.borderColor = '#1E1E1C'; e.target.style.boxShadow = 'none' }}
-              >
-                {STATUTS.map((s) => (
-                  <option key={s} value={s} style={{ backgroundColor: '#111110' }}>
-                    {s}
-                  </option>
-                ))}
-              </select>
-            </div>
+          <div>
+            <label style={labelStyle}>Date de début *</label>
+            <input
+              type="date"
+              value={form.date_debut}
+              onChange={set('date_debut')}
+              required
+              style={{
+                ...inputStyle,
+                colorScheme: 'dark',
+              }}
+              onFocus={(e) => (e.target.style.borderColor = '#E8C547')}
+              onBlur={(e) => (e.target.style.borderColor = '#1E1E1C')}
+            />
           </div>
 
           {error && (
