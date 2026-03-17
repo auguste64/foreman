@@ -24,8 +24,8 @@ export default function Home() {
   return (
     <>
       {/* NAV */}
-      <nav>
-        <a href="#" className="logo">FORE<span>MAN</span></a>
+      <nav className="lp-nav">
+        <a href="#" className="lp-logo">FORE<span>MAN</span></a>
         <ul>
           <li><a href="#features">Fonctionnalités</a></li>
           <li><a href="#workflow">Comment ça marche</a></li>
@@ -35,11 +35,11 @@ export default function Home() {
       </nav>
 
       {/* HERO */}
-      <section className="hero">
+      <section className="lp-hero">
         <div className="hero-grid"></div>
         <div className="hero-glow"></div>
 
-        <div className="badge">Conçu pour les architectes et MOE</div>
+        <div className="lp-badge">Conçu pour les architectes et MOE</div>
 
         <h1>Pilotez vos<br />chantiers.<br /><em>Sans friction.</em></h1>
 
@@ -79,7 +79,7 @@ export default function Home() {
       </section>
 
       {/* FEATURES */}
-      <section className="features" id="features">
+      <section className="lp-features" id="features">
         <div className="features-header reveal">
           <div>
             <div className="section-label">Fonctionnalités</div>
@@ -120,7 +120,7 @@ export default function Home() {
               <rect x="11" y="19" width="6" height="5" rx="1" fill="currentColor" opacity="0.4" />
               <rect x="23" y="19" width="6" height="5" rx="1" fill="currentColor" opacity="0.2" />
             </svg>
-            <div className="feature-title">Planning & interventions</div>
+            <div className="feature-title">Planning &amp; interventions</div>
             <div className="feature-text">Vue calendrier mensuelle et hebdo. Planifiez visites, livraisons, OPR et réunions de chantier. Sync automatique depuis les CR.</div>
             <div className="feature-num">03</div>
           </div>
@@ -160,7 +160,7 @@ export default function Home() {
       </section>
 
       {/* WORKFLOW */}
-      <section id="workflow">
+      <section className="lp-section" id="workflow">
         <div className="section-label reveal">Comment ça marche</div>
         <h2 className="section-title reveal">Du terrain au PDF en quelques minutes</h2>
 
@@ -222,16 +222,16 @@ export default function Home() {
               <span className="mock-row-label">Lot Peinture</span>
               <span className="mock-row-status status-wait">À venir</span>
             </div>
-            <div style={{ marginTop: 'auto', paddingTop: '20px', borderTop: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <span style={{ fontSize: '12px', color: 'var(--muted)' }}>3 artisans convoqués</span>
-              <span style={{ fontSize: '12px', color: 'var(--accent)', fontWeight: 500 }}>PDF généré ✓</span>
+            <div className="mock-footer">
+              <span>3 artisans convoqués</span>
+              <span className="mock-footer-accent">PDF généré ✓</span>
             </div>
           </div>
         </div>
       </section>
 
       {/* TESTIMONIALS */}
-      <section style={{ background: 'var(--surface)', borderTop: '1px solid var(--border)', borderBottom: '1px solid var(--border)' }}>
+      <section className="lp-testimonials">
         <div className="section-label reveal">Ils utilisent Foreman</div>
         <h2 className="section-title reveal">Ce qu&apos;en disent les architectes</h2>
 
@@ -272,7 +272,7 @@ export default function Home() {
       </section>
 
       {/* PRICING */}
-      <section className="pricing" id="pricing">
+      <section className="lp-pricing" id="pricing">
         <div className="section-label reveal">Tarifs</div>
         <h2 className="section-title reveal">Simple. Transparent.</h2>
         <p className="pricing-sub reveal">Aucun engagement. Résiliez quand vous voulez.</p>
@@ -311,10 +311,10 @@ export default function Home() {
       </section>
 
       {/* CTA FINAL */}
-      <section className="cta-section">
-        <h2 className="reveal">Prêt à<br /><em style={{ color: 'var(--accent)', fontStyle: 'normal' }}>prendre le chantier</em><br />en main ?</h2>
+      <section className="lp-cta">
+        <h2 className="reveal">Prêt à<br /><em>prendre le chantier</em><br />en main ?</h2>
         <p className="reveal">Rejoignez les architectes et MOE qui ont arrêté de perdre du temps sur l&apos;administratif.</p>
-        <a href="/login" className="btn-primary reveal" style={{ margin: '0 auto', width: 'fit-content' }}>
+        <a href="/login" className="btn-primary lp-cta-btn reveal">
           Commencer gratuitement
           <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
             <path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
@@ -323,7 +323,7 @@ export default function Home() {
       </section>
 
       {/* FOOTER */}
-      <footer>
+      <footer className="lp-footer">
         <div className="footer-copy">© 2026 Foreman. Tous droits réservés.</div>
         <div className="footer-links">
           <a href="#">Mentions légales</a>
