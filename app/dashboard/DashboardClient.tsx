@@ -196,12 +196,12 @@ export default function DashboardClient({
   const fmtEur = (n: number) => new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(n)
 
   const statCards = [
-    { label: 'CHANTIERS ACTIFS', value: String(stats.actifs), color: '#4ade80', desc: 'en cours actuellement', hint: stats.actifs > 0 ? { text: '● Actif', color: '#4ade80' } : null, href: null },
-    { label: 'TOTAL CHANTIERS',  value: String(stats.total),  color: '#60a5fa', desc: 'depuis le début',       hint: null, href: null },
+    { label: 'CHANTIERS ACTIFS', value: String(stats.actifs), color: '#F97316', desc: 'en cours actuellement', hint: stats.actifs > 0 ? { text: '● Actif', color: '#F97316' } : null, href: null },
+    { label: 'TOTAL CHANTIERS',  value: String(stats.total),  color: '#3B82F6', desc: 'depuis le début',       hint: null, href: null },
     {
       label: 'DEVIS ACCEPTÉS',
       value: fmtEur(devisAcceptes.montant),
-      color: '#22C55E',
+      color: '#10B981',
       desc: `${devisAcceptes.count} devis accepté${devisAcceptes.count !== 1 ? 's' : ''}`,
       hint: null,
       href: '/dashboard/documents?tab=devis&statut=accepte',
@@ -209,7 +209,7 @@ export default function DashboardClient({
     {
       label: 'IMPAYÉS',
       value: fmtEur(impayes.montant),
-      color: impayes.montant > 0 ? '#EF4444' : '#22C55E',
+      color: '#EF4444',
       desc: `${impayes.count} facture${impayes.count !== 1 ? 's' : ''} en attente`,
       hint: null,
       href: '/dashboard/finances',

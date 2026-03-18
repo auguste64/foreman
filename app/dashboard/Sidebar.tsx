@@ -95,7 +95,7 @@ export default function Sidebar({ email }: { email: string }) {
   }, [])
 
   return (
-    <aside className={syne.className} style={{ width: 240, flexShrink: 0, display: 'flex', flexDirection: 'column', height: '100vh', borderRight: '1px solid #1E1E1C', background: '#0D0D0B' }}>
+    <aside className={syne.className} style={{ width: 240, flexShrink: 0, display: 'flex', flexDirection: 'column', height: '100vh', borderRight: '1px solid #1E1E1C', background: 'rgba(13,13,11,0.5)' }}>
       <div style={{ padding: '24px', borderBottom: '1px solid #1E1E1C' }}>
         <Link href="/dashboard" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, textDecoration: 'none' }}>
           <span style={{ width: 3, height: 18, backgroundColor: '#F97316', borderRadius: 1, flexShrink: 0 }} />

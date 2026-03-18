@@ -1,0 +1,19 @@
+@keyframes auroraBlob1 {
+  0%   { transform: translate(0, 0) scale(1); }
+  33%  { transform: translate(80px, 60px) scale(1.1); }
+  66%  { transform: translate(30px, 100px) scale(0.95); }
+  100% { transform: translate(0, 0) scale(1); }
+}
+
+@keyframes auroraBlob2 {
+  0%   { transform: translate(0, 0) scale(1); }
+  50%  { transform: translate(-100px, -70px) scale(1.15); }
+  100% { transform: translate(0, 0) scale(1); }
+}
+
+@keyframes auroraBlob3 {
+  0%   { transform: translate(-50%, -50%) scale(1); }
+  25%  { transform: translate(calc(-50% - 80px), calc(-50% + 40px)) scale(1.2); }
+  75%  { transform: translate(calc(-50% + 80px), calc(-50% - 40px)) scale(0.9); }
+  100% { transform: translate(-50%, -50%) scale(1); }
+}
