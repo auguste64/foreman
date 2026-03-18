@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import { createCompteRendu } from '@/lib/supabase/comptes-rendus'
+import { useToast } from '@/components/ToastProvider'
 import type { Chantier } from '@/lib/supabase/chantiers'
 import PhotoAnnotator from '@/components/PhotoAnnotator'
 
@@ -86,8 +87,8 @@ const pdfSectionTitle: React.CSSProperties = {
 
 const focus = (e: React.FocusEvent<HTMLElement>) => {
   const t = e.target as HTMLElement
-  t.style.borderColor = '#E8C547'
-  t.style.boxShadow = '0 0 0 2px rgba(232,197,71,0.15)'
+  t.style.borderColor = '#F97316'
+  t.style.boxShadow = '0 0 0 2px rgba(249,115,22,0.15)'
   t.style.outline = 'none'
 }
 const blur = (e: React.FocusEvent<HTMLElement>) => {
@@ -103,6 +104,7 @@ const emptyProfile = (): Profile => ({ nom: '', societe: '', adresse: '', teleph
 
 export default function NouveauCompteRenduPage() {
   const router = useRouter()
+  const { showToast } = useToast()
   const [tab, setTab] = useState<Tab>('general')
   const [chantiers, setChantiers] = useState<Chantier[]>([])
   const [loading, setLoading] = useState(false)
@@ -245,16 +247,34 @@ export default function NouveauCompteRenduPage() {
     try {
       const photoUrls = await uploadPhotos()
       const artisansPresentsList = presences.filter((p) => p.statut === 'P').map((p) => p.nom)
-      const structuredData = {
-        presences, reserves: reserves.map((r) => ({ ...r, photos: [] })),
-        decisions, lots, observations: form.observations, travaux_a_faire: form.travaux_a_faire,
+
+      // observations stocke un objet structuré JSON dans la colonne TEXT
+      // (presences/reserves/decisions/lots n'ont pas de colonnes dédiées dans le schéma DB)
+      const observationsData = {
+        texte: form.observations,
+        presences,
+        reserves,
+        decisions,
+        lots,
       }
-      const cr = await createCompteRendu({
-        ...form,
+
+      const insertPayload = {
+        chantier_id: form.chantier_id,
+        date_visite: form.date_visite,
+        date_prochaine_visite: form.date_prochaine_visite || null,
+        progression: form.progression,
+        observations: JSON.stringify(observationsData),
+        travaux_a_faire: form.travaux_a_faire || null,
         artisans_presents: artisansPresentsList,
-        observations: JSON.stringify(structuredData),
         photos: photoUrls,
-      })
+      }
+      console.log('[handleSubmit] insertPayload keys:', Object.keys(insertPayload))
+      console.log('[handleSubmit] chantier_id:', insertPayload.chantier_id)
+      console.log('[handleSubmit] date_visite:', insertPayload.date_visite)
+      console.log('[handleSubmit] progression:', insertPayload.progression)
+      console.log('[handleSubmit] artisans_presents:', insertPayload.artisans_presents)
+      console.log('[handleSubmit] observations length:', insertPayload.observations.length)
+      const cr = await createCompteRendu(insertPayload)
 
       // Auto-create planning events
       const supabase = createClient()
@@ -263,22 +283,23 @@ export default function NouveauCompteRenduPage() {
         const nomChantier = selectedChantier?.nom ?? 'Chantier'
         const visitDate = new Date(form.date_visite)
         visitDate.setHours(9, 0, 0, 0)
-        supabase.from('evenements').insert({
+        void Promise.resolve(supabase.from('evenements').insert({
           user_id: user.id, chantier_id: form.chantier_id,
           titre: `Visite — ${nomChantier}`, type: 'visite_architecte',
           date_debut: visitDate.toISOString(), date_fin: null, artisan_id: null,
           notes: form.observations || null,
-        }).then(() => {}).catch(() => {})
+        })).catch(() => {})
         if (form.date_prochaine_visite) {
           const nextDate = new Date(form.date_prochaine_visite)
           nextDate.setHours(9, 0, 0, 0)
-          supabase.from('evenements').insert({
+          void Promise.resolve(supabase.from('evenements').insert({
             user_id: user.id, chantier_id: form.chantier_id,
             titre: `Prochaine visite — ${nomChantier}`, type: 'prochaine_visite',
             date_debut: nextDate.toISOString(), date_fin: null, artisan_id: null, notes: null,
-          }).then(() => {}).catch(() => {})
+          })).catch(() => {})
         }
       }
+      showToast('Compte rendu créé')
       router.push(`/dashboard/comptes-rendus/${cr.id}`)
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Une erreur est survenue.')
@@ -329,8 +350,8 @@ export default function NouveauCompteRenduPage() {
               {TABS.map((t) => (
                 <button key={t.id} type="button" onClick={() => setTab(t.id)} style={{
                   padding: '12px 16px', fontSize: '13px', background: 'none', border: 'none',
-                  borderBottom: tab === t.id ? '2px solid #E8C547' : '2px solid transparent',
-                  color: tab === t.id ? '#E8C547' : '#7A7870',
+                  borderBottom: tab === t.id ? '2px solid #F97316' : '2px solid transparent',
+                  color: tab === t.id ? '#F97316' : '#7A7870',
                   fontFamily: 'var(--font-dm-sans), sans-serif', fontWeight: tab === t.id ? 600 : 400,
                   cursor: 'pointer', whiteSpace: 'nowrap', marginBottom: '-1px', transition: 'color 0.15s',
                 }}>
@@ -359,7 +380,7 @@ export default function NouveauCompteRenduPage() {
                       </select>
                       <svg width="16" height="16" viewBox="0 0 16 16" fill="none"
                         style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none', opacity: 0.5, transition: 'opacity 0.15s' }}>
-                        <path d="M4 6L8 10L12 6" stroke="#E8C547" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                        <path d="M4 6L8 10L12 6" stroke="#F97316" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
                       </svg>
                     </div>
                   </div>
@@ -435,8 +456,8 @@ export default function NouveauCompteRenduPage() {
                                 <button type="button" onClick={() => toggleConvoque(p.artisanId)}
                                   style={{
                                     width: '20px', height: '20px', borderRadius: '4px', cursor: 'pointer',
-                                    border: `2px solid ${p.convoque ? '#E8C547' : '#3A3A38'}`,
-                                    backgroundColor: p.convoque ? '#E8C547' : 'transparent',
+                                    border: `2px solid ${p.convoque ? '#F97316' : '#3A3A38'}`,
+                                    backgroundColor: p.convoque ? '#F97316' : 'transparent',
                                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                                   }}>
                                   {p.convoque && <span style={{ color: '#0D0D0B', fontSize: '10px', fontWeight: 700, lineHeight: 1 }}>✓</span>}
@@ -462,7 +483,7 @@ export default function NouveauCompteRenduPage() {
                   {reserves.map((r, idx) => (
                     <div key={r.id} style={{ backgroundColor: '#0D0D0B', border: '1px solid #1E1E1C', borderRadius: '10px', padding: '20px' }}>
                       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
-                        <span style={{ fontFamily: 'var(--font-syne), sans-serif', fontWeight: 700, fontSize: '14px', color: '#E8C547' }}>
+                        <span style={{ fontFamily: 'var(--font-syne), sans-serif', fontWeight: 700, fontSize: '14px', color: '#F97316' }}>
                           Réserve 1.{idx + 1}
                         </span>
                         <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
@@ -511,7 +532,7 @@ export default function NouveauCompteRenduPage() {
                           <span style={{ ...labelStyle, marginBottom: 0 }}>Photos annotées</span>
                           <label style={{ cursor: 'pointer' }}>
                             <span style={{
-                              padding: '3px 10px', backgroundColor: 'rgba(232,197,71,0.1)', color: '#E8C547',
+                              padding: '3px 10px', backgroundColor: 'rgba(249,115,22,0.1)', color: '#F97316',
                               borderRadius: '6px', fontSize: '12px', fontWeight: 500,
                               fontFamily: 'var(--font-dm-sans), sans-serif',
                             }}>
@@ -546,7 +567,7 @@ export default function NouveauCompteRenduPage() {
                   ))}
                   <button type="button" onClick={addReserve}
                     style={{ padding: '14px', border: '1px dashed #1E1E1C', borderRadius: '10px', backgroundColor: 'transparent', color: '#8A8880', fontSize: '13px', fontFamily: 'var(--font-dm-sans), sans-serif', cursor: 'pointer', transition: 'all 0.15s' }}
-                    onMouseEnter={(e) => { e.currentTarget.style.borderColor = 'rgba(232,197,71,0.4)'; e.currentTarget.style.color = '#E8C547' }}
+                    onMouseEnter={(e) => { e.currentTarget.style.borderColor = 'rgba(249,115,22,0.4)'; e.currentTarget.style.color = '#F97316' }}
                     onMouseLeave={(e) => { e.currentTarget.style.borderColor = '#1E1E1C'; e.currentTarget.style.color = '#8A8880' }}>
                     + Ajouter une réserve
                   </button>
@@ -582,7 +603,7 @@ export default function NouveauCompteRenduPage() {
                   ))}
                   <button type="button" onClick={addDecision}
                     style={{ padding: '14px', border: '1px dashed #1E1E1C', borderRadius: '10px', backgroundColor: 'transparent', color: '#8A8880', fontSize: '13px', fontFamily: 'var(--font-dm-sans), sans-serif', cursor: 'pointer', transition: 'all 0.15s' }}
-                    onMouseEnter={(e) => { e.currentTarget.style.borderColor = 'rgba(232,197,71,0.4)'; e.currentTarget.style.color = '#E8C547' }}
+                    onMouseEnter={(e) => { e.currentTarget.style.borderColor = 'rgba(249,115,22,0.4)'; e.currentTarget.style.color = '#F97316' }}
                     onMouseLeave={(e) => { e.currentTarget.style.borderColor = '#1E1E1C'; e.currentTarget.style.color = '#8A8880' }}>
                     + Ajouter une décision
                   </button>
@@ -611,33 +632,33 @@ export default function NouveauCompteRenduPage() {
                             <td style={{ padding: '6px 8px' }}>
                               <input value={l.nom} onChange={(e) => updateLot(l.id, 'nom', e.target.value)} placeholder="Nom du lot"
                                 style={cellInput}
-                                onFocus={(e) => { e.target.style.borderColor = '#E8C547'; e.target.style.backgroundColor = '#0D0D0B' }}
+                                onFocus={(e) => { e.target.style.borderColor = '#F97316'; e.target.style.backgroundColor = '#0D0D0B' }}
                                 onBlur={(e) => { e.target.style.borderColor = 'transparent'; e.target.style.backgroundColor = 'transparent' }} />
                             </td>
                             <td style={{ padding: '6px 8px' }}>
                               <input value={l.intervenant} onChange={(e) => updateLot(l.id, 'intervenant', e.target.value)} placeholder="Entreprise"
                                 style={cellInput}
-                                onFocus={(e) => { e.target.style.borderColor = '#E8C547'; e.target.style.backgroundColor = '#0D0D0B' }}
+                                onFocus={(e) => { e.target.style.borderColor = '#F97316'; e.target.style.backgroundColor = '#0D0D0B' }}
                                 onBlur={(e) => { e.target.style.borderColor = 'transparent'; e.target.style.backgroundColor = 'transparent' }} />
                             </td>
                             <td style={{ padding: '6px 8px' }}>
                               <input type="date" value={l.dateDemarrage} onChange={(e) => updateLot(l.id, 'dateDemarrage', e.target.value)}
                                 style={{ ...cellInput, colorScheme: 'dark' } as React.CSSProperties}
-                                onFocus={(e) => { e.target.style.borderColor = '#E8C547'; e.target.style.backgroundColor = '#0D0D0B' }}
+                                onFocus={(e) => { e.target.style.borderColor = '#F97316'; e.target.style.backgroundColor = '#0D0D0B' }}
                                 onBlur={(e) => { e.target.style.borderColor = 'transparent'; e.target.style.backgroundColor = 'transparent' }} />
                             </td>
                             <td style={{ padding: '6px 8px' }}>
                               <input type="date" value={l.dateFin} onChange={(e) => updateLot(l.id, 'dateFin', e.target.value)}
                                 style={{ ...cellInput, colorScheme: 'dark' } as React.CSSProperties}
-                                onFocus={(e) => { e.target.style.borderColor = '#E8C547'; e.target.style.backgroundColor = '#0D0D0B' }}
+                                onFocus={(e) => { e.target.style.borderColor = '#F97316'; e.target.style.backgroundColor = '#0D0D0B' }}
                                 onBlur={(e) => { e.target.style.borderColor = 'transparent'; e.target.style.backgroundColor = 'transparent' }} />
                             </td>
                             <td style={{ padding: '6px 8px', minWidth: '130px' }}>
                               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                                 <input type="range" min={0} max={100} step={5} value={l.avancement}
                                   onChange={(e) => updateLot(l.id, 'avancement', parseInt(e.target.value))}
-                                  style={{ flex: 1, accentColor: '#E8C547', cursor: 'pointer' }} />
-                                <span style={{ fontSize: '12px', color: '#E8C547', fontWeight: 600, fontFamily: 'var(--font-syne), sans-serif', width: '32px', textAlign: 'right', flexShrink: 0 }}>
+                                  style={{ flex: 1, accentColor: '#F97316', cursor: 'pointer' }} />
+                                <span style={{ fontSize: '12px', color: '#F97316', fontWeight: 600, fontFamily: 'var(--font-syne), sans-serif', width: '32px', textAlign: 'right', flexShrink: 0 }}>
                                   {l.avancement}%
                                 </span>
                               </div>
@@ -653,7 +674,7 @@ export default function NouveauCompteRenduPage() {
                   )}
                   <button type="button" onClick={addLot}
                     style={{ padding: '14px', border: '1px dashed #1E1E1C', borderRadius: '10px', backgroundColor: 'transparent', color: '#8A8880', fontSize: '13px', fontFamily: 'var(--font-dm-sans), sans-serif', cursor: 'pointer', width: '100%', transition: 'all 0.15s' }}
-                    onMouseEnter={(e) => { e.currentTarget.style.borderColor = 'rgba(232,197,71,0.4)'; e.currentTarget.style.color = '#E8C547' }}
+                    onMouseEnter={(e) => { e.currentTarget.style.borderColor = 'rgba(249,115,22,0.4)'; e.currentTarget.style.color = '#F97316' }}
                     onMouseLeave={(e) => { e.currentTarget.style.borderColor = '#1E1E1C'; e.currentTarget.style.color = '#8A8880' }}>
                     + Ajouter un lot
                   </button>
@@ -669,7 +690,7 @@ export default function NouveauCompteRenduPage() {
                     color: '#8A8880', fontSize: '13px', fontFamily: 'var(--font-dm-sans), sans-serif',
                     marginBottom: photoPreviews.length ? '16px' : 0, transition: 'border-color 0.15s',
                   }}
-                    onMouseEnter={(e) => (e.currentTarget.style.borderColor = 'rgba(232,197,71,0.3)')}
+                    onMouseEnter={(e) => (e.currentTarget.style.borderColor = 'rgba(249,115,22,0.3)')}
                     onMouseLeave={(e) => (e.currentTarget.style.borderColor = '#1E1E1C')}>
                     <span style={{ fontSize: '28px' }}>↑</span>
                     <span>Cliquer pour ajouter des photos</span>
@@ -760,7 +781,7 @@ export default function NouveauCompteRenduPage() {
           )}
           <div style={{ display: 'flex', gap: '12px' }}>
             <button type="submit" disabled={loading}
-              style={{ flex: 1, padding: '12px', backgroundColor: loading ? '#9E8630' : '#E8C547', color: '#0D0D0B', border: 'none', borderRadius: '8px', fontSize: '14px', fontWeight: 600, cursor: loading ? 'not-allowed' : 'pointer', fontFamily: 'var(--font-dm-sans), sans-serif' }}>
+              style={{ flex: 1, padding: '12px', backgroundColor: loading ? '#9E8630' : '#F97316', color: '#0D0D0B', border: 'none', borderRadius: '8px', fontSize: '14px', fontWeight: 600, cursor: loading ? 'not-allowed' : 'pointer', fontFamily: 'var(--font-dm-sans), sans-serif' }}>
               {loading ? 'Enregistrement…' : 'Enregistrer le compte rendu'}
             </button>
             <Link href="/dashboard/comptes-rendus"

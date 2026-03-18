@@ -37,7 +37,7 @@ export async function GET(
   const buffer = await generatePdfBuffer(cr, chantier)
   const filename = `compte-rendu-${chantier.nom.toLowerCase().replace(/\s+/g, '-')}-${cr.date_visite}.pdf`
 
-  return new NextResponse(buffer, {
+  return new NextResponse(buffer as unknown as BodyInit, {
     headers: {
       'Content-Type': 'application/pdf',
       'Content-Disposition': `attachment; filename="${filename}"`,

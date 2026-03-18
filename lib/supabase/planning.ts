@@ -18,7 +18,7 @@ export type Evenement = {
 export type CreateEvenementInput = Omit<Evenement, 'id' | 'user_id' | 'created_at'>
 
 export const TYPE_COLORS: Record<TypeEvenement, { bg: string; text: string }> = {
-  visite_architecte: { bg: '#2a240a', text: '#E8C547' },
+  visite_architecte: { bg: '#2a240a', text: '#F97316' },
   reunion:           { bg: '#0a1628', text: '#3B82F6' },
   presence_artisan:  { bg: '#0a2814', text: '#4ADE80' },
   prochaine_visite:  { bg: '#1a0a2a', text: '#A855F7' },

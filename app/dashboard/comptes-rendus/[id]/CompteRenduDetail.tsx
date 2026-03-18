@@ -1,12 +1,46 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { updateCompteRendu, deleteCompteRendu } from '@/lib/supabase/comptes-rendus'
-import type { CompteRenduWithChantier } from '@/lib/supabase/comptes-rendus'
+import { useToast } from '@/components/ToastProvider'
+import type { CompteRenduWithChantier, ObservationsData } from '@/lib/supabase/comptes-rendus'
 import MetierSelect from '@/components/MetierSelect'
+
+function parseObservations(raw: string | null): ObservationsData {
+  const empty: ObservationsData = { texte: '', presences: [], reserves: [], decisions: [], lots: [] }
+  if (!raw) return empty
+  try {
+    const parsed = JSON.parse(raw)
+    // Nouveau format : { texte, presences, reserves, decisions, lots }
+    if (parsed && typeof parsed === 'object' && 'texte' in parsed) {
+      return {
+        texte: parsed.texte ?? '',
+        presences: parsed.presences ?? [],
+        reserves: parsed.reserves ?? [],
+        decisions: parsed.decisions ?? [],
+        lots: parsed.lots ?? [],
+      }
+    }
+    // Nouveau format sans `texte` : { observations, presences, reserves, decisions, lots, travaux_a_faire }
+    if (parsed && typeof parsed === 'object' && 'observations' in parsed) {
+      return {
+        texte: parsed.observations ?? '',
+        presences: parsed.presences ?? [],
+        reserves: parsed.reserves ?? [],
+        decisions: parsed.decisions ?? [],
+        lots: parsed.lots ?? [],
+      }
+    }
+    // Ancien format JSON sans structure attendue → traiter comme texte brut
+    return { ...empty, texte: raw }
+  } catch {
+    // Pas du JSON → ancienne string plain text
+    return { ...empty, texte: raw }
+  }
+}
 
 const labelStyle: React.CSSProperties = {
   fontSize: '11px',
@@ -30,7 +64,7 @@ const inputStyle: React.CSSProperties = {
   fontFamily: 'var(--font-dm-sans), sans-serif',
 }
 
-const focus = (e: React.FocusEvent<HTMLElement>) => ((e.target as HTMLElement).style.borderColor = '#E8C547')
+const focus = (e: React.FocusEvent<HTMLElement>) => ((e.target as HTMLElement).style.borderColor = '#F97316')
 const blur = (e: React.FocusEvent<HTMLElement>) => ((e.target as HTMLElement).style.borderColor = '#1E1E1C')
 
 function fmt(d: string | null) {
@@ -40,6 +74,7 @@ function fmt(d: string | null) {
 
 export default function CompteRenduDetail({ compteRendu: initial }: { compteRendu: CompteRenduWithChantier }) {
   const router = useRouter()
+  const { showToast } = useToast()
   const [cr, setCr] = useState(initial)
   const [editing, setEditing] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(false)
@@ -51,25 +86,28 @@ export default function CompteRenduDetail({ compteRendu: initial }: { compteRend
   const [saving, setSaving] = useState(false)
   const [deleting, setDeleting] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [artisansList, setArtisansList] = useState<{ id: string; nom: string }[]>([])
+  const [artisansList, setArtisansList] = useState<{ id: string; nom: string; email: string }[]>([])
+  const [artisanDropdownValue, setArtisanDropdownValue] = useState('')
   const [artisansOpen, setArtisansOpen] = useState(false)
   const artisansRef = useRef<HTMLDivElement>(null)
   const [showNewArtisan, setShowNewArtisan] = useState(false)
   const [newArtisan, setNewArtisan] = useState({ nom: '', email: '', telephone: '', metier: '' })
   const [creatingArtisan, setCreatingArtisan] = useState(false)
 
+  const parsed = useMemo(() => parseObservations(cr.observations), [cr.observations])
+
   const [form, setForm] = useState({
     date_visite: cr.date_visite,
     date_prochaine_visite: cr.date_prochaine_visite ?? '',
     progression: cr.progression,
-    observations: cr.observations ?? '',
+    observations: parseObservations(cr.observations).texte,
     travaux_a_faire: cr.travaux_a_faire ?? '',
     artisans_presents: [...cr.artisans_presents],
   })
 
   useEffect(() => {
-    createClient().from('artisans').select('id, nom').order('nom')
-      .then(({ data }) => setArtisansList((data ?? []) as { id: string; nom: string }[]))
+    createClient().from('artisans').select('id, nom, email').order('nom')
+      .then(({ data }) => setArtisansList((data ?? []) as { id: string; nom: string; email: string }[]))
   }, [])
 
   useEffect(() => {
@@ -104,14 +142,15 @@ export default function CompteRenduDetail({ compteRendu: initial }: { compteRend
       const { data, error: insertError } = await supabase
         .from('artisans')
         .insert({ ...newArtisan, nom: newArtisan.nom.trim(), user_id: user.id })
-        .select('id, nom')
+        .select('id, nom, email')
         .single()
       if (insertError) throw insertError
-      const created = data as { id: string; nom: string }
+      const created = data as { id: string; nom: string; email: string }
       setArtisansList((prev) => [...prev, created].sort((a, b) => a.nom.localeCompare(b.nom)))
       setField('artisans_presents', [...form.artisans_presents, created.nom])
       setNewArtisan({ nom: '', email: '', telephone: '', metier: '' })
       setShowNewArtisan(false)
+      showToast('Artisan ajouté')
     } finally {
       setCreatingArtisan(false)
     }
@@ -124,10 +163,17 @@ export default function CompteRenduDetail({ compteRendu: initial }: { compteRend
       const updated = await updateCompteRendu(cr.id, {
         ...form,
         date_prochaine_visite: form.date_prochaine_visite || null,
-        observations: form.observations || null,
+        observations: JSON.stringify({
+          texte: form.observations,
+          presences: parsed.presences,
+          reserves: parsed.reserves,
+          decisions: parsed.decisions,
+          lots: parsed.lots,
+        }),
         travaux_a_faire: form.travaux_a_faire || null,
       })
       setCr({ ...updated, chantiers: cr.chantiers })
+      showToast('Compte rendu sauvegardé')
       setEditing(false)
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Erreur lors de la sauvegarde.')
@@ -171,7 +217,8 @@ export default function CompteRenduDetail({ compteRendu: initial }: { compteRend
         throw new Error(data.error ?? 'Erreur envoi email')
       }
       setEmailSuccess(true)
-      setTimeout(() => { setShowEmailModal(false); setEmailSuccess(false); setEmailEmails([]) }, 2000)
+      showToast('Email envoyé')
+      setTimeout(() => { setShowEmailModal(false); setEmailSuccess(false); setEmailEmails([]); setEmailInput(''); setArtisanDropdownValue('') }, 2000)
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Erreur lors de l\'envoi.')
     } finally {
@@ -202,7 +249,7 @@ export default function CompteRenduDetail({ compteRendu: initial }: { compteRend
             <a
               href={`/api/generate-pdf/${cr.id}`}
               download
-              style={{ padding: '8px 14px', backgroundColor: '#E8C547', color: '#0D0D0B', borderRadius: '8px', fontSize: '13px', fontWeight: 600, textDecoration: 'none', fontFamily: 'var(--font-dm-sans), sans-serif' }}
+              style={{ padding: '8px 14px', backgroundColor: '#F97316', color: '#0D0D0B', borderRadius: '8px', fontSize: '13px', fontWeight: 600, textDecoration: 'none', fontFamily: 'var(--font-dm-sans), sans-serif' }}
             >
               ↓ Télécharger PDF
             </a>
@@ -242,15 +289,15 @@ export default function CompteRenduDetail({ compteRendu: initial }: { compteRend
             </div>
             <div>
               <span style={labelStyle}>Prochaine visite</span>
-              <p style={{ color: cr.date_prochaine_visite ? '#E8C547' : '#8A8880', fontSize: '14px', fontFamily: 'var(--font-dm-sans), sans-serif', margin: 0 }}>{fmt(cr.date_prochaine_visite)}</p>
+              <p style={{ color: cr.date_prochaine_visite ? '#F97316' : '#8A8880', fontSize: '14px', fontFamily: 'var(--font-dm-sans), sans-serif', margin: 0 }}>{fmt(cr.date_prochaine_visite)}</p>
             </div>
             <div>
               <span style={labelStyle}>Avancement</span>
               <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginTop: '4px' }}>
                 <div style={{ flex: 1, height: '6px', backgroundColor: '#1E1E1C', borderRadius: '3px' }}>
-                  <div style={{ height: '6px', backgroundColor: '#E8C547', borderRadius: '3px', width: `${cr.progression}%` }} />
+                  <div style={{ height: '6px', backgroundColor: '#F97316', borderRadius: '3px', width: `${cr.progression}%` }} />
                 </div>
-                <span style={{ fontFamily: 'var(--font-syne), sans-serif', fontSize: '13px', fontWeight: 700, color: '#E8C547', flexShrink: 0 }}>{cr.progression}%</span>
+                <span style={{ fontFamily: 'var(--font-syne), sans-serif', fontSize: '13px', fontWeight: 700, color: '#F97316', flexShrink: 0 }}>{cr.progression}%</span>
               </div>
             </div>
           </div>
@@ -270,18 +317,92 @@ export default function CompteRenduDetail({ compteRendu: initial }: { compteRend
           {/* Observations */}
           <div style={{ backgroundColor: '#111110', border: '1px solid #1E1E1C', borderRadius: '12px', padding: '24px' }}>
             <span style={labelStyle}>Observations</span>
-            <p style={{ color: cr.observations ? '#F0EDE6' : '#8A8880', fontSize: '14px', fontFamily: 'var(--font-dm-sans), sans-serif', margin: '8px 0 0', lineHeight: '1.7', fontStyle: cr.observations ? 'normal' : 'italic' }}>
-              {cr.observations ?? 'Aucune observation.'}
+            <p style={{ color: parsed.texte ? '#F0EDE6' : '#8A8880', fontSize: '14px', fontFamily: 'var(--font-dm-sans), sans-serif', margin: '8px 0 0', lineHeight: '1.7', fontStyle: parsed.texte ? 'normal' : 'italic', whiteSpace: 'pre-wrap' }}>
+              {parsed.texte || 'Aucune observation.'}
             </p>
           </div>
 
           {/* Travaux */}
           <div style={{ backgroundColor: '#111110', border: '1px solid #1E1E1C', borderRadius: '12px', padding: '24px' }}>
             <span style={labelStyle}>Travaux à réaliser</span>
-            <p style={{ color: cr.travaux_a_faire ? '#F0EDE6' : '#8A8880', fontSize: '14px', fontFamily: 'var(--font-dm-sans), sans-serif', margin: '8px 0 0', lineHeight: '1.7', fontStyle: cr.travaux_a_faire ? 'normal' : 'italic' }}>
+            <p style={{ color: cr.travaux_a_faire ? '#F0EDE6' : '#8A8880', fontSize: '14px', fontFamily: 'var(--font-dm-sans), sans-serif', margin: '8px 0 0', lineHeight: '1.7', fontStyle: cr.travaux_a_faire ? 'normal' : 'italic', whiteSpace: 'pre-wrap' }}>
               {cr.travaux_a_faire ?? 'Aucun travaux spécifiés.'}
             </p>
           </div>
+
+          {/* Présences détaillées */}
+          {parsed.presences.length > 0 && (
+            <div style={{ backgroundColor: '#111110', border: '1px solid #1E1E1C', borderRadius: '12px', padding: '24px' }}>
+              <span style={labelStyle}>Présences ({parsed.presences.length})</span>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginTop: '10px' }}>
+                {parsed.presences.map((p, i) => (
+                  <div key={i} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 12px', backgroundColor: '#0D0D0B', borderRadius: '6px' }}>
+                    <span style={{ fontSize: '13px', color: '#F0EDE6', fontFamily: 'var(--font-dm-sans), sans-serif' }}>{p.nom}{p.societe ? ` — ${p.societe}` : ''}</span>
+                    <span style={{ fontSize: '11px', fontWeight: 600, padding: '2px 8px', borderRadius: '4px', fontFamily: 'var(--font-dm-sans), sans-serif', backgroundColor: p.statut === 'P' ? 'rgba(72,186,120,0.15)' : p.statut === 'E' ? 'rgba(249,115,22,0.15)' : 'rgba(138,136,128,0.15)', color: p.statut === 'P' ? '#48ba78' : p.statut === 'E' ? '#F97316' : '#8A8880' }}>
+                      {p.statut === 'P' ? 'Présent' : p.statut === 'E' ? 'Excusé' : 'Absent'}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Réserves */}
+          {parsed.reserves.length > 0 && (
+            <div style={{ backgroundColor: '#111110', border: '1px solid #1E1E1C', borderRadius: '12px', padding: '24px' }}>
+              <span style={labelStyle}>Réserves ({parsed.reserves.length})</span>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '10px' }}>
+                {parsed.reserves.map((r, i) => (
+                  <div key={i} style={{ padding: '12px', backgroundColor: '#0D0D0B', borderRadius: '8px', borderLeft: `3px solid ${r.statut === 'levee' ? '#48ba78' : '#E85447'}` }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
+                      <span style={{ fontSize: '12px', color: '#8A8880', fontFamily: 'var(--font-dm-sans), sans-serif' }}>{r.lot}</span>
+                      <span style={{ fontSize: '11px', color: r.statut === 'levee' ? '#48ba78' : '#E85447', fontFamily: 'var(--font-dm-sans), sans-serif', fontWeight: 600 }}>{r.statut === 'levee' ? 'Levée' : 'Ouverte'}</span>
+                    </div>
+                    <p style={{ margin: 0, fontSize: '13px', color: '#F0EDE6', fontFamily: 'var(--font-dm-sans), sans-serif', lineHeight: 1.5 }}>{r.description}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Décisions */}
+          {parsed.decisions.length > 0 && (
+            <div style={{ backgroundColor: '#111110', border: '1px solid #1E1E1C', borderRadius: '12px', padding: '24px' }}>
+              <span style={labelStyle}>Décisions ({parsed.decisions.length})</span>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '10px' }}>
+                {parsed.decisions.map((d, i) => (
+                  <div key={i} style={{ padding: '12px', backgroundColor: '#0D0D0B', borderRadius: '8px' }}>
+                    <p style={{ margin: '0 0 6px', fontSize: '13px', color: '#F0EDE6', fontFamily: 'var(--font-dm-sans), sans-serif', lineHeight: 1.5 }}>{d.texte}</p>
+                    <div style={{ display: 'flex', gap: '16px' }}>
+                      {d.responsable && <span style={{ fontSize: '12px', color: '#8A8880', fontFamily: 'var(--font-dm-sans), sans-serif' }}>→ {d.responsable}</span>}
+                      {d.echeance && <span style={{ fontSize: '12px', color: '#F97316', fontFamily: 'var(--font-dm-sans), sans-serif' }}>{fmt(d.echeance)}</span>}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Lots */}
+          {parsed.lots.length > 0 && (
+            <div style={{ backgroundColor: '#111110', border: '1px solid #1E1E1C', borderRadius: '12px', padding: '24px' }}>
+              <span style={labelStyle}>Lots ({parsed.lots.length})</span>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '10px' }}>
+                {parsed.lots.map((l, i) => (
+                  <div key={i} style={{ padding: '12px', backgroundColor: '#0D0D0B', borderRadius: '8px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+                      <span style={{ fontSize: '13px', color: '#F0EDE6', fontFamily: 'var(--font-dm-sans), sans-serif', fontWeight: 500 }}>{l.nom}</span>
+                      <span style={{ fontSize: '12px', color: '#F97316', fontFamily: 'var(--font-syne), sans-serif', fontWeight: 700 }}>{l.avancement}%</span>
+                    </div>
+                    <div style={{ height: '4px', backgroundColor: '#1E1E1C', borderRadius: '2px' }}>
+                      <div style={{ height: '4px', backgroundColor: '#F97316', borderRadius: '2px', width: `${l.avancement}%` }} />
+                    </div>
+                    {l.notes && <p style={{ margin: '6px 0 0', fontSize: '12px', color: '#8A8880', fontFamily: 'var(--font-dm-sans), sans-serif' }}>{l.notes}</p>}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
           {/* Photos */}
           {cr.photos?.length > 0 && (
@@ -303,7 +424,7 @@ export default function CompteRenduDetail({ compteRendu: initial }: { compteRend
       {/* EDIT MODE */}
       {editing && (
         <div style={{ maxWidth: '680px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
-          <div style={{ backgroundColor: '#111110', border: '1px solid #E8C547', borderRadius: '12px', padding: '28px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
+          <div style={{ backgroundColor: '#111110', border: '1px solid #F97316', borderRadius: '12px', padding: '28px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
               <div>
@@ -319,9 +440,9 @@ export default function CompteRenduDetail({ compteRendu: initial }: { compteRend
             <div>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px' }}>
                 <label style={labelStyle}>Avancement</label>
-                <span style={{ fontFamily: 'var(--font-syne), sans-serif', fontSize: '16px', fontWeight: 700, color: '#E8C547' }}>{form.progression}%</span>
+                <span style={{ fontFamily: 'var(--font-syne), sans-serif', fontSize: '16px', fontWeight: 700, color: '#F97316' }}>{form.progression}%</span>
               </div>
-              <input type="range" min={0} max={100} step={5} value={form.progression} onChange={(e) => setField('progression', parseInt(e.target.value))} style={{ width: '100%', accentColor: '#E8C547' }} />
+              <input type="range" min={0} max={100} step={5} value={form.progression} onChange={(e) => setField('progression', parseInt(e.target.value))} style={{ width: '100%', accentColor: '#F97316' }} />
             </div>
 
             <div>
@@ -348,7 +469,7 @@ export default function CompteRenduDetail({ compteRendu: initial }: { compteRend
                     justifyContent: 'space-between',
                     padding: '10px 14px',
                     backgroundColor: '#0D0D0B',
-                    border: `1px solid ${artisansOpen ? '#E8C547' : '#2A2A28'}`,
+                    border: `1px solid ${artisansOpen ? '#F97316' : '#2A2A28'}`,
                     borderRadius: '8px',
                     color: form.artisans_presents.length > 0 ? '#F0EDE6' : '#8A8880',
                     fontSize: '14px',
@@ -408,8 +529,8 @@ export default function CompteRenduDetail({ compteRendu: initial }: { compteRend
                         >
                           <span style={{
                             width: '16px', height: '16px', borderRadius: '4px', flexShrink: 0,
-                            border: `2px solid ${checked ? '#E8C547' : '#3A3A38'}`,
-                            backgroundColor: checked ? '#E8C547' : 'transparent',
+                            border: `2px solid ${checked ? '#F97316' : '#3A3A38'}`,
+                            backgroundColor: checked ? '#F97316' : 'transparent',
                             display: 'flex', alignItems: 'center', justifyContent: 'center',
                             transition: 'all 0.1s',
                           }}>
@@ -431,7 +552,7 @@ export default function CompteRenduDetail({ compteRendu: initial }: { compteRend
                           width: '100%', display: 'flex', alignItems: 'center', gap: '8px',
                           padding: '10px 14px', backgroundColor: 'transparent',
                           borderTop: '1px solid #2A2A28', border: 'none', borderRadius: 0,
-                          cursor: 'pointer', textAlign: 'left', color: '#E8C547',
+                          cursor: 'pointer', textAlign: 'left', color: '#F97316',
                           fontSize: '13px', fontFamily: 'var(--font-dm-sans), sans-serif',
                           fontWeight: 500,
                         }}
@@ -475,7 +596,7 @@ export default function CompteRenduDetail({ compteRendu: initial }: { compteRend
                           <button
                             type="submit"
                             disabled={creatingArtisan || !newArtisan.nom.trim()}
-                            style={{ flex: 1, padding: '8px', backgroundColor: creatingArtisan ? '#9E8630' : '#E8C547', color: '#0D0D0B', border: 'none', borderRadius: '6px', fontSize: '12px', fontWeight: 600, cursor: creatingArtisan ? 'not-allowed' : 'pointer', fontFamily: 'var(--font-dm-sans), sans-serif' }}
+                            style={{ flex: 1, padding: '8px', backgroundColor: creatingArtisan ? '#9E8630' : '#F97316', color: '#0D0D0B', border: 'none', borderRadius: '6px', fontSize: '12px', fontWeight: 600, cursor: creatingArtisan ? 'not-allowed' : 'pointer', fontFamily: 'var(--font-dm-sans), sans-serif' }}
                           >
                             {creatingArtisan ? 'Création…' : 'Créer et ajouter'}
                           </button>
@@ -500,7 +621,7 @@ export default function CompteRenduDetail({ compteRendu: initial }: { compteRend
                     <span key={nom} style={{
                       display: 'inline-flex', alignItems: 'center', gap: '6px',
                       padding: '4px 10px', backgroundColor: '#1E1E1C', borderRadius: '20px',
-                      fontSize: '13px', color: '#E8C547', fontFamily: 'var(--font-dm-sans), sans-serif',
+                      fontSize: '13px', color: '#F97316', fontFamily: 'var(--font-dm-sans), sans-serif',
                     }}>
                       {nom}
                       <button
@@ -517,7 +638,7 @@ export default function CompteRenduDetail({ compteRendu: initial }: { compteRend
             {error && <p style={{ fontSize: '13px', color: '#E85447', margin: 0, fontFamily: 'var(--font-dm-sans), sans-serif' }}>{error}</p>}
 
             <div style={{ display: 'flex', gap: '10px' }}>
-              <button onClick={handleSave} disabled={saving} style={{ padding: '10px 20px', backgroundColor: saving ? '#9E8630' : '#E8C547', color: '#0D0D0B', border: 'none', borderRadius: '8px', fontSize: '13px', fontWeight: 600, cursor: saving ? 'not-allowed' : 'pointer', fontFamily: 'var(--font-dm-sans), sans-serif' }}>
+              <button onClick={handleSave} disabled={saving} style={{ padding: '10px 20px', backgroundColor: saving ? '#9E8630' : '#F97316', color: '#0D0D0B', border: 'none', borderRadius: '8px', fontSize: '13px', fontWeight: 600, cursor: saving ? 'not-allowed' : 'pointer', fontFamily: 'var(--font-dm-sans), sans-serif' }}>
                 {saving ? 'Sauvegarde…' : 'Sauvegarder'}
               </button>
               <button onClick={() => { setEditing(false); setError(null) }} style={{ padding: '10px 20px', backgroundColor: 'transparent', color: '#8A8880', border: '1px solid #1E1E1C', borderRadius: '8px', fontSize: '13px', cursor: 'pointer', fontFamily: 'var(--font-dm-sans), sans-serif' }}>
@@ -548,24 +669,51 @@ export default function CompteRenduDetail({ compteRendu: initial }: { compteRend
 
       {/* EMAIL MODAL */}
       {showEmailModal && (
-        <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 50 }} onClick={() => setShowEmailModal(false)}>
+        <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 50 }} onClick={() => { setShowEmailModal(false); setEmailEmails([]); setEmailInput(''); setArtisanDropdownValue(''); setError(null) }}>
           <div style={{ backgroundColor: '#111110', border: '1px solid #1E1E1C', borderRadius: '12px', padding: '32px', maxWidth: '440px', width: '100%', margin: '0 24px' }} onClick={(e) => e.stopPropagation()}>
             <h2 style={{ fontFamily: 'var(--font-syne), sans-serif', fontSize: '18px', fontWeight: 600, color: '#F0EDE6', marginBottom: '8px' }}>Envoyer par email</h2>
             <p style={{ color: '#8A8880', fontSize: '13px', fontFamily: 'var(--font-dm-sans), sans-serif', marginBottom: '24px' }}>
               Le PDF sera envoyé aux destinataires ci-dessous.
             </p>
 
-            <div style={{ display: 'flex', gap: '8px', marginBottom: '12px' }}>
-              <input
-                type="email"
-                value={emailInput}
-                onChange={(e) => setEmailInput(e.target.value)}
-                onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); addEmail() } }}
-                placeholder="destinataire@exemple.com"
-                style={{ ...inputStyle, flex: 1 }}
-                onFocus={focus} onBlur={blur}
-              />
-              <button type="button" onClick={addEmail} style={{ padding: '10px 14px', backgroundColor: '#1E1E1C', color: '#F0EDE6', border: '1px solid #1E1E1C', borderRadius: '8px', fontSize: '13px', cursor: 'pointer', fontFamily: 'var(--font-dm-sans), sans-serif' }}>+ Ajouter</button>
+            {artisansList.length > 0 && (
+              <div style={{ marginBottom: '12px' }}>
+                <label style={{ ...labelStyle, marginBottom: '6px' }}>Artisan</label>
+                <select
+                  value={artisanDropdownValue}
+                  onChange={(e) => {
+                    setArtisanDropdownValue(e.target.value)
+                    setEmailInput(e.target.value)
+                  }}
+                  style={{ width: '100%', padding: '10px 14px', backgroundColor: '#111110', border: '1px solid #1E1E1C', borderRadius: '8px', color: artisanDropdownValue ? '#F0EDE6' : '#8A8880', fontSize: '14px', outline: 'none', fontFamily: 'var(--font-dm-sans), sans-serif', colorScheme: 'dark' } as React.CSSProperties}
+                  onFocus={focus} onBlur={blur}
+                >
+                  <option value="">— Sélectionner un artisan —</option>
+                  {artisansList.map((a) => (
+                    <option key={a.id} value={a.email ?? ''}>
+                      {a.nom}{a.email ? ` — ${a.email}` : ''}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
+
+            <div style={{ marginBottom: '12px' }}>
+              <label style={{ ...labelStyle, marginBottom: '6px' }}>
+                {artisansList.length > 0 ? 'Ou saisir un email manuellement' : 'Destinataire'}
+              </label>
+              <div style={{ display: 'flex', gap: '8px' }}>
+                <input
+                  type="email"
+                  value={emailInput}
+                  onChange={(e) => { setEmailInput(e.target.value); setArtisanDropdownValue('') }}
+                  onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); addEmail() } }}
+                  placeholder="destinataire@exemple.com"
+                  style={{ ...inputStyle, flex: 1 }}
+                  onFocus={focus} onBlur={blur}
+                />
+                <button type="button" onClick={addEmail} style={{ padding: '10px 14px', backgroundColor: '#1E1E1C', color: '#F0EDE6', border: '1px solid #1E1E1C', borderRadius: '8px', fontSize: '13px', cursor: 'pointer', fontFamily: 'var(--font-dm-sans), sans-serif' }}>+ Ajouter</button>
+              </div>
             </div>
 
             {emailEmails.length > 0 && (
@@ -586,11 +734,11 @@ export default function CompteRenduDetail({ compteRendu: initial }: { compteRend
               <button
                 onClick={handleSendEmail}
                 disabled={sendingEmail || !emailEmails.length}
-                style={{ flex: 1, padding: '10px', backgroundColor: sendingEmail || !emailEmails.length ? '#9E8630' : '#E8C547', color: '#0D0D0B', border: 'none', borderRadius: '8px', fontSize: '13px', fontWeight: 600, cursor: sendingEmail || !emailEmails.length ? 'not-allowed' : 'pointer', fontFamily: 'var(--font-dm-sans), sans-serif' }}
+                style={{ flex: 1, padding: '10px', backgroundColor: sendingEmail || !emailEmails.length ? '#9E8630' : '#F97316', color: '#0D0D0B', border: 'none', borderRadius: '8px', fontSize: '13px', fontWeight: 600, cursor: sendingEmail || !emailEmails.length ? 'not-allowed' : 'pointer', fontFamily: 'var(--font-dm-sans), sans-serif' }}
               >
                 {sendingEmail ? 'Envoi…' : 'Envoyer'}
               </button>
-              <button onClick={() => { setShowEmailModal(false); setEmailEmails([]); setError(null) }} style={{ flex: 1, padding: '10px', backgroundColor: 'transparent', color: '#8A8880', border: '1px solid #1E1E1C', borderRadius: '8px', fontSize: '13px', cursor: 'pointer', fontFamily: 'var(--font-dm-sans), sans-serif' }}>Annuler</button>
+              <button onClick={() => { setShowEmailModal(false); setEmailEmails([]); setEmailInput(''); setArtisanDropdownValue(''); setError(null) }} style={{ flex: 1, padding: '10px', backgroundColor: 'transparent', color: '#8A8880', border: '1px solid #1E1E1C', borderRadius: '8px', fontSize: '13px', cursor: 'pointer', fontFamily: 'var(--font-dm-sans), sans-serif' }}>Annuler</button>
             </div>
           </div>
         </div>

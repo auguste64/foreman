@@ -143,7 +143,7 @@ export default function PhotoAnnotator({
             style={{
               padding: '6px 14px', borderRadius: '6px', fontSize: '13px', cursor: 'pointer', border: 'none',
               fontFamily: 'var(--font-dm-sans), sans-serif', fontWeight: 500,
-              backgroundColor: tool === t.id ? '#E8C547' : '#2A2A28',
+              backgroundColor: tool === t.id ? '#F97316' : '#2A2A28',
               color: tool === t.id ? '#0D0D0B' : '#F0EDE6',
               transition: 'all 0.15s',
             }}

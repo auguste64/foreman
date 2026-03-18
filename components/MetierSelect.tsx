@@ -24,7 +24,7 @@ export default function MetierSelect({ value, onChange, compact = false, require
   const pad    = compact ? '8px 10px'         : '10px 14px'
   const fs     = compact ? '13px'             : '14px'
   const bdBase = compact ? '1px solid #2A2A28' : '1px solid #1E1E1C'
-  const bdOpen = compact ? '1px solid #2A2A28' : '1px solid #E8C547'
+  const bdOpen = compact ? '1px solid #2A2A28' : '1px solid #F97316'
   const radius = compact ? '6px'              : '8px'
 
   function selectMetier(m: string) {
@@ -78,7 +78,7 @@ export default function MetierSelect({ value, onChange, compact = false, require
                 backgroundColor: value === m ? '#232320' : 'transparent',
                 borderTop: i > 0 ? '1px solid #2A2A28' : 'none',
                 border: 'none', borderRadius: 0,
-                color: value === m ? '#E8C547' : '#F0EDE6',
+                color: value === m ? '#F97316' : '#F0EDE6',
                 fontSize: fs, fontFamily: 'var(--font-dm-sans), sans-serif', cursor: 'pointer',
               }}
               onMouseEnter={(e) => { if (value !== m) e.currentTarget.style.backgroundColor = '#2A2A28' }}

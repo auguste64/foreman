@@ -1,6 +1,52 @@
 import { createClient } from './client'
 import type { Chantier } from './chantiers'
 
+// Colonnes confirmées dans la table Supabase (HTTP 200) :
+// id, chantier_id, user_id, date_visite, date_prochaine_visite, progression,
+// observations (TEXT — stocke un JSON structuré), travaux_a_faire, artisans_presents (text[]), photos (text[]), created_at
+//
+// Colonnes ABSENTES du schéma DB : presences, reserves, decisions, lots
+// → Ces données sont sérialisées dans observations sous la forme :
+//   { texte: string, presences: [], reserves: [], decisions: [], lots: [] }
+
+export type ObservationsData = {
+  texte: string
+  presences: PresenceRow[]
+  reserves: Reserve[]
+  decisions: Decision[]
+  lots: Lot[]
+}
+
+export type PresenceRow = {
+  artisanId: string
+  nom: string
+  societe: string
+  statut: 'P' | 'A' | 'E'
+  convoque: boolean
+}
+
+export type Reserve = {
+  id: string
+  lot: string
+  description: string
+  statut: 'ouverte' | 'levee'
+  photos: string[]
+}
+
+export type Decision = {
+  id: string
+  texte: string
+  responsable: string
+  echeance: string
+}
+
+export type Lot = {
+  id: string
+  nom: string
+  avancement: number
+  notes: string
+}
+
 export type CompteRendu = {
   id: string
   chantier_id: string
@@ -8,7 +54,7 @@ export type CompteRendu = {
   date_visite: string
   date_prochaine_visite: string | null
   progression: number
-  observations: string | null
+  observations: string | null   // JSON stringifié de ObservationsData
   travaux_a_faire: string | null
   artisans_presents: string[]
   photos: string[]
@@ -62,8 +108,13 @@ export async function createCompteRendu(input: CreateCompteRenduInput): Promise<
     .single()
 
   if (error) {
-    console.error('[createCompteRendu] Supabase error:', error)
-    throw new Error(error.message)
+    console.error('[createCompteRendu] error.message:', error.message)
+    console.error('[createCompteRendu] error.code:', error.code)
+    console.error('[createCompteRendu] error.details:', error.details)
+    console.error('[createCompteRendu] error.hint:', error.hint)
+    console.error('[createCompteRendu] full:', JSON.stringify(error))
+    console.error('[createCompteRendu] input was:', JSON.stringify({ ...input, user_id: user.id }))
+    throw new Error(`[${error.code}] ${error.message} — ${error.details ?? ''} ${error.hint ?? ''}`.trim())
   }
   return data
 }

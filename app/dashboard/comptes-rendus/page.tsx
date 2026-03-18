@@ -22,7 +22,7 @@ export default function ComptesRendusPage() {
   }, [])
 
   return (
-    <div style={{ flex: 1, padding: '40px', overflowY: 'auto' }}>
+    <div className="page-enter" style={{ flex: 1, padding: '40px', overflowY: 'auto' }}>
       {/* Header */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '40px' }}>
         <div>
@@ -35,10 +35,10 @@ export default function ComptesRendusPage() {
         </div>
         <Link
           href="/dashboard/comptes-rendus/nouveau"
-          className="transition-all duration-200 hover:scale-105 hover:shadow-[0_0_25px_rgba(232,197,71,0.5)] active:scale-95"
+          className="transition-all duration-200 hover:scale-105 hover:shadow-[0_0_25px_rgba(249,115,22,0.5)] active:scale-95"
           style={{
             padding: '10px 20px',
-            backgroundColor: '#E8C547',
+            backgroundColor: '#F97316',
             color: '#0D0D0B',
             borderRadius: '8px',
             fontSize: '14px',
@@ -57,15 +57,24 @@ export default function ComptesRendusPage() {
 
       {!loading && items.length === 0 && (
         <div style={{ backgroundColor: '#111110', border: '1px dashed #1E1E1C', borderRadius: '12px', padding: '80px 24px', textAlign: 'center' }}>
-          <div style={{ width: '48px', height: '48px', borderRadius: '12px', backgroundColor: '#1E1E1C', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px', fontSize: '20px' }}>
-            ≡
-          </div>
-          <h2 style={{ fontFamily: 'var(--font-syne), sans-serif', fontSize: '18px', fontWeight: 600, color: '#F0EDE6', marginBottom: '8px' }}>
-            Aucun compte rendu
+          <svg width="48" height="48" viewBox="0 0 48 48" fill="none" style={{ margin: '0 auto 20px', display: 'block' }}>
+            <rect x="8" y="6" width="32" height="36" rx="2" stroke="#1E1E1C" strokeWidth="2"/>
+            <path d="M14 16h20M14 22h16M14 28h10" stroke="#F97316" strokeWidth="2" strokeLinecap="round"/>
+            <circle cx="36" cy="36" r="8" fill="#111110" stroke="#F97316" strokeWidth="2"/>
+            <path d="M33 36h6M36 33v6" stroke="#F97316" strokeWidth="1.5" strokeLinecap="round"/>
+          </svg>
+          <h2 style={{ fontFamily: 'var(--font-syne), sans-serif', fontSize: '16px', fontWeight: 600, color: '#8A8880', marginBottom: '8px' }}>
+            Aucun compte rendu pour l&apos;instant
           </h2>
-          <p style={{ color: '#8A8880', fontSize: '14px', fontFamily: 'var(--font-dm-sans), sans-serif' }}>
-            Créez votre premier compte rendu de visite.
+          <p style={{ color: '#7A7870', fontSize: '13px', fontFamily: 'var(--font-dm-sans), sans-serif', marginBottom: '24px' }}>
+            Rédigez votre premier compte rendu de visite de chantier.
           </p>
+          <Link
+            href="/dashboard/comptes-rendus/nouveau"
+            style={{ display: 'inline-block', padding: '10px 20px', backgroundColor: '#F97316', color: '#0D0D0B', borderRadius: '8px', fontSize: '14px', fontWeight: 600, textDecoration: 'none', fontFamily: 'var(--font-dm-sans), sans-serif' }}
+          >
+            + Créer mon premier CR
+          </Link>
         </div>
       )}
 
@@ -86,7 +95,7 @@ export default function ComptesRendusPage() {
                   <span style={{ fontFamily: 'var(--font-syne), sans-serif', fontSize: '16px', fontWeight: 700, color: '#F0EDE6' }}>
                     {group.chantier?.nom ?? '—'}
                   </span>
-                  <span style={{ padding: '2px 8px', backgroundColor: 'rgba(232,197,71,0.1)', color: '#E8C547', borderRadius: '4px', fontSize: '11px', fontWeight: 600, fontFamily: 'var(--font-dm-sans), sans-serif' }}>
+                  <span style={{ padding: '2px 8px', backgroundColor: 'rgba(249,115,22,0.1)', color: '#F97316', borderRadius: '4px', fontSize: '11px', fontWeight: 600, fontFamily: 'var(--font-dm-sans), sans-serif' }}>
                     {group.items.length} CR
                   </span>
                 </div>
@@ -98,11 +107,11 @@ export default function ComptesRendusPage() {
                       key={cr.id}
                       href={`/dashboard/comptes-rendus/${cr.id}`}
                       style={{ backgroundColor: '#111110', border: '1px solid #1E1E1C', borderRadius: '10px', padding: '16px 20px', display: 'flex', alignItems: 'center', gap: '20px', textDecoration: 'none', transition: 'all 0.15s ease' }}
-                      onMouseEnter={e => { e.currentTarget.style.transform = 'translateX(6px)'; e.currentTarget.style.background = 'rgba(232,197,71,0.03)'; e.currentTarget.style.borderColor = 'rgba(232,197,71,0.2)'; }}
+                      onMouseEnter={e => { e.currentTarget.style.transform = 'translateX(6px)'; e.currentTarget.style.background = 'rgba(249,115,22,0.03)'; e.currentTarget.style.borderColor = 'rgba(249,115,22,0.2)'; }}
                       onMouseLeave={e => { e.currentTarget.style.transform = 'translateX(0)'; e.currentTarget.style.background = '#111110'; e.currentTarget.style.borderColor = '#1E1E1C'; }}
                     >
                       {/* Index badge */}
-                      <span style={{ padding: '2px 8px', backgroundColor: 'rgba(232,197,71,0.08)', color: '#E8C547', borderRadius: '4px', fontSize: '11px', fontWeight: 600, fontFamily: 'var(--font-dm-sans), sans-serif', flexShrink: 0 }}>
+                      <span style={{ padding: '2px 8px', backgroundColor: 'rgba(249,115,22,0.08)', color: '#F97316', borderRadius: '4px', fontSize: '11px', fontWeight: 600, fontFamily: 'var(--font-dm-sans), sans-serif', flexShrink: 0 }}>
                         CR #{index + 1}
                       </span>
 
@@ -120,8 +129,8 @@ export default function ComptesRendusPage() {
                       <div style={{ fontSize: '13px', color: '#8A8880', fontFamily: 'var(--font-dm-sans), sans-serif', flexShrink: 0, textAlign: 'right' }}>
                         <div>{new Date(cr.date_visite).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' })}</div>
                         {cr.date_prochaine_visite && (
-                          <div style={{ fontSize: '12px', color: '#E8C547', marginTop: '2px' }}>
-                            Prochaine : {new Date(cr.date_prochaine_visite).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}
+                          <div style={{ fontSize: '12px', color: '#F97316', marginTop: '2px' }}>
+                            Prochaine réunion : {new Date(cr.date_prochaine_visite).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}
                           </div>
                         )}
                       </div>

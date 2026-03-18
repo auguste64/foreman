@@ -2,9 +2,10 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
+import { useRouter, usePathname } from 'next/navigation'
 import { updateChantier, deleteChantier } from '@/lib/supabase/chantiers'
 import { getArtisansChantier, getArtisans, assignerArtisan, retirerArtisan } from '@/lib/supabase/artisans'
+import { useToast } from '@/components/ToastProvider'
 import MiniCalendrier from './MiniCalendrier'
 import type { Chantier } from '@/lib/supabase/chantiers'
 import type { Artisan } from '@/lib/supabase/artisans'
@@ -41,6 +42,7 @@ const labelStyle: React.CSSProperties = {
 
 export default function ChantierDetail({ chantier }: { chantier: Chantier }) {
   const router = useRouter()
+  const { showToast } = useToast()
   const [editing, setEditing] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(false)
   const [saving, setSaving] = useState(false)
@@ -107,6 +109,7 @@ export default function ChantierDetail({ chantier }: { chantier: Chantier }) {
       await assignerArtisan(chantier.id, selectedArtisan)
       await loadArtisans()
       setShowAjouterArtisan(false)
+      showToast('Artisan ajouté')
     } catch (err: unknown) {
       setAssignError(err instanceof Error ? err.message : "Erreur lors de l'assignation.")
     } finally {
@@ -128,6 +131,7 @@ export default function ChantierDetail({ chantier }: { chantier: Chantier }) {
     setSaving(true)
     try {
       await updateChantier(chantier.id, form)
+      showToast('Chantier sauvegardé')
       router.refresh()
       setEditing(false)
     } catch (err: unknown) {
@@ -150,7 +154,15 @@ export default function ChantierDetail({ chantier }: { chantier: Chantier }) {
     }
   }
 
+  const pathname = usePathname()
   const colors = STATUT_COLORS[chantier.statut] ?? STATUT_COLORS['En cours']
+  const progression = chantier.statut === 'Terminé' ? 100 : chantier.statut === 'En pause' ? 30 : 65
+
+  const tabItems = [
+    { label: 'Infos', href: `/dashboard/chantiers/${chantier.id}` },
+    { label: 'Devis', href: `/dashboard/chantiers/${chantier.id}/devis` },
+    { label: 'Factures', href: `/dashboard/chantiers/${chantier.id}/factures` },
+  ]
 
   return (
     <div style={{ flex: 1, padding: '40px', overflowY: 'auto', maxWidth: '720px' }}>
@@ -171,36 +183,59 @@ export default function ChantierDetail({ chantier }: { chantier: Chantier }) {
         ← Retour aux chantiers
       </Link>
 
-      {/* Header */}
-      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '16px', marginBottom: '32px' }}>
-        <div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '6px' }}>
-            <h1
+      {/* Visual header */}
+      <div style={{ marginBottom: '32px', paddingBottom: '24px', borderBottom: '1px solid #1E1E1C' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '6px' }}>
+          <h1 style={{ fontFamily: 'var(--font-syne), sans-serif', fontSize: '28px', fontWeight: 700, color: '#F0EDE6', margin: 0 }}>
+            {chantier.nom}
+          </h1>
+          <span style={{ padding: '3px 12px', borderRadius: '20px', fontSize: '12px', fontWeight: 500, fontFamily: 'var(--font-dm-sans), sans-serif', backgroundColor: colors.bg, color: colors.text, flexShrink: 0 }}>
+            {chantier.statut}
+          </span>
+        </div>
+        <p style={{ color: '#8A8880', fontSize: '13px', fontFamily: 'var(--font-dm-sans), sans-serif', margin: '0 0 16px' }}>
+          {chantier.adresse}
+        </p>
+        {/* Progress bar */}
+        <div style={{ width: '100%', height: '4px', backgroundColor: '#1E1E1C', borderRadius: '999px', overflow: 'hidden' }}>
+          <div style={{ height: '100%', width: `${progression}%`, backgroundColor: '#F97316', borderRadius: '999px', transition: 'width 0.8s cubic-bezier(0.4,0,0.2,1)' }} />
+        </div>
+        <p style={{ fontSize: '11px', color: '#7A7870', fontFamily: 'var(--font-dm-sans), sans-serif', margin: '6px 0 0', textAlign: 'right' }}>
+          {progression}%
+        </p>
+      </div>
+
+      {/* Tabs */}
+      <div style={{ display: 'flex', gap: '4px', marginBottom: '32px', borderBottom: '1px solid #1E1E1C' }}>
+        {tabItems.map(tab => {
+          const active = pathname === tab.href
+          return (
+            <Link
+              key={tab.href}
+              href={tab.href}
               style={{
-                fontFamily: 'var(--font-syne), sans-serif',
-                fontSize: '26px',
-                fontWeight: 700,
-                color: '#F0EDE6',
-                margin: 0,
-              }}
-            >
-              {chantier.nom}
-            </h1>
-            <span
-              style={{
-                padding: '3px 12px',
-                borderRadius: '20px',
-                fontSize: '12px',
+                padding: '10px 20px',
+                fontSize: '13px',
                 fontWeight: 500,
                 fontFamily: 'var(--font-dm-sans), sans-serif',
-                backgroundColor: colors.bg,
-                color: colors.text,
-                flexShrink: 0,
+                textDecoration: 'none',
+                color: active ? '#F97316' : '#8A8880',
+                borderBottom: active ? '2px solid #F97316' : '2px solid transparent',
+                marginBottom: '-1px',
+                transition: 'color 0.15s',
               }}
+              onMouseEnter={e => { if (!active) e.currentTarget.style.color = '#F0EDE6' }}
+              onMouseLeave={e => { if (!active) e.currentTarget.style.color = '#8A8880' }}
             >
-              {chantier.statut}
-            </span>
-          </div>
+              {tab.label}
+            </Link>
+          )
+        })}
+      </div>
+
+      {/* Header actions */}
+      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '16px', marginBottom: '32px' }}>
+        <div>
           <p style={{ color: '#8A8880', fontSize: '14px', fontFamily: 'var(--font-dm-sans), sans-serif', margin: 0 }}>
             {chantier.client} · {chantier.adresse}
           </p>
@@ -210,7 +245,7 @@ export default function ChantierDetail({ chantier }: { chantier: Chantier }) {
           <div style={{ display: 'flex', gap: '8px', flexShrink: 0 }}>
             <button
               onClick={() => setEditing(true)}
-              className="transition-all duration-200 hover:-translate-y-1 hover:shadow-[0_0_20px_rgba(232,197,71,0.4)] active:translate-y-0 active:shadow-none"
+              className="transition-all duration-200 hover:-translate-y-1 hover:shadow-[0_0_20px_rgba(249,115,22,0.4)] active:translate-y-0 active:shadow-none"
               style={{
                 padding: '8px 16px',
                 backgroundColor: '#1E1E1C',
@@ -227,7 +262,7 @@ export default function ChantierDetail({ chantier }: { chantier: Chantier }) {
             </button>
             <button
               onClick={() => setConfirmDelete(true)}
-              className="transition-all duration-200 hover:-translate-y-1 hover:shadow-[0_0_20px_rgba(232,197,71,0.4)] active:translate-y-0 active:shadow-none"
+              className="transition-all duration-200 hover:-translate-y-1 hover:shadow-[0_0_20px_rgba(249,115,22,0.4)] active:translate-y-0 active:shadow-none"
               style={{
                 padding: '8px 16px',
                 backgroundColor: 'transparent',
@@ -286,7 +321,7 @@ export default function ChantierDetail({ chantier }: { chantier: Chantier }) {
         <div
           style={{
             backgroundColor: '#111110',
-            border: '1px solid #E8C547',
+            border: '1px solid #F97316',
             borderRadius: '12px',
             padding: '28px',
           }}
@@ -299,7 +334,7 @@ export default function ChantierDetail({ chantier }: { chantier: Chantier }) {
                 value={form.nom}
                 onChange={set('nom')}
                 style={inputStyle}
-                onFocus={(e) => (e.target.style.borderColor = '#E8C547')}
+                onFocus={(e) => (e.target.style.borderColor = '#F97316')}
                 onBlur={(e) => (e.target.style.borderColor = '#1E1E1C')}
               />
             </div>
@@ -310,7 +345,7 @@ export default function ChantierDetail({ chantier }: { chantier: Chantier }) {
                 value={form.client}
                 onChange={set('client')}
                 style={inputStyle}
-                onFocus={(e) => (e.target.style.borderColor = '#E8C547')}
+                onFocus={(e) => (e.target.style.borderColor = '#F97316')}
                 onBlur={(e) => (e.target.style.borderColor = '#1E1E1C')}
               />
             </div>
@@ -321,7 +356,7 @@ export default function ChantierDetail({ chantier }: { chantier: Chantier }) {
                 value={form.date_debut}
                 onChange={set('date_debut')}
                 style={{ ...inputStyle, colorScheme: 'dark' }}
-                onFocus={(e) => (e.target.style.borderColor = '#E8C547')}
+                onFocus={(e) => (e.target.style.borderColor = '#F97316')}
                 onBlur={(e) => (e.target.style.borderColor = '#1E1E1C')}
               />
             </div>
@@ -332,7 +367,7 @@ export default function ChantierDetail({ chantier }: { chantier: Chantier }) {
                 value={form.adresse}
                 onChange={set('adresse')}
                 style={inputStyle}
-                onFocus={(e) => (e.target.style.borderColor = '#E8C547')}
+                onFocus={(e) => (e.target.style.borderColor = '#F97316')}
                 onBlur={(e) => (e.target.style.borderColor = '#1E1E1C')}
               />
             </div>
@@ -354,11 +389,11 @@ export default function ChantierDetail({ chantier }: { chantier: Chantier }) {
                   cursor: 'pointer',
                   appearance: 'none',
                   WebkitAppearance: 'none',
-                  backgroundImage: "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 16 16' fill='none'%3E%3Cpath d='M4 6L8 10L12 6' stroke='%23E8C547' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E\")",
+                  backgroundImage: "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 16 16' fill='none'%3E%3Cpath d='M4 6L8 10L12 6' stroke='%23F97316' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E\")",
                   backgroundRepeat: 'no-repeat',
                   backgroundPosition: 'right 12px center',
                 }}
-                onFocus={(e) => { e.target.style.borderColor = '#E8C547'; e.target.style.boxShadow = '0 0 0 2px rgba(232,197,71,0.15)' }}
+                onFocus={(e) => { e.target.style.borderColor = '#F97316'; e.target.style.boxShadow = '0 0 0 2px rgba(249,115,22,0.15)' }}
                 onBlur={(e) => { e.target.style.borderColor = '#1E1E1C'; e.target.style.boxShadow = 'none' }}
               >
                 {STATUTS.map((s) => (
@@ -378,10 +413,10 @@ export default function ChantierDetail({ chantier }: { chantier: Chantier }) {
             <button
               onClick={handleSave}
               disabled={saving}
-              className="transition-all duration-200 hover:-translate-y-1 hover:shadow-[0_0_20px_rgba(232,197,71,0.4)] active:translate-y-0 active:shadow-none"
+              className="transition-all duration-200 hover:-translate-y-1 hover:shadow-[0_0_20px_rgba(249,115,22,0.4)] active:translate-y-0 active:shadow-none"
               style={{
                 padding: '10px 20px',
-                backgroundColor: saving ? '#9E8630' : '#E8C547',
+                backgroundColor: saving ? '#9E8630' : '#F97316',
                 color: '#0D0D0B',
                 border: 'none',
                 borderRadius: '8px',
@@ -395,7 +430,7 @@ export default function ChantierDetail({ chantier }: { chantier: Chantier }) {
             </button>
             <button
               onClick={() => { setEditing(false); setError(null); setForm({ nom: chantier.nom, adresse: chantier.adresse, client: chantier.client, date_debut: chantier.date_debut, statut: chantier.statut }) }}
-              className="transition-all duration-200 hover:-translate-y-1 hover:shadow-[0_0_20px_rgba(232,197,71,0.4)] active:translate-y-0 active:shadow-none"
+              className="transition-all duration-200 hover:-translate-y-1 hover:shadow-[0_0_20px_rgba(249,115,22,0.4)] active:translate-y-0 active:shadow-none"
               style={{
                 padding: '10px 20px',
                 backgroundColor: 'transparent',
@@ -438,10 +473,10 @@ export default function ChantierDetail({ chantier }: { chantier: Chantier }) {
           </h2>
           <button
             onClick={openAjouterArtisan}
-            className="transition-all duration-200 hover:-translate-y-1 hover:shadow-[0_0_20px_rgba(232,197,71,0.4)] active:translate-y-0 active:shadow-none"
+            className="transition-all duration-200 hover:-translate-y-1 hover:shadow-[0_0_20px_rgba(249,115,22,0.4)] active:translate-y-0 active:shadow-none"
             style={{
               padding: '8px 14px',
-              backgroundColor: '#E8C547',
+              backgroundColor: '#F97316',
               color: '#0D0D0B',
               border: 'none',
               borderRadius: '8px',
@@ -472,7 +507,7 @@ export default function ChantierDetail({ chantier }: { chantier: Chantier }) {
             {artisans.map((a) => (
               <div
                 key={a.id}
-                className="transition-all duration-150 hover:translate-x-1 hover:bg-[rgba(232,197,71,0.04)]"
+                className="transition-all duration-150 hover:translate-x-1 hover:bg-[rgba(249,115,22,0.04)]"
                 style={{
                   display: 'flex',
                   alignItems: 'center',
@@ -502,7 +537,7 @@ export default function ChantierDetail({ chantier }: { chantier: Chantier }) {
                 </div>
                 <button
                   onClick={() => handleRetirerArtisan(a.id)}
-                  className="transition-all duration-200 hover:-translate-y-1 hover:shadow-[0_0_20px_rgba(232,197,71,0.4)] active:translate-y-0 active:shadow-none"
+                  className="transition-all duration-200 hover:-translate-y-1 hover:shadow-[0_0_20px_rgba(249,115,22,0.4)] active:translate-y-0 active:shadow-none"
                   style={{
                     padding: '6px 12px',
                     backgroundColor: 'transparent',
@@ -544,7 +579,7 @@ export default function ChantierDetail({ chantier }: { chantier: Chantier }) {
                 value={selectedArtisan}
                 onChange={(e) => setSelectedArtisan(e.target.value)}
                 style={{ ...inputStyle, cursor: 'pointer', marginBottom: '20px' }}
-                onFocus={(e) => (e.target.style.borderColor = '#E8C547')}
+                onFocus={(e) => (e.target.style.borderColor = '#F97316')}
                 onBlur={(e) => (e.target.style.borderColor = '#1E1E1C')}
               >
                 <option value="">— Sélectionner un artisan —</option>
@@ -570,11 +605,11 @@ export default function ChantierDetail({ chantier }: { chantier: Chantier }) {
               <button
                 onClick={handleAssignerArtisan}
                 disabled={assigning || !selectedArtisan}
-                className="transition-all duration-200 hover:-translate-y-1 hover:shadow-[0_0_20px_rgba(232,197,71,0.4)] active:translate-y-0 active:shadow-none"
+                className="transition-all duration-200 hover:-translate-y-1 hover:shadow-[0_0_20px_rgba(249,115,22,0.4)] active:translate-y-0 active:shadow-none"
                 style={{
                   flex: 1,
                   padding: '10px',
-                  backgroundColor: !selectedArtisan ? '#5a5030' : assigning ? '#9E8630' : '#E8C547',
+                  backgroundColor: !selectedArtisan ? '#5a5030' : assigning ? '#9E8630' : '#F97316',
                   color: '#0D0D0B',
                   border: 'none',
                   borderRadius: '8px',
@@ -588,7 +623,7 @@ export default function ChantierDetail({ chantier }: { chantier: Chantier }) {
               </button>
               <button
                 onClick={() => setShowAjouterArtisan(false)}
-                className="transition-all duration-200 hover:-translate-y-1 hover:shadow-[0_0_20px_rgba(232,197,71,0.4)] active:translate-y-0 active:shadow-none"
+                className="transition-all duration-200 hover:-translate-y-1 hover:shadow-[0_0_20px_rgba(249,115,22,0.4)] active:translate-y-0 active:shadow-none"
                 style={{
                   flex: 1,
                   padding: '10px',
@@ -704,7 +739,7 @@ export default function ChantierDetail({ chantier }: { chantier: Chantier }) {
               </button>
               <button
                 onClick={() => setConfirmDelete(false)}
-                className="transition-all duration-200 hover:-translate-y-1 hover:shadow-[0_0_20px_rgba(232,197,71,0.4)] active:translate-y-0 active:shadow-none"
+                className="transition-all duration-200 hover:-translate-y-1 hover:shadow-[0_0_20px_rgba(249,115,22,0.4)] active:translate-y-0 active:shadow-none"
                 style={{
                   flex: 1,
                   padding: '10px',

@@ -22,7 +22,7 @@ export default function ArtisansPage() {
   }, [])
 
   return (
-    <div style={{ flex: 1, padding: '40px', overflowY: 'auto' }}>
+    <div className="page-enter" style={{ flex: 1, padding: '40px', overflowY: 'auto' }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '40px' }}>
         <div>
           <h1
@@ -42,10 +42,10 @@ export default function ArtisansPage() {
         </div>
         <Link
           href="/dashboard/artisans/nouveau"
-          className="transition-all duration-200 hover:scale-105 hover:shadow-[0_0_25px_rgba(232,197,71,0.5)] active:scale-95"
+          className="transition-all duration-200 hover:scale-105 hover:shadow-[0_0_25px_rgba(249,115,22,0.5)] active:scale-95"
           style={{
             padding: '10px 20px',
-            backgroundColor: '#E8C547',
+            backgroundColor: '#F97316',
             color: '#0D0D0B',
             borderRadius: '8px',
             fontSize: '14px',
@@ -66,59 +66,23 @@ export default function ArtisansPage() {
       )}
 
       {!loading && artisans.length === 0 && (
-        <div
-          style={{
-            backgroundColor: '#111110',
-            border: '1px dashed #1E1E1C',
-            borderRadius: '12px',
-            padding: '80px 24px',
-            textAlign: 'center',
-          }}
-        >
-          <div
-            style={{
-              width: '48px',
-              height: '48px',
-              borderRadius: '12px',
-              backgroundColor: '#1E1E1C',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              margin: '0 auto 16px',
-              fontSize: '20px',
-            }}
-          >
-            ⬤
-          </div>
-          <h2
-            style={{
-              fontFamily: 'var(--font-syne), sans-serif',
-              fontSize: '18px',
-              fontWeight: 600,
-              color: '#F0EDE6',
-              marginBottom: '8px',
-            }}
-          >
+        <div style={{ backgroundColor: '#111110', border: '1px dashed #1E1E1C', borderRadius: '12px', padding: '80px 24px', textAlign: 'center' }}>
+          <svg width="48" height="48" viewBox="0 0 48 48" fill="none" style={{ margin: '0 auto 20px', display: 'block' }}>
+            <rect x="10" y="6" width="28" height="36" rx="2" stroke="#1E1E1C" strokeWidth="2"/>
+            <circle cx="24" cy="20" r="7" stroke="#1E1E1C" strokeWidth="2"/>
+            <path d="M24 29v4M16 42c0-4.418 3.582-8 8-8s8 3.582 8 8" stroke="#F97316" strokeWidth="2" strokeLinecap="round"/>
+          </svg>
+          <h2 style={{ fontFamily: 'var(--font-syne), sans-serif', fontSize: '16px', fontWeight: 600, color: '#8A8880', marginBottom: '8px' }}>
             Aucun artisan pour l&apos;instant
           </h2>
-          <p style={{ color: '#8A8880', fontSize: '14px', marginBottom: '24px', fontFamily: 'var(--font-dm-sans), sans-serif' }}>
-            Ajoutez votre premier artisan pour commencer.
+          <p style={{ color: '#7A7870', fontSize: '13px', marginBottom: '24px', fontFamily: 'var(--font-dm-sans), sans-serif' }}>
+            Ajoutez vos artisans pour les convoquer et suivre leurs interventions.
           </p>
           <Link
             href="/dashboard/artisans/nouveau"
-            style={{
-              display: 'inline-block',
-              padding: '10px 20px',
-              backgroundColor: '#E8C547',
-              color: '#0D0D0B',
-              borderRadius: '8px',
-              fontSize: '14px',
-              fontWeight: 600,
-              textDecoration: 'none',
-              fontFamily: 'var(--font-dm-sans), sans-serif',
-            }}
+            style={{ display: 'inline-block', padding: '10px 20px', backgroundColor: '#F97316', color: '#0D0D0B', borderRadius: '8px', fontSize: '14px', fontWeight: 600, textDecoration: 'none', fontFamily: 'var(--font-dm-sans), sans-serif' }}
           >
-            + Nouvel artisan
+            + Ajouter mon premier artisan
           </Link>
         </div>
       )}
@@ -132,19 +96,19 @@ export default function ArtisansPage() {
                 key={artisan.id}
                 href={`/dashboard/artisans/${artisan.id}`}
                 style={{ textDecoration: 'none', display: 'block', transition: 'all 0.25s ease' }}
-                onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-4px)'; e.currentTarget.style.borderColor = 'rgba(232,197,71,0.4)'; e.currentTarget.style.boxShadow = '0 12px 32px rgba(0,0,0,0.4)'; }}
+                onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-4px)'; e.currentTarget.style.borderColor = 'rgba(249,115,22,0.4)'; e.currentTarget.style.boxShadow = '0 12px 32px rgba(0,0,0,0.4)'; }}
                 onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.borderColor = '#1E1E1C'; e.currentTarget.style.boxShadow = 'none'; }}
               >
                 <div style={{ backgroundColor: '#111110', border: '1px solid #1E1E1C', borderRadius: '12px', padding: '28px', height: '100%', boxSizing: 'border-box', transition: 'border-color 0.25s ease' }}>
                   {/* Initials */}
-                  <div style={{ width: '48px', height: '48px', borderRadius: '50%', background: 'rgba(232,197,71,0.1)', color: '#E8C547', fontFamily: 'var(--font-syne), sans-serif', fontWeight: 700, fontSize: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '16px' }}>
+                  <div style={{ width: '48px', height: '48px', borderRadius: '50%', background: 'rgba(249,115,22,0.1)', color: '#F97316', fontFamily: 'var(--font-syne), sans-serif', fontWeight: 700, fontSize: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '16px' }}>
                     {initials}
                   </div>
                   {/* Name + badge */}
                   <h3 style={{ fontFamily: 'var(--font-syne), sans-serif', fontSize: '16px', fontWeight: 700, color: '#F0EDE6', margin: '0 0 8px' }}>
                     {artisan.nom}
                   </h3>
-                  <span style={{ display: 'inline-block', padding: '2px 10px', borderRadius: '20px', fontSize: '12px', fontWeight: 500, backgroundColor: 'rgba(232,197,71,0.1)', color: '#E8C547', fontFamily: 'var(--font-dm-sans), sans-serif', marginBottom: '14px' }}>
+                  <span style={{ display: 'inline-block', padding: '2px 10px', borderRadius: '20px', fontSize: '12px', fontWeight: 500, backgroundColor: 'rgba(249,115,22,0.1)', color: '#F97316', fontFamily: 'var(--font-dm-sans), sans-serif', marginBottom: '14px' }}>
                     {artisan.metier}
                   </span>
                   {/* Contact */}

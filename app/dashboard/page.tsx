@@ -8,24 +8,23 @@ export default async function DashboardPage() {
 
   if (!user) redirect('/login')
 
-  const { data: profile } = await supabase.from('profiles').select('nom_complet').eq('id', user.id).single()
+  const [{ data: entreprise }, { data: profile }] = await Promise.all([
+    supabase.from('entreprise_infos').select('raison_sociale').eq('user_id', user.id).single(),
+    supabase.from('profiles').select('prenom, nom').eq('id', user.id).single(),
+  ])
 
-  const prenom = user.email?.split('.')[0] ?? ''
-  const prenomFormate = prenom.charAt(0).toUpperCase() + prenom.slice(1).replace(/[0-9]/g, '')
-  const displayName = profile?.nom_complet ?? prenomFormate
+  const emailFallback = (user.email?.split('@')[0] ?? '').replace(/[0-9]/g, '')
+  const emailFormate = emailFallback.charAt(0).toUpperCase() + emailFallback.slice(1)
+  const displayName = entreprise?.raison_sociale?.trim() || profile?.prenom?.trim() || emailFormate
 
   const [
     { count: chantiersCount },
     { count: chantiersActifsCount },
-    { count: artisansCount },
-    { count: comptesRendusCount },
     { data: chantiersEnCours },
     { data: prochainsEvenements },
   ] = await Promise.all([
     supabase.from('chantiers').select('*', { count: 'exact', head: true }),
     supabase.from('chantiers').select('*', { count: 'exact', head: true }).eq('statut', 'En cours'),
-    supabase.from('artisans').select('*', { count: 'exact', head: true }),
-    supabase.from('comptes_rendus').select('*', { count: 'exact', head: true }),
     supabase
       .from('chantiers')
       .select('*')
@@ -47,8 +46,6 @@ export default async function DashboardPage() {
       stats={{
         total: chantiersCount ?? 0,
         actifs: chantiersActifsCount ?? 0,
-        artisans: artisansCount ?? 0,
-        comptesRendus: comptesRendusCount ?? 0,
       }}
       chantiersEnCours={chantiersEnCours ?? []}
       prochainsEvenements={prochainsEvenements ?? []}

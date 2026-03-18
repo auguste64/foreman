@@ -1,9 +1,26 @@
 'use client'
 
-import { useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import './landing.css'
 
+const faqs = [
+  {
+    q: "Mes artisans ont besoin d'un compte ?",
+    a: "Non. Ils reçoivent un lien magic link par email. Zéro inscription, zéro friction.",
+  },
+  {
+    q: "Puis-je annuler à tout moment ?",
+    a: "Oui. Sans engagement, sans frais de résiliation. Vous annulez en un clic depuis vos paramètres.",
+  },
+  {
+    q: "Foreman fonctionne sur mobile ?",
+    a: "Oui, l'interface est optimisée pour mobile. Idéal pour rédiger vos CR directement sur le chantier.",
+  },
+]
+
 export default function Home() {
+  const [openFaq, setOpenFaq] = useState<number | null>(null)
+
   useEffect(() => {
     const reveals = document.querySelectorAll('.reveal')
     const io = new IntersectionObserver(
@@ -25,7 +42,12 @@ export default function Home() {
     <>
       {/* NAV */}
       <nav className="lp-nav">
-        <a href="#" className="lp-logo">FORE<span>MAN</span></a>
+        <a href="#" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, textDecoration: 'none' }}>
+          <span style={{ width: 4, height: 24, backgroundColor: '#F97316', borderRadius: 1, flexShrink: 0 }} />
+          <span style={{ fontFamily: 'var(--font-syne), sans-serif', fontWeight: 800, fontSize: 22, letterSpacing: '-0.5px', color: '#F0EDE6' }}>
+            FORE<span style={{ color: '#F97316' }}>MAN</span>
+          </span>
+        </a>
         <ul>
           <li><a href="#features">Fonctionnalités</a></li>
           <li><a href="#workflow">Comment ça marche</a></li>
@@ -38,8 +60,6 @@ export default function Home() {
       <section className="lp-hero">
         <div className="hero-grid"></div>
         <div className="hero-glow"></div>
-
-        <div className="lp-badge">Conçu pour les architectes et MOE</div>
 
         <h1>Pilotez vos<br />chantiers.<br /><em>Sans friction.</em></h1>
 
@@ -62,19 +82,9 @@ export default function Home() {
           </a>
         </div>
 
-        <div className="hero-stats">
-          <div>
-            <div className="stat-num">100<span>%</span></div>
-            <div className="stat-label">Mobile-first</div>
-          </div>
-          <div>
-            <div className="stat-num"><span>—</span> ArchiReport</div>
-            <div className="stat-label">Alternative directe</div>
-          </div>
-          <div>
-            <div className="stat-num">19<span>€</span></div>
-            <div className="stat-label">Par mois, tout inclus</div>
-          </div>
+        <div className="hero-social-proof">
+          <span className="hero-proof-dot"></span>
+          Déjà utilisé par des architectes et MOE partout en France
         </div>
       </section>
 
@@ -85,76 +95,112 @@ export default function Home() {
             <div className="section-label">Fonctionnalités</div>
             <h2 className="section-title">Tout ce dont vous avez besoin sur le terrain</h2>
           </div>
-          <p className="features-desc">
-            De la photo de chantier au PDF envoyé aux artisans — Foreman automatise ce que vous faites à la main.
-          </p>
         </div>
 
         <div className="features-grid reveal">
           <div className="feature-card">
-            <svg className="feature-icon" viewBox="0 0 40 40" fill="none">
-              <rect x="6" y="8" width="28" height="24" rx="2" stroke="currentColor" strokeWidth="1.5" />
-              <path d="M12 16h16M12 20h12M12 24h8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-            </svg>
-            <div className="feature-title">Comptes rendus automatisés</div>
-            <div className="feature-text">Générez un PDF complet en quelques clics depuis le chantier. Envoi automatique aux artisans et au maître d&apos;ouvrage via Resend.</div>
-            <div className="feature-num">01</div>
+            <div className="feature-badge">01</div>
+            <div className="feature-content">
+              <svg className="feature-icon" viewBox="0 0 40 40" fill="none">
+                <rect x="6" y="8" width="28" height="24" rx="2" stroke="currentColor" strokeWidth="1.5" />
+                <path d="M12 16h16M12 20h12M12 24h8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+              </svg>
+              <div className="feature-title">Comptes rendus automatisés</div>
+              <div className="feature-text">Générez un PDF complet en quelques clics depuis le chantier. Envoi automatique aux artisans et au maître d&apos;ouvrage via Resend.</div>
+            </div>
           </div>
 
           <div className="feature-card">
-            <svg className="feature-icon" viewBox="0 0 40 40" fill="none">
-              <rect x="8" y="6" width="24" height="28" rx="2" stroke="currentColor" strokeWidth="1.5" />
-              <circle cx="20" cy="18" r="5" stroke="currentColor" strokeWidth="1.5" />
-              <path d="M20 25v3M14 34c0-3.314 2.686-6 6-6s6 2.686 6 6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-            </svg>
-            <div className="feature-title">Gestion des artisans</div>
-            <div className="feature-text">Répertoire complet avec métiers, convocations automatiques et accès via magic link. Zéro compte à créer pour eux.</div>
-            <div className="feature-num">02</div>
+            <div className="feature-badge">02</div>
+            <div className="feature-content">
+              <svg className="feature-icon" viewBox="0 0 40 40" fill="none">
+                <rect x="8" y="6" width="24" height="28" rx="2" stroke="currentColor" strokeWidth="1.5" />
+                <circle cx="20" cy="18" r="5" stroke="currentColor" strokeWidth="1.5" />
+                <path d="M20 25v3M14 34c0-3.314 2.686-6 6-6s6 2.686 6 6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+              </svg>
+              <div className="feature-title">Gestion des artisans</div>
+              <div className="feature-text">Répertoire complet avec métiers, convocations automatiques et accès via magic link. Zéro compte à créer pour eux.</div>
+            </div>
           </div>
 
           <div className="feature-card">
-            <svg className="feature-icon" viewBox="0 0 40 40" fill="none">
-              <rect x="6" y="8" width="28" height="26" rx="2" stroke="currentColor" strokeWidth="1.5" />
-              <path d="M6 14h28" stroke="currentColor" strokeWidth="1.5" />
-              <path d="M14 6v4M26 6v4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-              <rect x="11" y="19" width="6" height="5" rx="1" fill="currentColor" opacity="0.4" />
-              <rect x="23" y="19" width="6" height="5" rx="1" fill="currentColor" opacity="0.2" />
-            </svg>
-            <div className="feature-title">Planning &amp; interventions</div>
-            <div className="feature-text">Vue calendrier mensuelle et hebdo. Planifiez visites, livraisons, OPR et réunions de chantier. Sync automatique depuis les CR.</div>
-            <div className="feature-num">03</div>
+            <div className="feature-badge">03</div>
+            <div className="feature-content">
+              <svg className="feature-icon" viewBox="0 0 40 40" fill="none">
+                <rect x="6" y="8" width="28" height="26" rx="2" stroke="currentColor" strokeWidth="1.5" />
+                <path d="M6 14h28" stroke="currentColor" strokeWidth="1.5" />
+                <path d="M14 6v4M26 6v4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+                <rect x="11" y="19" width="6" height="5" rx="1" fill="currentColor" opacity="0.4" />
+                <rect x="23" y="19" width="6" height="5" rx="1" fill="currentColor" opacity="0.2" />
+              </svg>
+              <div className="feature-title">Planning &amp; interventions</div>
+              <div className="feature-text">Vue calendrier mensuelle et hebdo. Planifiez visites, livraisons, OPR et réunions de chantier. Sync automatique depuis les CR.</div>
+            </div>
           </div>
 
           <div className="feature-card">
-            <svg className="feature-icon" viewBox="0 0 40 40" fill="none">
-              <path d="M10 30a10 10 0 1 1 20 0" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-              <path d="M20 20v-8M20 20l5-5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-              <circle cx="20" cy="20" r="2" fill="currentColor" />
-            </svg>
-            <div className="feature-title">Suivi d&apos;avancement</div>
-            <div className="feature-text">Tableau de bord par chantier. Visualisez l&apos;état de chaque lot, les réserves ouvertes et les jalons à venir en un coup d&apos;œil.</div>
-            <div className="feature-num">04</div>
+            <div className="feature-badge">04</div>
+            <div className="feature-content">
+              <svg className="feature-icon" viewBox="0 0 40 40" fill="none">
+                <path d="M10 30a10 10 0 1 1 20 0" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+                <path d="M20 20v-8M20 20l5-5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+                <circle cx="20" cy="20" r="2" fill="currentColor" />
+              </svg>
+              <div className="feature-title">Suivi d&apos;avancement</div>
+              <div className="feature-text">Tableau de bord par chantier. Visualisez l&apos;état de chaque lot, les réserves ouvertes et les jalons à venir en un coup d&apos;œil.</div>
+            </div>
           </div>
 
           <div className="feature-card">
-            <svg className="feature-icon" viewBox="0 0 40 40" fill="none">
-              <rect x="8" y="8" width="24" height="24" rx="2" stroke="currentColor" strokeWidth="1.5" />
-              <path d="M14 20l4 4 8-8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
-            <div className="feature-title">Interface client</div>
-            <div className="feature-text">Donnez accès à vos maîtres d&apos;ouvrage en lecture seule. Ils suivent l&apos;avancement sans polluer votre espace de travail.</div>
-            <div className="feature-num">05</div>
+            <div className="feature-badge">05</div>
+            <div className="feature-content">
+              <svg className="feature-icon" viewBox="0 0 40 40" fill="none">
+                <rect x="8" y="8" width="24" height="24" rx="2" stroke="currentColor" strokeWidth="1.5" />
+                <path d="M14 20l4 4 8-8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+              <div className="feature-title">Interface client</div>
+              <div className="feature-text">Donnez accès à vos maîtres d&apos;ouvrage en lecture seule. Ils suivent l&apos;avancement sans polluer votre espace de travail.</div>
+            </div>
           </div>
 
           <div className="feature-card">
-            <svg className="feature-icon" viewBox="0 0 40 40" fill="none">
-              <path d="M20 8v4M20 28v4M8 20h4M28 20h4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-              <circle cx="20" cy="20" r="8" stroke="currentColor" strokeWidth="1.5" />
-              <circle cx="20" cy="20" r="3" fill="currentColor" opacity="0.5" />
-            </svg>
-            <div className="feature-title">Photos intégrées</div>
-            <div className="feature-text">Capturez depuis mobile, intégrez directement dans les CR. Les photos s&apos;insèrent dans le PDF automatiquement au bon endroit.</div>
-            <div className="feature-num">06</div>
+            <div className="feature-badge">06</div>
+            <div className="feature-content">
+              <svg className="feature-icon" viewBox="0 0 40 40" fill="none">
+                <path d="M20 8v4M20 28v4M8 20h4M28 20h4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+                <circle cx="20" cy="20" r="8" stroke="currentColor" strokeWidth="1.5" />
+                <circle cx="20" cy="20" r="3" fill="currentColor" opacity="0.5" />
+              </svg>
+              <div className="feature-title">Photos intégrées</div>
+              <div className="feature-text">Capturez depuis mobile, intégrez directement dans les CR. Les photos s&apos;insèrent dans le PDF automatiquement au bon endroit.</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* AVANT / APRÈS */}
+      <section className="lp-section lp-before-after">
+        <h2 className="section-title reveal" style={{ marginBottom: '48px' }}>Avant. Après.</h2>
+        <div className="before-after-grid reveal">
+          <div className="ba-col ba-before">
+            <div className="ba-title">Avant Foreman</div>
+            <ul className="ba-list">
+              <li>📄 CR tapé sur Word à 23h</li>
+              <li>📧 Email avec 12 pièces jointes</li>
+              <li>📞 Appel pour savoir qui vient</li>
+              <li>🗓️ Planning sur Excel</li>
+              <li>😓 2h d&apos;admin par visite</li>
+            </ul>
+          </div>
+          <div className="ba-col ba-after">
+            <div className="ba-title">Avec Foreman</div>
+            <ul className="ba-list">
+              <li>⚡ CR généré en 3 clics sur site</li>
+              <li>📨 PDF envoyé automatiquement</li>
+              <li>🔗 Magic link = présence confirmée</li>
+              <li>📅 Planning synchro depuis les CR</li>
+              <li>✅ 20 minutes par visite</li>
+            </ul>
           </div>
         </div>
       </section>
@@ -196,37 +242,6 @@ export default function Home() {
             </div>
           </div>
 
-          <div className="workflow-visual reveal">
-            <div className="mock-header">
-              <div className="mock-dot"></div>
-              <div className="mock-title">Résidence Les Pins — CR #4</div>
-              <div className="mock-tag">Envoyé</div>
-            </div>
-            <div className="mock-row">
-              <span className="mock-row-label">Lot Maçonnerie</span>
-              <span className="mock-row-status status-done">Terminé</span>
-            </div>
-            <div className="mock-row">
-              <span className="mock-row-label">Lot Plomberie</span>
-              <span className="mock-row-status status-pending">En cours</span>
-            </div>
-            <div className="mock-row">
-              <span className="mock-row-label">Lot Électricité</span>
-              <span className="mock-row-status status-pending">En cours</span>
-            </div>
-            <div className="mock-row">
-              <span className="mock-row-label">Lot Menuiserie ext.</span>
-              <span className="mock-row-status status-wait">À venir</span>
-            </div>
-            <div className="mock-row">
-              <span className="mock-row-label">Lot Peinture</span>
-              <span className="mock-row-status status-wait">À venir</span>
-            </div>
-            <div className="mock-footer">
-              <span>3 artisans convoqués</span>
-              <span className="mock-footer-accent">PDF généré ✓</span>
-            </div>
-          </div>
         </div>
       </section>
 
@@ -253,7 +268,7 @@ export default function Home() {
               <div className="author-avatar">TP</div>
               <div>
                 <div className="author-name">Thomas P.</div>
-                <div className="author-role">MOE indépendant, Bayonne</div>
+                <div className="author-role">MOE indépendant, France</div>
               </div>
             </div>
           </div>
@@ -264,10 +279,29 @@ export default function Home() {
               <div className="author-avatar">SA</div>
               <div>
                 <div className="author-name">Sophie A.</div>
-                <div className="author-role">Architecte, Biarritz</div>
+                <div className="author-role">Architecte, France</div>
               </div>
             </div>
           </div>
+        </div>
+      </section>
+
+      {/* FAQ */}
+      <section className="lp-section lp-faq">
+        <div className="section-label reveal">FAQ</div>
+        <h2 className="section-title reveal">Questions fréquentes</h2>
+        <div className="faq-list reveal">
+          {faqs.map((faq, i) => (
+            <div key={i} className={`faq-item${openFaq === i ? ' open' : ''}`}>
+              <button className="faq-question" onClick={() => setOpenFaq(openFaq === i ? null : i)}>
+                {faq.q}
+                <span className="faq-icon">{openFaq === i ? '−' : '+'}</span>
+              </button>
+              <div className="faq-answer">
+                <p>{faq.a}</p>
+              </div>
+            </div>
+          ))}
         </div>
       </section>
 
@@ -323,13 +357,27 @@ export default function Home() {
       </section>
 
       {/* FOOTER */}
-      <footer className="lp-footer">
-        <div className="footer-copy">© 2026 Foreman. Tous droits réservés.</div>
-        <div className="footer-links">
-          <a href="#">Mentions légales</a>
-          <a href="#">Confidentialité</a>
-          <a href="#">Contact</a>
+      <footer className="lp-footer-v2">
+        <div className="footer-v2-grid">
+          <div className="footer-v2-col">
+            <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, marginBottom: '12px' }}>
+              <span style={{ width: 4, height: 24, backgroundColor: '#F97316', borderRadius: 1, flexShrink: 0 }} />
+              <span style={{ fontFamily: 'var(--font-syne), sans-serif', fontWeight: 800, fontSize: '20px', letterSpacing: '-0.5px', color: '#F0EDE6' }}>
+                FORE<span style={{ color: '#F97316' }}>MAN</span>
+              </span>
+            </div>
+            <p className="footer-v2-desc">Gestion de chantier pour architectes et MOE.</p>
+          </div>
+          <div className="footer-v2-col">
+            <a href="#features" className="footer-v2-link">Fonctionnalités</a>
+            <a href="#pricing" className="footer-v2-link">Tarifs</a>
+            <a href="#workflow" className="footer-v2-link">Comment ça marche</a>
+          </div>
+          <div className="footer-v2-col">
+            <span className="footer-v2-info">contact@foreman.app</span>
+          </div>
         </div>
+        <div className="footer-v2-copy">© 2026 Foreman</div>
       </footer>
     </>
   )

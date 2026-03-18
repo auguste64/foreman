@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { createArtisan } from '@/lib/supabase/artisans'
+import { useToast } from '@/components/ToastProvider'
 import MetierSelect from '@/components/MetierSelect'
 
 const inputStyle: React.CSSProperties = {
@@ -29,6 +30,7 @@ const labelStyle: React.CSSProperties = {
 
 export default function NouvelArtisanPage() {
   const router = useRouter()
+  const { showToast } = useToast()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -50,6 +52,7 @@ export default function NouvelArtisanPage() {
     setLoading(true)
     try {
       await createArtisan(form)
+      showToast('Artisan ajouté')
       router.push('/dashboard/artisans')
       router.refresh()
     } catch (err: unknown) {
@@ -108,7 +111,7 @@ export default function NouvelArtisanPage() {
               required
               placeholder="Ex : Jean Martin"
               style={inputStyle}
-              onFocus={(e) => (e.target.style.borderColor = '#E8C547')}
+              onFocus={(e) => (e.target.style.borderColor = '#F97316')}
               onBlur={(e) => (e.target.style.borderColor = '#1E1E1C')}
             />
           </div>
@@ -132,7 +135,7 @@ export default function NouvelArtisanPage() {
                 required
                 placeholder="jean@exemple.com"
                 style={inputStyle}
-                onFocus={(e) => (e.target.style.borderColor = '#E8C547')}
+                onFocus={(e) => (e.target.style.borderColor = '#F97316')}
                 onBlur={(e) => (e.target.style.borderColor = '#1E1E1C')}
               />
             </div>
@@ -145,7 +148,7 @@ export default function NouvelArtisanPage() {
                 required
                 placeholder="06 00 00 00 00"
                 style={inputStyle}
-                onFocus={(e) => (e.target.style.borderColor = '#E8C547')}
+                onFocus={(e) => (e.target.style.borderColor = '#F97316')}
                 onBlur={(e) => (e.target.style.borderColor = '#1E1E1C')}
               />
             </div>
@@ -164,7 +167,7 @@ export default function NouvelArtisanPage() {
               style={{
                 flex: 1,
                 padding: '12px',
-                backgroundColor: loading ? '#9E8630' : '#E8C547',
+                backgroundColor: loading ? '#9E8630' : '#F97316',
                 color: '#0D0D0B',
                 border: 'none',
                 borderRadius: '8px',

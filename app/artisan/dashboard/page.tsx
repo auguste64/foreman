@@ -121,12 +121,12 @@ export default function ArtisanDashboard() {
               fontSize: '20px',
               fontWeight: 800,
               letterSpacing: '0.15em',
-              color: '#E8C547',
+              color: '#F0EDE6',
               display: 'block',
               marginBottom: '32px',
             }}
           >
-            FOREMAN
+            FORE<span style={{ color: '#F97316' }}>MAN</span>
           </span>
           <p style={{ color: '#8A8880', fontSize: '14px', fontFamily: 'var(--font-dm-sans), sans-serif', lineHeight: '1.6' }}>
             Aucun compte artisan trouvé pour cet email. Contactez votre chef de chantier.
@@ -172,12 +172,12 @@ export default function ArtisanDashboard() {
                 fontSize: '18px',
                 fontWeight: 800,
                 letterSpacing: '0.15em',
-                color: '#E8C547',
+                color: '#F0EDE6',
                 display: 'block',
                 marginBottom: '12px',
               }}
             >
-              FOREMAN
+              FORE<span style={{ color: '#F97316' }}>MAN</span>
             </span>
             <h1
               style={{
@@ -313,7 +313,7 @@ export default function ArtisanDashboard() {
                           <span
                             style={{
                               fontSize: '13px',
-                              color: '#E8C547',
+                              color: '#F97316',
                               fontFamily: 'var(--font-dm-sans), sans-serif',
                               fontWeight: 600,
                             }}

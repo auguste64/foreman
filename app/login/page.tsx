@@ -60,10 +60,10 @@ export default function LoginPage() {
               fontSize: '28px',
               fontWeight: 800,
               letterSpacing: '0.15em',
-              color: '#E8C547',
+              color: '#F0EDE6',
             }}
           >
-            FOREMAN
+            FORE<span style={{ color: '#F97316' }}>MAN</span>
           </span>
           <p style={{ color: '#8A8880', fontSize: '14px', marginTop: '8px' }}>
             Gestion de chantier pour architectes
@@ -143,7 +143,7 @@ export default function LoginPage() {
                   fontFamily: 'var(--font-dm-sans), sans-serif',
                   transition: 'border-color 0.15s',
                 }}
-                onFocus={(e) => (e.target.style.borderColor = '#E8C547')}
+                onFocus={(e) => (e.target.style.borderColor = '#F97316')}
                 onBlur={(e) => (e.target.style.borderColor = '#1E1E1C')}
               />
             </div>
@@ -178,7 +178,7 @@ export default function LoginPage() {
                   fontFamily: 'var(--font-dm-sans), sans-serif',
                   transition: 'border-color 0.15s',
                 }}
-                onFocus={(e) => (e.target.style.borderColor = '#E8C547')}
+                onFocus={(e) => (e.target.style.borderColor = '#F97316')}
                 onBlur={(e) => (e.target.style.borderColor = '#1E1E1C')}
               />
             </div>
@@ -196,7 +196,7 @@ export default function LoginPage() {
               style={{
                 marginTop: '8px',
                 padding: '12px',
-                backgroundColor: loading ? '#9E8630' : '#E8C547',
+                backgroundColor: loading ? '#9E8630' : '#F97316',
                 color: '#0D0D0B',
                 border: 'none',
                 borderRadius: '8px',

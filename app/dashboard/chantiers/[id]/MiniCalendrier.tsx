@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { createEvenement, deleteEvenement, TYPE_COLORS, TYPE_LABELS, TYPES } from '@/lib/supabase/planning'
+import { useToast } from '@/components/ToastProvider'
 import type { Evenement, TypeEvenement, CreateEvenementInput } from '@/lib/supabase/planning'
 import type { Artisan } from '@/lib/supabase/artisans'
 
@@ -49,7 +50,7 @@ const lbl: React.CSSProperties = {
   display: 'block', fontSize: '11px', color: '#8A8880', marginBottom: '5px',
   fontFamily: 'var(--font-dm-sans), sans-serif', textTransform: 'uppercase', letterSpacing: '0.06em',
 }
-const f = (e: React.FocusEvent<HTMLElement>) => { (e.target as HTMLElement).style.borderColor = '#E8C547' }
+const f = (e: React.FocusEvent<HTMLElement>) => { (e.target as HTMLElement).style.borderColor = '#F97316' }
 const b = (e: React.FocusEvent<HTMLElement>) => { (e.target as HTMLElement).style.borderColor = '#1E1E1C' }
 
 // ─── Component ───────────────────────────────────────────────────────────────
@@ -57,6 +58,7 @@ const b = (e: React.FocusEvent<HTMLElement>) => { (e.target as HTMLElement).styl
 interface Props { chantierId: string }
 
 export default function MiniCalendrier({ chantierId }: Props) {
+  const { showToast } = useToast()
   const today = new Date()
   const [year,  setYear]  = useState(today.getFullYear())
   const [month, setMonth] = useState(today.getMonth())
@@ -134,6 +136,7 @@ export default function MiniCalendrier({ chantierId }: Props) {
       })
       setEvenements(prev => [...prev, ev].sort((a,b) => a.date_debut.localeCompare(b.date_debut)))
       setShowCreate(false)
+      showToast('Événement créé')
     } catch (err: unknown) {
       setCreateError(err instanceof Error ? err.message : 'Erreur')
     } finally {
@@ -169,7 +172,7 @@ export default function MiniCalendrier({ chantierId }: Props) {
         </div>
         <button
           onClick={() => openCreate()}
-          style={{ padding: '6px 12px', backgroundColor: '#E8C547', color: '#0D0D0B', border: 'none', borderRadius: '6px', fontSize: '12px', fontWeight: 600, cursor: 'pointer', fontFamily: 'var(--font-dm-sans), sans-serif' }}
+          style={{ padding: '6px 12px', backgroundColor: '#F97316', color: '#0D0D0B', border: 'none', borderRadius: '6px', fontSize: '12px', fontWeight: 600, cursor: 'pointer', fontFamily: 'var(--font-dm-sans), sans-serif' }}
         >
           + Ajouter
         </button>
@@ -212,7 +215,7 @@ export default function MiniCalendrier({ chantierId }: Props) {
                   <div style={{
                     width: '20px', height: '20px', borderRadius: '50%', margin: '0 auto 3px',
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    backgroundColor: today ? '#E8C547' : 'transparent',
+                    backgroundColor: today ? '#F97316' : 'transparent',
                     fontSize: '11px', fontWeight: today ? 700 : 400,
                     color: today ? '#0D0D0B' : '#F0EDE6',
                     fontFamily: 'var(--font-dm-sans), sans-serif',
@@ -320,7 +323,7 @@ export default function MiniCalendrier({ chantierId }: Props) {
             {createError && <p style={{ fontSize: '12px', color: '#E85447', marginTop: '10px', fontFamily: 'var(--font-dm-sans), sans-serif' }}>{createError}</p>}
             <div style={{ display: 'flex', gap: '8px', marginTop: '18px' }}>
               <button onClick={handleCreate} disabled={creating}
-                style={{ flex: 1, padding: '9px', backgroundColor: creating ? '#9E8630' : '#E8C547', color: '#0D0D0B', border: 'none', borderRadius: '8px', fontSize: '13px', fontWeight: 600, cursor: creating ? 'not-allowed' : 'pointer', fontFamily: 'var(--font-dm-sans), sans-serif' }}>
+                style={{ flex: 1, padding: '9px', backgroundColor: creating ? '#9E8630' : '#F97316', color: '#0D0D0B', border: 'none', borderRadius: '8px', fontSize: '13px', fontWeight: 600, cursor: creating ? 'not-allowed' : 'pointer', fontFamily: 'var(--font-dm-sans), sans-serif' }}>
                 {creating ? 'Création...' : 'Créer'}
               </button>
               <button onClick={() => setShowCreate(false)}

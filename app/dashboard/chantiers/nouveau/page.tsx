@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { createChantier } from '@/lib/supabase/chantiers'
+import { useToast } from '@/components/ToastProvider'
 
 const inputStyle: React.CSSProperties = {
   width: '100%',
@@ -28,6 +29,7 @@ const labelStyle: React.CSSProperties = {
 
 export default function NouveauChantierPage() {
   const router = useRouter()
+  const { showToast } = useToast()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -50,6 +52,7 @@ export default function NouveauChantierPage() {
     setLoading(true)
     try {
       await createChantier(form)
+      showToast('Chantier créé')
       router.push('/dashboard/chantiers')
       router.refresh()
     } catch (err: unknown) {
@@ -110,7 +113,7 @@ export default function NouveauChantierPage() {
               required
               placeholder="Ex : Villa Dupont — Rénovation complète"
               style={inputStyle}
-              onFocus={(e) => (e.target.style.borderColor = '#E8C547')}
+              onFocus={(e) => (e.target.style.borderColor = '#F97316')}
               onBlur={(e) => (e.target.style.borderColor = '#1E1E1C')}
             />
           </div>
@@ -124,7 +127,7 @@ export default function NouveauChantierPage() {
               required
               placeholder="Ex : 12 rue de la Paix, 75001 Paris"
               style={inputStyle}
-              onFocus={(e) => (e.target.style.borderColor = '#E8C547')}
+              onFocus={(e) => (e.target.style.borderColor = '#F97316')}
               onBlur={(e) => (e.target.style.borderColor = '#1E1E1C')}
             />
           </div>
@@ -138,7 +141,7 @@ export default function NouveauChantierPage() {
               required
               placeholder="Ex : M. et Mme Dupont"
               style={inputStyle}
-              onFocus={(e) => (e.target.style.borderColor = '#E8C547')}
+              onFocus={(e) => (e.target.style.borderColor = '#F97316')}
               onBlur={(e) => (e.target.style.borderColor = '#1E1E1C')}
             />
           </div>
@@ -154,7 +157,7 @@ export default function NouveauChantierPage() {
                 ...inputStyle,
                 colorScheme: 'dark',
               }}
-              onFocus={(e) => (e.target.style.borderColor = '#E8C547')}
+              onFocus={(e) => (e.target.style.borderColor = '#F97316')}
               onBlur={(e) => (e.target.style.borderColor = '#1E1E1C')}
             />
           </div>
@@ -169,11 +172,11 @@ export default function NouveauChantierPage() {
             <button
               type="submit"
               disabled={loading}
-              className="transition-all duration-200 hover:-translate-y-1 hover:shadow-[0_0_20px_rgba(232,197,71,0.4)] active:translate-y-0 active:shadow-none"
+              className="transition-all duration-200 hover:-translate-y-1 hover:shadow-[0_0_20px_rgba(249,115,22,0.4)] active:translate-y-0 active:shadow-none"
               style={{
                 flex: 1,
                 padding: '12px',
-                backgroundColor: loading ? '#9E8630' : '#E8C547',
+                backgroundColor: loading ? '#9E8630' : '#F97316',
                 color: '#0D0D0B',
                 border: 'none',
                 borderRadius: '8px',
@@ -187,7 +190,7 @@ export default function NouveauChantierPage() {
             </button>
             <Link
               href="/dashboard/chantiers"
-              className="transition-all duration-200 hover:-translate-y-1 hover:shadow-[0_0_20px_rgba(232,197,71,0.4)] active:translate-y-0 active:shadow-none"
+              className="transition-all duration-200 hover:-translate-y-1 hover:shadow-[0_0_20px_rgba(249,115,22,0.4)] active:translate-y-0 active:shadow-none"
               style={{
                 padding: '12px 20px',
                 backgroundColor: 'transparent',
