@@ -170,10 +170,10 @@ export default function ChantierDetail({ chantier }: { chantier: Chantier }) {
       <Link
         href="/dashboard/chantiers"
         style={{ display: 'inline-flex', alignItems: 'center', gap: 8, backgroundColor: '#111110', border: '1px solid #1E1E1C', borderRadius: 8, padding: '8px 14px', color: '#F0EDE6', fontSize: 13, fontWeight: 500, cursor: 'pointer', textDecoration: 'none', transition: 'all 0.15s ease', fontFamily: 'var(--font-dm-sans), sans-serif', marginBottom: 28 }}
-        onMouseEnter={e => { e.currentTarget.style.background = '#1E1E1C'; e.currentTarget.style.borderColor = '#F97316'; e.currentTarget.style.color = '#F97316' }}
+        onMouseEnter={e => { e.currentTarget.style.background = '#1E1E1C'; e.currentTarget.style.borderColor = '#ea580c'; e.currentTarget.style.color = '#ea580c' }}
         onMouseLeave={e => { e.currentTarget.style.background = '#111110'; e.currentTarget.style.borderColor = '#1E1E1C'; e.currentTarget.style.color = '#F0EDE6' }}
       >
-        <span style={{ color: '#F97316' }}>←</span>
+        <span style={{ color: '#ea580c' }}>←</span>
         Retour aux chantiers
       </Link>
 
@@ -192,7 +192,7 @@ export default function ChantierDetail({ chantier }: { chantier: Chantier }) {
         </p>
         {/* Progress bar */}
         <div style={{ width: '100%', height: '4px', backgroundColor: '#1E1E1C', borderRadius: '999px', overflow: 'hidden' }}>
-          <div style={{ height: '100%', width: `${progression}%`, backgroundColor: '#F97316', borderRadius: '999px', transition: 'width 0.8s cubic-bezier(0.4,0,0.2,1)' }} />
+          <div style={{ height: '100%', width: `${progression}%`, backgroundColor: '#ea580c', borderRadius: '999px', transition: 'width 0.8s cubic-bezier(0.4,0,0.2,1)' }} />
         </div>
         <p style={{ fontSize: '11px', color: '#7A7870', fontFamily: 'var(--font-dm-sans), sans-serif', margin: '6px 0 0', textAlign: 'right' }}>
           {progression}%
@@ -213,8 +213,8 @@ export default function ChantierDetail({ chantier }: { chantier: Chantier }) {
                 fontWeight: 500,
                 fontFamily: 'var(--font-dm-sans), sans-serif',
                 textDecoration: 'none',
-                color: active ? '#F97316' : '#8A8880',
-                borderBottom: active ? '2px solid #F97316' : '2px solid transparent',
+                color: active ? '#ea580c' : '#8A8880',
+                borderBottom: active ? '2px solid #ea580c' : '2px solid transparent',
                 marginBottom: '-1px',
                 transition: 'color 0.15s',
               }}
@@ -315,7 +315,7 @@ export default function ChantierDetail({ chantier }: { chantier: Chantier }) {
         <div
           style={{
             backgroundColor: '#111110',
-            border: '1px solid #F97316',
+            border: '1px solid #ea580c',
             borderRadius: '12px',
             padding: '28px',
           }}
@@ -328,7 +328,7 @@ export default function ChantierDetail({ chantier }: { chantier: Chantier }) {
                 value={form.nom}
                 onChange={set('nom')}
                 style={inputStyle}
-                onFocus={(e) => (e.target.style.borderColor = '#F97316')}
+                onFocus={(e) => (e.target.style.borderColor = '#ea580c')}
                 onBlur={(e) => (e.target.style.borderColor = '#1E1E1C')}
               />
             </div>
@@ -339,7 +339,7 @@ export default function ChantierDetail({ chantier }: { chantier: Chantier }) {
                 value={form.client}
                 onChange={set('client')}
                 style={inputStyle}
-                onFocus={(e) => (e.target.style.borderColor = '#F97316')}
+                onFocus={(e) => (e.target.style.borderColor = '#ea580c')}
                 onBlur={(e) => (e.target.style.borderColor = '#1E1E1C')}
               />
             </div>
@@ -350,7 +350,7 @@ export default function ChantierDetail({ chantier }: { chantier: Chantier }) {
                 value={form.date_debut}
                 onChange={set('date_debut')}
                 style={{ ...inputStyle, colorScheme: 'dark' }}
-                onFocus={(e) => (e.target.style.borderColor = '#F97316')}
+                onFocus={(e) => (e.target.style.borderColor = '#ea580c')}
                 onBlur={(e) => (e.target.style.borderColor = '#1E1E1C')}
               />
             </div>
@@ -361,7 +361,7 @@ export default function ChantierDetail({ chantier }: { chantier: Chantier }) {
                 value={form.adresse}
                 onChange={set('adresse')}
                 style={inputStyle}
-                onFocus={(e) => (e.target.style.borderColor = '#F97316')}
+                onFocus={(e) => (e.target.style.borderColor = '#ea580c')}
                 onBlur={(e) => (e.target.style.borderColor = '#1E1E1C')}
               />
             </div>
@@ -383,11 +383,11 @@ export default function ChantierDetail({ chantier }: { chantier: Chantier }) {
                   cursor: 'pointer',
                   appearance: 'none',
                   WebkitAppearance: 'none',
-                  backgroundImage: "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 16 16' fill='none'%3E%3Cpath d='M4 6L8 10L12 6' stroke='%23F97316' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E\")",
+                  backgroundImage: "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 16 16' fill='none'%3E%3Cpath d='M4 6L8 10L12 6' stroke='%23ea580c' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E\")",
                   backgroundRepeat: 'no-repeat',
                   backgroundPosition: 'right 12px center',
                 }}
-                onFocus={(e) => { e.target.style.borderColor = '#F97316'; e.target.style.boxShadow = '0 0 0 2px rgba(249,115,22,0.15)' }}
+                onFocus={(e) => { e.target.style.borderColor = '#ea580c'; e.target.style.boxShadow = '0 0 0 2px rgba(249,115,22,0.15)' }}
                 onBlur={(e) => { e.target.style.borderColor = '#1E1E1C'; e.target.style.boxShadow = 'none' }}
               >
                 {STATUTS.map((s) => (
@@ -410,7 +410,7 @@ export default function ChantierDetail({ chantier }: { chantier: Chantier }) {
               className="transition-all duration-200 hover:-translate-y-1 hover:shadow-[0_0_20px_rgba(249,115,22,0.4)] active:translate-y-0 active:shadow-none"
               style={{
                 padding: '10px 20px',
-                backgroundColor: saving ? '#9E8630' : '#F97316',
+                backgroundColor: saving ? '#9E8630' : '#ea580c',
                 color: '#0D0D0B',
                 border: 'none',
                 borderRadius: '8px',
@@ -470,7 +470,7 @@ export default function ChantierDetail({ chantier }: { chantier: Chantier }) {
             className="transition-all duration-200 hover:-translate-y-1 hover:shadow-[0_0_20px_rgba(249,115,22,0.4)] active:translate-y-0 active:shadow-none"
             style={{
               padding: '8px 14px',
-              backgroundColor: '#F97316',
+              backgroundColor: '#ea580c',
               color: '#0D0D0B',
               border: 'none',
               borderRadius: '8px',
@@ -573,7 +573,7 @@ export default function ChantierDetail({ chantier }: { chantier: Chantier }) {
                 value={selectedArtisan}
                 onChange={(e) => setSelectedArtisan(e.target.value)}
                 style={{ ...inputStyle, cursor: 'pointer', marginBottom: '20px' }}
-                onFocus={(e) => (e.target.style.borderColor = '#F97316')}
+                onFocus={(e) => (e.target.style.borderColor = '#ea580c')}
                 onBlur={(e) => (e.target.style.borderColor = '#1E1E1C')}
               >
                 <option value="">— Sélectionner un artisan —</option>
@@ -603,7 +603,7 @@ export default function ChantierDetail({ chantier }: { chantier: Chantier }) {
                 style={{
                   flex: 1,
                   padding: '10px',
-                  backgroundColor: !selectedArtisan ? '#5a5030' : assigning ? '#9E8630' : '#F97316',
+                  backgroundColor: !selectedArtisan ? '#5a5030' : assigning ? '#9E8630' : '#ea580c',
                   color: '#0D0D0B',
                   border: 'none',
                   borderRadius: '8px',

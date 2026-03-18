@@ -38,7 +38,7 @@ export default function ComptesRendusPage() {
           className="transition-all duration-200 hover:scale-105 hover:shadow-[0_0_25px_rgba(249,115,22,0.5)] active:scale-95"
           style={{
             padding: '10px 20px',
-            backgroundColor: '#F97316',
+            backgroundColor: '#ea580c',
             color: '#0D0D0B',
             borderRadius: '8px',
             fontSize: '14px',
@@ -59,9 +59,9 @@ export default function ComptesRendusPage() {
         <div style={{ backgroundColor: '#111110', border: '1px dashed #1E1E1C', borderRadius: '12px', padding: '80px 24px', textAlign: 'center' }}>
           <svg width="48" height="48" viewBox="0 0 48 48" fill="none" style={{ margin: '0 auto 20px', display: 'block' }}>
             <rect x="8" y="6" width="32" height="36" rx="2" stroke="#1E1E1C" strokeWidth="2"/>
-            <path d="M14 16h20M14 22h16M14 28h10" stroke="#F97316" strokeWidth="2" strokeLinecap="round"/>
-            <circle cx="36" cy="36" r="8" fill="#111110" stroke="#F97316" strokeWidth="2"/>
-            <path d="M33 36h6M36 33v6" stroke="#F97316" strokeWidth="1.5" strokeLinecap="round"/>
+            <path d="M14 16h20M14 22h16M14 28h10" stroke="#ea580c" strokeWidth="2" strokeLinecap="round"/>
+            <circle cx="36" cy="36" r="8" fill="#111110" stroke="#ea580c" strokeWidth="2"/>
+            <path d="M33 36h6M36 33v6" stroke="#ea580c" strokeWidth="1.5" strokeLinecap="round"/>
           </svg>
           <h2 style={{ fontFamily: 'var(--font-syne), sans-serif', fontSize: '16px', fontWeight: 600, color: '#8A8880', marginBottom: '8px' }}>
             Aucun compte rendu pour l&apos;instant
@@ -71,7 +71,7 @@ export default function ComptesRendusPage() {
           </p>
           <Link
             href="/dashboard/comptes-rendus/nouveau"
-            style={{ display: 'inline-block', padding: '10px 20px', backgroundColor: '#F97316', color: '#0D0D0B', borderRadius: '8px', fontSize: '14px', fontWeight: 600, textDecoration: 'none', fontFamily: 'var(--font-dm-sans), sans-serif' }}
+            style={{ display: 'inline-block', padding: '10px 20px', backgroundColor: '#ea580c', color: '#0D0D0B', borderRadius: '8px', fontSize: '14px', fontWeight: 600, textDecoration: 'none', fontFamily: 'var(--font-dm-sans), sans-serif' }}
           >
             + Créer mon premier CR
           </Link>
@@ -95,7 +95,7 @@ export default function ComptesRendusPage() {
                   <span style={{ fontFamily: 'var(--font-syne), sans-serif', fontSize: '16px', fontWeight: 700, color: '#F0EDE6' }}>
                     {group.chantier?.nom ?? '—'}
                   </span>
-                  <span style={{ padding: '2px 8px', backgroundColor: 'rgba(249,115,22,0.1)', color: '#F97316', borderRadius: '4px', fontSize: '11px', fontWeight: 600, fontFamily: 'var(--font-dm-sans), sans-serif' }}>
+                  <span style={{ padding: '2px 8px', backgroundColor: 'rgba(249,115,22,0.1)', color: '#ea580c', borderRadius: '4px', fontSize: '11px', fontWeight: 600, fontFamily: 'var(--font-dm-sans), sans-serif' }}>
                     {group.items.length} CR
                   </span>
                 </div>
@@ -111,7 +111,7 @@ export default function ComptesRendusPage() {
                       onMouseLeave={e => { e.currentTarget.style.transform = 'translateX(0)'; e.currentTarget.style.background = '#111110'; e.currentTarget.style.borderColor = '#1E1E1C'; }}
                     >
                       {/* Index badge */}
-                      <span style={{ padding: '2px 8px', backgroundColor: 'rgba(249,115,22,0.08)', color: '#F97316', borderRadius: '4px', fontSize: '11px', fontWeight: 600, fontFamily: 'var(--font-dm-sans), sans-serif', flexShrink: 0 }}>
+                      <span style={{ padding: '2px 8px', backgroundColor: 'rgba(249,115,22,0.08)', color: '#ea580c', borderRadius: '4px', fontSize: '11px', fontWeight: 600, fontFamily: 'var(--font-dm-sans), sans-serif', flexShrink: 0 }}>
                         CR #{index + 1}
                       </span>
 
@@ -129,7 +129,7 @@ export default function ComptesRendusPage() {
                       <div style={{ fontSize: '13px', color: '#8A8880', fontFamily: 'var(--font-dm-sans), sans-serif', flexShrink: 0, textAlign: 'right' }}>
                         <div>{new Date(cr.date_visite).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' })}</div>
                         {cr.date_prochaine_visite && (
-                          <div style={{ fontSize: '12px', color: '#F97316', marginTop: '2px' }}>
+                          <div style={{ fontSize: '12px', color: '#ea580c', marginTop: '2px' }}>
                             Prochaine réunion : {new Date(cr.date_prochaine_visite).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}
                           </div>
                         )}

@@ -25,7 +25,7 @@ const readMutedStyle: React.CSSProperties = {
   fontSize: 14, color: '#7A7870', fontFamily: 'var(--font-dm-sans), sans-serif',
 }
 const focus = (e: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-  e.target.style.borderColor = '#F97316'; e.target.style.boxShadow = '0 0 0 2px rgba(249,115,22,0.12)'
+  e.target.style.borderColor = '#ea580c'; e.target.style.boxShadow = '0 0 0 2px rgba(249,115,22,0.12)'
 }
 const blur = (e: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement>) => {
   e.target.style.borderColor = '#1E1E1C'; e.target.style.boxShadow = 'none'
@@ -111,12 +111,12 @@ const DEVIS_STATUT: Record<string, { label: string; color: string }> = {
   envoye:    { label: 'Envoyé',    color: '#60a5fa' },
   accepte:   { label: 'Accepté',   color: '#4ade80' },
   refuse:    { label: 'Refusé',    color: '#E85447' },
-  expire:    { label: 'Expiré',    color: '#F97316' },
+  expire:    { label: 'Expiré',    color: '#ea580c' },
 }
 const FACTURE_STATUT: Record<string, { label: string; color: string }> = {
   brouillon:           { label: 'Brouillon', color: '#8A8880' },
   envoyee:             { label: 'Envoyée',   color: '#60a5fa' },
-  partiellement_payee: { label: 'Partiel',   color: '#F97316' },
+  partiellement_payee: { label: 'Partiel',   color: '#ea580c' },
   payee:               { label: 'Payée',     color: '#4ade80' },
   annulee:             { label: 'Annulée',   color: '#E85447' },
 }
@@ -212,28 +212,29 @@ export default function ClientDetailPage() {
   }
 
   const isEntreprise = client.type === 'entreprise'
+  const formIsEntreprise = (form.type ?? client.type) === 'entreprise'
   const name = clientDisplayName(client)
 
   return (
     <div className="page-enter" style={{ flex: 1, padding: '40px', overflowY: 'auto', maxWidth: 800 }}>
       <Link href="/dashboard/clients" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, backgroundColor: '#111110', border: '1px solid #1E1E1C', borderRadius: 8, padding: '8px 14px', color: '#F0EDE6', fontSize: 13, fontWeight: 500, cursor: 'pointer', textDecoration: 'none', transition: 'all 0.15s ease', fontFamily: 'var(--font-dm-sans), sans-serif', marginBottom: 28 }}
-        onMouseEnter={e => { e.currentTarget.style.background = '#1E1E1C'; e.currentTarget.style.borderColor = '#F97316'; e.currentTarget.style.color = '#F97316' }}
+        onMouseEnter={e => { e.currentTarget.style.background = '#1E1E1C'; e.currentTarget.style.borderColor = '#ea580c'; e.currentTarget.style.color = '#ea580c' }}
         onMouseLeave={e => { e.currentTarget.style.background = '#111110'; e.currentTarget.style.borderColor = '#1E1E1C'; e.currentTarget.style.color = '#F0EDE6' }}
       >
-        <span style={{ color: '#F97316' }}>←</span>
+        <span style={{ color: '#ea580c' }}>←</span>
         Retour aux clients
       </Link>
 
       {/* Header */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 32 }}>
-        <div style={{ width: 52, height: 52, borderRadius: '50%', backgroundColor: isEntreprise ? '#F97316' : '#1E1E1C', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, fontWeight: 700, color: isEntreprise ? '#0D0D0B' : '#F0EDE6', fontFamily: 'var(--font-syne), sans-serif', flexShrink: 0, border: isEntreprise ? 'none' : '1px solid #2A2A28' }}>
+        <div style={{ width: 52, height: 52, borderRadius: '50%', backgroundColor: isEntreprise ? '#ea580c' : '#1E1E1C', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, fontWeight: 700, color: isEntreprise ? '#0D0D0B' : '#F0EDE6', fontFamily: 'var(--font-syne), sans-serif', flexShrink: 0, border: isEntreprise ? 'none' : '1px solid #2A2A28' }}>
           {initials(client)}
         </div>
         <div style={{ flex: 1, minWidth: 0 }}>
           <h1 style={{ fontFamily: 'var(--font-syne), sans-serif', fontSize: 22, fontWeight: 700, color: '#F0EDE6', margin: '0 0 4px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
             {name}
           </h1>
-          <span style={{ fontSize: 11, fontWeight: 600, padding: '2px 8px', borderRadius: 20, backgroundColor: isEntreprise ? 'rgba(249,115,22,0.12)' : 'rgba(138,136,128,0.15)', color: isEntreprise ? '#F97316' : '#8A8880', fontFamily: 'var(--font-dm-sans), sans-serif' }}>
+          <span style={{ fontSize: 11, fontWeight: 600, padding: '2px 8px', borderRadius: 20, backgroundColor: isEntreprise ? 'rgba(249,115,22,0.12)' : 'rgba(138,136,128,0.15)', color: isEntreprise ? '#ea580c' : '#8A8880', fontFamily: 'var(--font-dm-sans), sans-serif' }}>
             {isEntreprise ? 'Entreprise' : 'Particulier'}
           </span>
         </div>
@@ -241,7 +242,7 @@ export default function ClientDetailPage() {
           {editing ? (
             <>
               <button onClick={handleSave} disabled={saving}
-                style={{ padding: '9px 20px', backgroundColor: '#F97316', color: '#0D0D0B', border: 'none', borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'var(--font-dm-sans), sans-serif' }}>
+                style={{ padding: '9px 20px', backgroundColor: '#ea580c', color: '#0D0D0B', border: 'none', borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'var(--font-dm-sans), sans-serif' }}>
                 {saving ? 'Enregistrement…' : 'Enregistrer'}
               </button>
               <button onClick={() => { setEditing(false); setForm(client) }}
@@ -253,7 +254,7 @@ export default function ClientDetailPage() {
             <>
               <button onClick={() => setEditing(true)}
                 style={{ padding: '9px 20px', backgroundColor: 'transparent', color: '#F0EDE6', border: '1px solid #1E1E1C', borderRadius: 8, fontSize: 13, cursor: 'pointer', fontFamily: 'var(--font-dm-sans), sans-serif' }}
-                onMouseEnter={e => { e.currentTarget.style.borderColor = '#F97316'; e.currentTarget.style.color = '#F97316' }}
+                onMouseEnter={e => { e.currentTarget.style.borderColor = '#ea580c'; e.currentTarget.style.color = '#ea580c' }}
                 onMouseLeave={e => { e.currentTarget.style.borderColor = '#1E1E1C'; e.currentTarget.style.color = '#F0EDE6' }}>
                 Modifier
               </button>
@@ -292,70 +293,90 @@ export default function ClientDetailPage() {
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
         {/* Identity */}
-        {isEntreprise ? (
-          <Card title="Identité entreprise">
-            {editing ? (
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
-                <div style={{ gridColumn: '1 / -1' }}>
-                  <label style={labelStyle}>Raison sociale</label>
-                  <input type="text" value={form.entreprise_nom || ''} onChange={set('entreprise_nom')} onFocus={focus} onBlur={blur} style={inputStyle} />
-                </div>
-                <div>
-                  <label style={labelStyle}>SIRET</label>
-                  <input type="text" value={form.entreprise_siret || ''} onChange={set('entreprise_siret')} onFocus={focus} onBlur={blur} style={inputStyle} />
-                </div>
-                <div>
-                  <label style={labelStyle}>N° TVA</label>
-                  <input type="text" value={form.entreprise_tva || ''} onChange={set('entreprise_tva')} onFocus={focus} onBlur={blur} style={inputStyle} />
-                </div>
-                <div style={{ gridColumn: '1 / -1' }}>
-                  <label style={labelStyle}>Forme juridique</label>
-                  <input type="text" value={form.entreprise_forme_juridique || ''} onChange={set('entreprise_forme_juridique')} onFocus={focus} onBlur={blur} style={inputStyle} />
-                </div>
-              </div>
-            ) : (
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
-                <div style={{ gridColumn: '1 / -1' }}><ReadRow label="Raison sociale" value={client.entreprise_nom} /></div>
-                <ReadRow label="SIRET" value={client.entreprise_siret} />
-                <ReadRow label="N° TVA" value={client.entreprise_tva} />
-                <div style={{ gridColumn: '1 / -1' }}><ReadRow label="Forme juridique" value={client.entreprise_forme_juridique} /></div>
-              </div>
-            )}
-          </Card>
-        ) : (
-          <Card title="Identité">
-            {editing ? (
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
-                <div>
-                  <label style={labelStyle}>Prénom</label>
-                  <input type="text" value={form.prenom || ''} onChange={set('prenom')} onFocus={focus} onBlur={blur} style={inputStyle} />
-                </div>
-                <div>
-                  <label style={labelStyle}>Nom</label>
-                  <input type="text" value={form.nom || ''} onChange={set('nom')} onFocus={focus} onBlur={blur} style={inputStyle} />
-                </div>
-                <div>
-                  <label style={labelStyle}>Email</label>
-                  <input type="email" value={form.email || ''} onChange={set('email')} onFocus={focus} onBlur={blur} style={inputStyle} />
-                </div>
-                <div>
-                  <label style={labelStyle}>Téléphone</label>
-                  <input type="tel" value={form.telephone || ''} onChange={set('telephone')} onFocus={focus} onBlur={blur} style={inputStyle} />
+        <Card title={editing ? 'Identité' : isEntreprise ? 'Identité entreprise' : 'Identité'}>
+          {editing ? (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+              {/* Type toggle */}
+              <div>
+                <label style={labelStyle}>Type de client</label>
+                <div style={{ display: 'flex', borderRadius: 8, overflow: 'hidden', border: '1px solid #1E1E1C', width: 'fit-content' }}>
+                  {(['particulier', 'entreprise'] as const).map(t => {
+                    const active = (form.type ?? client.type) === t
+                    return (
+                      <button
+                        key={t}
+                        type="button"
+                        onClick={() => setForm(p => ({ ...p, type: t }))}
+                        style={{ padding: '9px 20px', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'var(--font-dm-sans), sans-serif', border: 'none', transition: 'all 0.15s', backgroundColor: active ? '#ea580c' : 'transparent', color: active ? '#0D0D0B' : '#7A7870' }}
+                      >
+                        {t === 'particulier' ? 'Particulier' : 'Entreprise'}
+                      </button>
+                    )
+                  })}
                 </div>
               </div>
-            ) : (
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
-                <ReadRow label="Prénom" value={client.prenom} />
-                <ReadRow label="Nom" value={client.nom} />
-                <ReadRow label="Email" value={client.email} />
-                <ReadRow label="Téléphone" value={client.telephone} />
-              </div>
-            )}
-          </Card>
-        )}
+
+              {/* Entreprise fields */}
+              {formIsEntreprise ? (
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+                  <div style={{ gridColumn: '1 / -1' }}>
+                    <label style={labelStyle}>Raison sociale</label>
+                    <input type="text" value={form.entreprise_nom || ''} onChange={set('entreprise_nom')} onFocus={focus} onBlur={blur} style={inputStyle} />
+                  </div>
+                  <div>
+                    <label style={labelStyle}>SIRET</label>
+                    <input type="text" value={form.entreprise_siret || ''} onChange={set('entreprise_siret')} onFocus={focus} onBlur={blur} style={inputStyle} />
+                  </div>
+                  <div>
+                    <label style={labelStyle}>N° TVA</label>
+                    <input type="text" value={form.entreprise_tva || ''} onChange={set('entreprise_tva')} onFocus={focus} onBlur={blur} style={inputStyle} />
+                  </div>
+                  <div style={{ gridColumn: '1 / -1' }}>
+                    <label style={labelStyle}>Forme juridique</label>
+                    <input type="text" value={form.entreprise_forme_juridique || ''} onChange={set('entreprise_forme_juridique')} onFocus={focus} onBlur={blur} style={inputStyle} />
+                  </div>
+                </div>
+              ) : (
+                /* Particulier fields */
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+                  <div>
+                    <label style={labelStyle}>Prénom</label>
+                    <input type="text" value={form.prenom || ''} onChange={set('prenom')} onFocus={focus} onBlur={blur} style={inputStyle} />
+                  </div>
+                  <div>
+                    <label style={labelStyle}>Nom</label>
+                    <input type="text" value={form.nom || ''} onChange={set('nom')} onFocus={focus} onBlur={blur} style={inputStyle} />
+                  </div>
+                  <div>
+                    <label style={labelStyle}>Email</label>
+                    <input type="email" value={form.email || ''} onChange={set('email')} onFocus={focus} onBlur={blur} style={inputStyle} />
+                  </div>
+                  <div>
+                    <label style={labelStyle}>Téléphone</label>
+                    <input type="tel" value={form.telephone || ''} onChange={set('telephone')} onFocus={focus} onBlur={blur} style={inputStyle} />
+                  </div>
+                </div>
+              )}
+            </div>
+          ) : isEntreprise ? (
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+              <div style={{ gridColumn: '1 / -1' }}><ReadRow label="Raison sociale" value={client.entreprise_nom} /></div>
+              <ReadRow label="SIRET" value={client.entreprise_siret} />
+              <ReadRow label="N° TVA" value={client.entreprise_tva} />
+              <div style={{ gridColumn: '1 / -1' }}><ReadRow label="Forme juridique" value={client.entreprise_forme_juridique} /></div>
+            </div>
+          ) : (
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+              <ReadRow label="Prénom" value={client.prenom} />
+              <ReadRow label="Nom" value={client.nom} />
+              <ReadRow label="Email" value={client.email} />
+              <ReadRow label="Téléphone" value={client.telephone} />
+            </div>
+          )}
+        </Card>
 
         {/* Contact (entreprise only) */}
-        {isEntreprise && (
+        {(editing ? formIsEntreprise : isEntreprise) && (
           <Card title="Contact principal">
             {editing ? (
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
@@ -460,13 +481,13 @@ export default function ClientDetailPage() {
                       onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
                       <td style={{ padding: '10px 12px', fontSize: 12, fontFamily: 'var(--font-syne), sans-serif', fontWeight: 600, color: '#F0EDE6', borderBottom: '1px solid #1E1E1C' }}>{d.numero}</td>
                       <td style={{ padding: '10px 12px', fontSize: 12, fontFamily: 'var(--font-dm-sans), sans-serif', color: '#8A8880', borderBottom: '1px solid #1E1E1C', textTransform: 'capitalize' }}>{d.type}</td>
-                      <td style={{ padding: '10px 12px', fontSize: 13, fontFamily: 'var(--font-dm-sans), sans-serif', fontWeight: 600, color: '#F97316', borderBottom: '1px solid #1E1E1C' }}>{formatEurDoc(d.montant_ttc)}</td>
+                      <td style={{ padding: '10px 12px', fontSize: 13, fontFamily: 'var(--font-dm-sans), sans-serif', fontWeight: 600, color: '#ea580c', borderBottom: '1px solid #1E1E1C' }}>{formatEurDoc(d.montant_ttc)}</td>
                       <td style={{ padding: '10px 12px', borderBottom: '1px solid #1E1E1C' }}>
                         <span style={{ fontSize: 11, fontWeight: 600, padding: '2px 8px', borderRadius: 20, color: s.color, backgroundColor: `${s.color}22`, fontFamily: 'var(--font-dm-sans), sans-serif' }}>{s.label}</span>
                       </td>
                       <td style={{ padding: '10px 12px', fontSize: 12, color: '#8A8880', fontFamily: 'var(--font-dm-sans), sans-serif', borderBottom: '1px solid #1E1E1C' }}>{fmtDate(d.date)}</td>
                       <td style={{ padding: '10px 12px', borderBottom: '1px solid #1E1E1C' }}>
-                        <Link href={href} style={{ fontSize: 12, color: '#F97316', textDecoration: 'none', fontFamily: 'var(--font-dm-sans), sans-serif' }}>Voir →</Link>
+                        <Link href={href} style={{ fontSize: 12, color: '#ea580c', textDecoration: 'none', fontFamily: 'var(--font-dm-sans), sans-serif' }}>Voir →</Link>
                       </td>
                     </tr>
                   )

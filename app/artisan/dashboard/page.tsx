@@ -126,7 +126,7 @@ export default function ArtisanDashboard() {
               marginBottom: '32px',
             }}
           >
-            FORE<span style={{ color: '#F97316' }}>MAN</span>
+            FORE<span style={{ color: '#ea580c' }}>MAN</span>
           </span>
           <p style={{ color: '#8A8880', fontSize: '14px', fontFamily: 'var(--font-dm-sans), sans-serif', lineHeight: '1.6' }}>
             Aucun compte artisan trouvé pour cet email. Contactez votre chef de chantier.
@@ -177,7 +177,7 @@ export default function ArtisanDashboard() {
                 marginBottom: '12px',
               }}
             >
-              FORE<span style={{ color: '#F97316' }}>MAN</span>
+              FORE<span style={{ color: '#ea580c' }}>MAN</span>
             </span>
             <h1
               style={{
@@ -313,7 +313,7 @@ export default function ArtisanDashboard() {
                           <span
                             style={{
                               fontSize: '13px',
-                              color: '#F97316',
+                              color: '#ea580c',
                               fontFamily: 'var(--font-dm-sans), sans-serif',
                               fontWeight: 600,
                             }}

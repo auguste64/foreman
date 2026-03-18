@@ -6,7 +6,7 @@
   --bg: #0D0D0B;
   --surface: #111110;
   --border: #1E1E1C;
-  --accent: #F97316;
+  --accent: #ea580c;
   --text: #F0EDE6;
   --muted: #7A7870;
 }
@@ -347,7 +347,7 @@ body::before {
   width: 24px; height: 24px;
   border-radius: 50%;
   background: #1E1E1C;
-  color: #F97316;
+  color: #ea580c;
   font-size: 11px;
   font-family: var(--font-syne), sans-serif;
   font-weight: 700;
@@ -750,7 +750,7 @@ body::before {
   transition: color 0.2s;
 }
 
-.footer-v2-link:hover { color: #F97316; }
+.footer-v2-link:hover { color: #ea580c; }
 
 .footer-v2-info {
   font-size: 13px;
@@ -830,7 +830,7 @@ body::before {
 }
 
 .ba-before .ba-title { color: #8A8880; }
-.ba-after .ba-title { color: #F97316; }
+.ba-after .ba-title { color: #ea580c; }
 
 .ba-list {
   list-style: none;

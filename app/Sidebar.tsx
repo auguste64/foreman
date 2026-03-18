@@ -19,7 +19,7 @@ export default function Sidebar({ email }: { email: string }) {
       {/* Logo */}
       <div className="p-6 border-b border-[#1E1E1C]">
         <Link href="/dashboard" className="font-black text-xl tracking-widest hover:opacity-80 transition-opacity" style={{ fontFamily: 'var(--font-syne)', color: '#F0EDE6', textDecoration: 'none' }}>
-          FORE<span style={{ color: '#F97316' }}>MAN</span>
+          FORE<span style={{ color: '#ea580c' }}>MAN</span>
         </Link>
       </div>
 
@@ -31,9 +31,9 @@ export default function Sidebar({ email }: { email: string }) {
             <Link
               key={item.href}
               href={item.href}
-              className={`group flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200 hover:bg-[rgba(249,115,22,0.08)] hover:text-[#F97316] hover:translate-x-1 ${
+              className={`group flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200 hover:bg-[rgba(249,115,22,0.08)] hover:text-[#ea580c] hover:translate-x-1 ${
                 isActive
-                  ? 'bg-[rgba(249,115,22,0.1)] text-[#F97316] shadow-[inset_3px_0_0_#F97316]'
+                  ? 'bg-[rgba(249,115,22,0.1)] text-[#ea580c] shadow-[inset_3px_0_0_#ea580c]'
                   : 'text-[#7A7870]'
               }`}
             >
@@ -47,9 +47,9 @@ export default function Sidebar({ email }: { email: string }) {
 
         <Link
           href="/dashboard/parametres"
-          className={`group flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200 hover:bg-[rgba(249,115,22,0.08)] hover:text-[#F97316] hover:translate-x-1 ${
+          className={`group flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200 hover:bg-[rgba(249,115,22,0.08)] hover:text-[#ea580c] hover:translate-x-1 ${
             pathname === '/dashboard/parametres'
-              ? 'bg-[rgba(249,115,22,0.1)] text-[#F97316] shadow-[inset_3px_0_0_#F97316]'
+              ? 'bg-[rgba(249,115,22,0.1)] text-[#ea580c] shadow-[inset_3px_0_0_#ea580c]'
               : 'text-[#7A7870]'
           }`}
         >
@@ -66,7 +66,7 @@ export default function Sidebar({ email }: { email: string }) {
         <form action="/auth/signout" method="post">
           <button
             type="submit"
-            className="w-full text-left text-xs text-[#7A7870] px-3 py-2 rounded-lg transition-all duration-200 hover:text-[#F97316] hover:bg-[rgba(249,115,22,0.08)]"
+            className="w-full text-left text-xs text-[#7A7870] px-3 py-2 rounded-lg transition-all duration-200 hover:text-[#ea580c] hover:bg-[rgba(249,115,22,0.08)]"
           >
             ← Déconnexion
           </button>

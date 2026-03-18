@@ -19,7 +19,7 @@ function GearIconHoverable() {
   return (
     <span
       style={{ display: 'flex', alignItems: 'center', flexShrink: 0 }}
-      onMouseEnter={e => { (e.currentTarget.querySelectorAll('path') as NodeListOf<SVGPathElement>).forEach(p => p.setAttribute('stroke', '#F97316')) }}
+      onMouseEnter={e => { (e.currentTarget.querySelectorAll('path') as NodeListOf<SVGPathElement>).forEach(p => p.setAttribute('stroke', '#ea580c')) }}
       onMouseLeave={e => { (e.currentTarget.querySelectorAll('path') as NodeListOf<SVGPathElement>).forEach(p => p.setAttribute('stroke', '#8A8880')) }}
     >
       <GearIcon size={14} color="#8A8880" />
@@ -95,22 +95,22 @@ export default function Sidebar({ email }: { email: string }) {
   }, [])
 
   return (
-    <aside className={syne.className} style={{ width: 240, flexShrink: 0, display: 'flex', flexDirection: 'column', height: '100vh', borderRight: '1px solid #1E1E1C', background: 'rgba(13,13,11,0.5)' }}>
-      <div style={{ padding: '24px', borderBottom: '1px solid #1E1E1C' }}>
+    <aside className={syne.className} style={{ width: 240, flexShrink: 0, display: 'flex', flexDirection: 'column', height: '100vh', borderRight: '1px solid #1E1E1C', background: '#0D0D0B', position: 'relative', zIndex: 1 }}>
+      <div style={{ padding: '24px', borderBottom: '1px solid #1E1E1C', background: '#0D0D0B' }}>
         <Link href="/dashboard" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, textDecoration: 'none' }}>
-          <span style={{ width: 3, height: 18, backgroundColor: '#F97316', borderRadius: 1, flexShrink: 0 }} />
+          <span style={{ width: 3, height: 18, backgroundColor: '#ea580c', borderRadius: 1, flexShrink: 0 }} />
           <span style={{ fontFamily: 'var(--font-syne)', fontWeight: 800, fontSize: 20, letterSpacing: '-0.5px', color: '#F0EDE6' }}>
-            FORE<span style={{ color: '#F97316' }}>MAN</span>
+            FORE<span style={{ color: '#ea580c' }}>MAN</span>
           </span>
         </Link>
       </div>
-      <nav style={{ flex: 1, padding: 16, display: 'flex', flexDirection: 'column', gap: 4 }}>
+      <nav style={{ flex: 1, padding: 16, display: 'flex', flexDirection: 'column', gap: 4, background: '#0D0D0B' }}>
         {navItems.map(item => {
           const active = pathname === item.href || (item.href !== '/dashboard' && pathname.startsWith(item.href))
           return (
             <Link key={item.href} href={item.href}
-              style={{ display: 'flex', alignItems: 'center', gap: item.icon ? 8 : 0, padding: '10px 16px', borderRadius: 8, fontSize: 14, fontWeight: 500, color: active ? '#F97316' : '#F0EDE6', background: active ? 'rgba(249,115,22,0.08)' : 'transparent', textDecoration: 'none', transition: 'all 0.2s ease', fontFamily: 'var(--font-syne)', borderLeft: active ? '3px solid #F97316' : '3px solid transparent' }}
-              onMouseEnter={e => { if (!active) { e.currentTarget.style.color = '#F97316'; e.currentTarget.style.background = 'rgba(249,115,22,0.06)'; e.currentTarget.style.paddingLeft = '20px' } }}
+              style={{ display: 'flex', alignItems: 'center', gap: item.icon ? 8 : 0, padding: '10px 16px', borderRadius: 8, fontSize: 14, fontWeight: 500, color: active ? '#ea580c' : '#F0EDE6', background: active ? 'rgba(249,115,22,0.08)' : 'transparent', textDecoration: 'none', transition: 'all 0.2s ease', fontFamily: 'var(--font-syne)', borderLeft: active ? '3px solid #ea580c' : '3px solid transparent' }}
+              onMouseEnter={e => { if (!active) { e.currentTarget.style.color = '#ea580c'; e.currentTarget.style.background = 'rgba(249,115,22,0.06)'; e.currentTarget.style.paddingLeft = '20px' } }}
               onMouseLeave={e => { if (!active) { e.currentTarget.style.color = '#F0EDE6'; e.currentTarget.style.background = 'transparent'; e.currentTarget.style.paddingLeft = '16px' } }}
             >
               {item.icon && <span style={{ opacity: active ? 1 : 0.5, flexShrink: 0 }}>{item.icon}</span>}
@@ -120,14 +120,14 @@ export default function Sidebar({ email }: { email: string }) {
         })}
         <div style={{ borderTop: '1px solid #1E1E1C', margin: '8px 0' }} />
       </nav>
-      <div style={{ padding: 16, borderTop: '1px solid #1E1E1C', display: 'flex', flexDirection: 'column', gap: 8 }}>
+      <div style={{ padding: 16, borderTop: '1px solid #1E1E1C', display: 'flex', flexDirection: 'column', gap: 8, background: '#0D0D0B' }}>
         <Link
           href="/dashboard/parametres"
           style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '8px 12px', borderRadius: 8, textDecoration: 'none', transition: 'background 0.2s ease' }}
           onMouseEnter={e => { e.currentTarget.style.background = 'rgba(249,115,22,0.06)' }}
           onMouseLeave={e => { e.currentTarget.style.background = 'transparent' }}
         >
-          <div style={{ width: 36, height: 36, borderRadius: '50%', backgroundColor: '#F97316', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'var(--font-syne)', fontWeight: 700, fontSize: 16, color: '#fff', flexShrink: 0 }}>
+          <div style={{ width: 36, height: 36, borderRadius: '50%', backgroundColor: '#ea580c', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'var(--font-syne)', fontWeight: 700, fontSize: 16, color: '#fff', flexShrink: 0 }}>
             {initial}
           </div>
           <span style={{ fontSize: 13, color: '#F0EDE6', fontFamily: 'var(--font-dm-sans), sans-serif', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1 }}>
@@ -138,7 +138,7 @@ export default function Sidebar({ email }: { email: string }) {
         <div style={{ background: 'rgba(249,115,22,0.04)', border: '1px solid #1E1E1C', borderRadius: 8, padding: '8px 12px', fontSize: 12, color: '#7A7870', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{email}</div>
         <form action="/auth/signout" method="post">
           <button type="submit" style={{ width: '100%', textAlign: 'left', fontSize: 12, color: '#7A7870', padding: '8px 12px', borderRadius: 8, border: 'none', background: 'transparent', cursor: 'pointer', transition: 'all 0.2s ease', fontFamily: 'var(--font-syne)' }}
-            onMouseEnter={e => { e.currentTarget.style.color = '#F97316'; e.currentTarget.style.background = 'rgba(249,115,22,0.08)' }}
+            onMouseEnter={e => { e.currentTarget.style.color = '#ea580c'; e.currentTarget.style.background = 'rgba(249,115,22,0.08)' }}
             onMouseLeave={e => { e.currentTarget.style.color = '#7A7870'; e.currentTarget.style.background = 'transparent' }}
           >← Déconnexion</button>
         </form>

@@ -16,7 +16,7 @@ const labelStyle: React.CSSProperties = {
   textTransform: 'uppercase', color: '#8A8880', marginBottom: 6, fontFamily: 'var(--font-dm-sans), sans-serif',
 }
 const focus = (e: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-  e.target.style.borderColor = '#F97316'; e.target.style.boxShadow = '0 0 0 2px rgba(249,115,22,0.12)'
+  e.target.style.borderColor = '#ea580c'; e.target.style.boxShadow = '0 0 0 2px rgba(249,115,22,0.12)'
 }
 const blur = (e: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement>) => {
   e.target.style.borderColor = '#1E1E1C'; e.target.style.boxShadow = 'none'
@@ -186,10 +186,10 @@ export default function NouveauClientPage() {
   return (
     <div className="page-enter" style={{ flex: 1, padding: '40px', overflowY: 'auto', maxWidth: 760 }}>
       <Link href="/dashboard/clients" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, backgroundColor: '#111110', border: '1px solid #1E1E1C', borderRadius: 8, padding: '8px 14px', color: '#F0EDE6', fontSize: 13, fontWeight: 500, cursor: 'pointer', textDecoration: 'none', transition: 'all 0.15s ease', fontFamily: 'var(--font-dm-sans), sans-serif', marginBottom: 28 }}
-        onMouseEnter={e => { e.currentTarget.style.background = '#1E1E1C'; e.currentTarget.style.borderColor = '#F97316'; e.currentTarget.style.color = '#F97316' }}
+        onMouseEnter={e => { e.currentTarget.style.background = '#1E1E1C'; e.currentTarget.style.borderColor = '#ea580c'; e.currentTarget.style.color = '#ea580c' }}
         onMouseLeave={e => { e.currentTarget.style.background = '#111110'; e.currentTarget.style.borderColor = '#1E1E1C'; e.currentTarget.style.color = '#F0EDE6' }}
       >
-        <span style={{ color: '#F97316' }}>←</span>
+        <span style={{ color: '#ea580c' }}>←</span>
         Retour aux clients
       </Link>
       <h1 style={{ fontFamily: 'var(--font-syne), sans-serif', fontSize: 24, fontWeight: 700, color: '#F0EDE6', margin: '0 0 28px' }}>
@@ -202,7 +202,7 @@ export default function NouveauClientPage() {
           <button
             key={t}
             onClick={() => setForm(p => ({ ...p, type: t }))}
-            style={{ padding: '10px 24px', fontSize: 13, fontWeight: form.type === t ? 600 : 400, fontFamily: 'var(--font-dm-sans), sans-serif', border: 'none', cursor: 'pointer', backgroundColor: form.type === t ? '#F97316' : 'transparent', color: form.type === t ? '#0D0D0B' : '#8A8880', transition: 'all 0.15s' }}
+            style={{ padding: '10px 24px', fontSize: 13, fontWeight: form.type === t ? 600 : 400, fontFamily: 'var(--font-dm-sans), sans-serif', border: 'none', cursor: 'pointer', backgroundColor: form.type === t ? '#ea580c' : 'transparent', color: form.type === t ? '#0D0D0B' : '#8A8880', transition: 'all 0.15s' }}
           >
             {t === 'particulier' ? 'Particulier' : 'Entreprise'}
           </button>
@@ -281,7 +281,7 @@ export default function NouveauClientPage() {
           <button
             onClick={handleSave}
             disabled={saving}
-            style={{ padding: '11px 28px', backgroundColor: saving ? '#c45a10' : '#F97316', color: '#0D0D0B', border: 'none', borderRadius: 8, fontSize: 14, fontWeight: 600, cursor: saving ? 'not-allowed' : 'pointer', fontFamily: 'var(--font-dm-sans), sans-serif' }}
+            style={{ padding: '11px 28px', backgroundColor: saving ? '#c45a10' : '#ea580c', color: '#0D0D0B', border: 'none', borderRadius: 8, fontSize: 14, fontWeight: 600, cursor: saving ? 'not-allowed' : 'pointer', fontFamily: 'var(--font-dm-sans), sans-serif' }}
             onMouseEnter={e => { if (!saving) { e.currentTarget.style.transform = 'translateY(-1px)'; e.currentTarget.style.boxShadow = '0 0 20px rgba(249,115,22,0.4)' } }}
             onMouseLeave={e => { e.currentTarget.style.transform = 'none'; e.currentTarget.style.boxShadow = 'none' }}
           >

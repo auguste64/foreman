@@ -64,7 +64,7 @@ const inputStyle: React.CSSProperties = {
   fontFamily: 'var(--font-dm-sans), sans-serif',
 }
 
-const focus = (e: React.FocusEvent<HTMLElement>) => ((e.target as HTMLElement).style.borderColor = '#F97316')
+const focus = (e: React.FocusEvent<HTMLElement>) => ((e.target as HTMLElement).style.borderColor = '#ea580c')
 const blur = (e: React.FocusEvent<HTMLElement>) => ((e.target as HTMLElement).style.borderColor = '#1E1E1C')
 
 function fmt(d: string | null) {
@@ -230,10 +230,10 @@ export default function CompteRenduDetail({ compteRendu: initial }: { compteRend
     <div style={{ flex: 1, padding: '40px', overflowY: 'auto' }}>
       {/* Back */}
       <Link href="/dashboard/comptes-rendus" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, backgroundColor: '#111110', border: '1px solid #1E1E1C', borderRadius: 8, padding: '8px 14px', color: '#F0EDE6', fontSize: 13, fontWeight: 500, cursor: 'pointer', textDecoration: 'none', transition: 'all 0.15s ease', fontFamily: 'var(--font-dm-sans), sans-serif', marginBottom: 28 }}
-        onMouseEnter={e => { e.currentTarget.style.background = '#1E1E1C'; e.currentTarget.style.borderColor = '#F97316'; e.currentTarget.style.color = '#F97316' }}
+        onMouseEnter={e => { e.currentTarget.style.background = '#1E1E1C'; e.currentTarget.style.borderColor = '#ea580c'; e.currentTarget.style.color = '#ea580c' }}
         onMouseLeave={e => { e.currentTarget.style.background = '#111110'; e.currentTarget.style.borderColor = '#1E1E1C'; e.currentTarget.style.color = '#F0EDE6' }}
       >
-        <span style={{ color: '#F97316' }}>←</span>
+        <span style={{ color: '#ea580c' }}>←</span>
         Retour aux comptes rendus
       </Link>
 
@@ -253,7 +253,7 @@ export default function CompteRenduDetail({ compteRendu: initial }: { compteRend
             <a
               href={`/api/generate-pdf/${cr.id}`}
               download
-              style={{ padding: '8px 14px', backgroundColor: '#F97316', color: '#0D0D0B', borderRadius: '8px', fontSize: '13px', fontWeight: 600, textDecoration: 'none', fontFamily: 'var(--font-dm-sans), sans-serif' }}
+              style={{ padding: '8px 14px', backgroundColor: '#ea580c', color: '#0D0D0B', borderRadius: '8px', fontSize: '13px', fontWeight: 600, textDecoration: 'none', fontFamily: 'var(--font-dm-sans), sans-serif' }}
             >
               ↓ Télécharger PDF
             </a>
@@ -293,15 +293,15 @@ export default function CompteRenduDetail({ compteRendu: initial }: { compteRend
             </div>
             <div>
               <span style={labelStyle}>Prochaine visite</span>
-              <p style={{ color: cr.date_prochaine_visite ? '#F97316' : '#8A8880', fontSize: '14px', fontFamily: 'var(--font-dm-sans), sans-serif', margin: 0 }}>{fmt(cr.date_prochaine_visite)}</p>
+              <p style={{ color: cr.date_prochaine_visite ? '#ea580c' : '#8A8880', fontSize: '14px', fontFamily: 'var(--font-dm-sans), sans-serif', margin: 0 }}>{fmt(cr.date_prochaine_visite)}</p>
             </div>
             <div>
               <span style={labelStyle}>Avancement</span>
               <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginTop: '4px' }}>
                 <div style={{ flex: 1, height: '6px', backgroundColor: '#1E1E1C', borderRadius: '3px' }}>
-                  <div style={{ height: '6px', backgroundColor: '#F97316', borderRadius: '3px', width: `${cr.progression}%` }} />
+                  <div style={{ height: '6px', backgroundColor: '#ea580c', borderRadius: '3px', width: `${cr.progression}%` }} />
                 </div>
-                <span style={{ fontFamily: 'var(--font-syne), sans-serif', fontSize: '13px', fontWeight: 700, color: '#F97316', flexShrink: 0 }}>{cr.progression}%</span>
+                <span style={{ fontFamily: 'var(--font-syne), sans-serif', fontSize: '13px', fontWeight: 700, color: '#ea580c', flexShrink: 0 }}>{cr.progression}%</span>
               </div>
             </div>
           </div>
@@ -342,7 +342,7 @@ export default function CompteRenduDetail({ compteRendu: initial }: { compteRend
                 {parsed.presences.map((p, i) => (
                   <div key={i} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 12px', backgroundColor: '#0D0D0B', borderRadius: '6px' }}>
                     <span style={{ fontSize: '13px', color: '#F0EDE6', fontFamily: 'var(--font-dm-sans), sans-serif' }}>{p.nom}{p.societe ? ` — ${p.societe}` : ''}</span>
-                    <span style={{ fontSize: '11px', fontWeight: 600, padding: '2px 8px', borderRadius: '4px', fontFamily: 'var(--font-dm-sans), sans-serif', backgroundColor: p.statut === 'P' ? 'rgba(72,186,120,0.15)' : p.statut === 'E' ? 'rgba(249,115,22,0.15)' : 'rgba(138,136,128,0.15)', color: p.statut === 'P' ? '#48ba78' : p.statut === 'E' ? '#F97316' : '#8A8880' }}>
+                    <span style={{ fontSize: '11px', fontWeight: 600, padding: '2px 8px', borderRadius: '4px', fontFamily: 'var(--font-dm-sans), sans-serif', backgroundColor: p.statut === 'P' ? 'rgba(72,186,120,0.15)' : p.statut === 'E' ? 'rgba(249,115,22,0.15)' : 'rgba(138,136,128,0.15)', color: p.statut === 'P' ? '#48ba78' : p.statut === 'E' ? '#ea580c' : '#8A8880' }}>
                       {p.statut === 'P' ? 'Présent' : p.statut === 'E' ? 'Excusé' : 'Absent'}
                     </span>
                   </div>
@@ -379,7 +379,7 @@ export default function CompteRenduDetail({ compteRendu: initial }: { compteRend
                     <p style={{ margin: '0 0 6px', fontSize: '13px', color: '#F0EDE6', fontFamily: 'var(--font-dm-sans), sans-serif', lineHeight: 1.5 }}>{d.texte}</p>
                     <div style={{ display: 'flex', gap: '16px' }}>
                       {d.responsable && <span style={{ fontSize: '12px', color: '#8A8880', fontFamily: 'var(--font-dm-sans), sans-serif' }}>→ {d.responsable}</span>}
-                      {d.echeance && <span style={{ fontSize: '12px', color: '#F97316', fontFamily: 'var(--font-dm-sans), sans-serif' }}>{fmt(d.echeance)}</span>}
+                      {d.echeance && <span style={{ fontSize: '12px', color: '#ea580c', fontFamily: 'var(--font-dm-sans), sans-serif' }}>{fmt(d.echeance)}</span>}
                     </div>
                   </div>
                 ))}
@@ -396,10 +396,10 @@ export default function CompteRenduDetail({ compteRendu: initial }: { compteRend
                   <div key={i} style={{ padding: '12px', backgroundColor: '#0D0D0B', borderRadius: '8px' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
                       <span style={{ fontSize: '13px', color: '#F0EDE6', fontFamily: 'var(--font-dm-sans), sans-serif', fontWeight: 500 }}>{l.nom}</span>
-                      <span style={{ fontSize: '12px', color: '#F97316', fontFamily: 'var(--font-syne), sans-serif', fontWeight: 700 }}>{l.avancement}%</span>
+                      <span style={{ fontSize: '12px', color: '#ea580c', fontFamily: 'var(--font-syne), sans-serif', fontWeight: 700 }}>{l.avancement}%</span>
                     </div>
                     <div style={{ height: '4px', backgroundColor: '#1E1E1C', borderRadius: '2px' }}>
-                      <div style={{ height: '4px', backgroundColor: '#F97316', borderRadius: '2px', width: `${l.avancement}%` }} />
+                      <div style={{ height: '4px', backgroundColor: '#ea580c', borderRadius: '2px', width: `${l.avancement}%` }} />
                     </div>
                     {l.notes && <p style={{ margin: '6px 0 0', fontSize: '12px', color: '#8A8880', fontFamily: 'var(--font-dm-sans), sans-serif' }}>{l.notes}</p>}
                   </div>
@@ -428,7 +428,7 @@ export default function CompteRenduDetail({ compteRendu: initial }: { compteRend
       {/* EDIT MODE */}
       {editing && (
         <div style={{ maxWidth: '680px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
-          <div style={{ backgroundColor: '#111110', border: '1px solid #F97316', borderRadius: '12px', padding: '28px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
+          <div style={{ backgroundColor: '#111110', border: '1px solid #ea580c', borderRadius: '12px', padding: '28px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
               <div>
@@ -444,9 +444,9 @@ export default function CompteRenduDetail({ compteRendu: initial }: { compteRend
             <div>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px' }}>
                 <label style={labelStyle}>Avancement</label>
-                <span style={{ fontFamily: 'var(--font-syne), sans-serif', fontSize: '16px', fontWeight: 700, color: '#F97316' }}>{form.progression}%</span>
+                <span style={{ fontFamily: 'var(--font-syne), sans-serif', fontSize: '16px', fontWeight: 700, color: '#ea580c' }}>{form.progression}%</span>
               </div>
-              <input type="range" min={0} max={100} step={5} value={form.progression} onChange={(e) => setField('progression', parseInt(e.target.value))} style={{ width: '100%', accentColor: '#F97316' }} />
+              <input type="range" min={0} max={100} step={5} value={form.progression} onChange={(e) => setField('progression', parseInt(e.target.value))} style={{ width: '100%', accentColor: '#ea580c' }} />
             </div>
 
             <div>
@@ -473,7 +473,7 @@ export default function CompteRenduDetail({ compteRendu: initial }: { compteRend
                     justifyContent: 'space-between',
                     padding: '10px 14px',
                     backgroundColor: '#0D0D0B',
-                    border: `1px solid ${artisansOpen ? '#F97316' : '#2A2A28'}`,
+                    border: `1px solid ${artisansOpen ? '#ea580c' : '#2A2A28'}`,
                     borderRadius: '8px',
                     color: form.artisans_presents.length > 0 ? '#F0EDE6' : '#8A8880',
                     fontSize: '14px',
@@ -533,8 +533,8 @@ export default function CompteRenduDetail({ compteRendu: initial }: { compteRend
                         >
                           <span style={{
                             width: '16px', height: '16px', borderRadius: '4px', flexShrink: 0,
-                            border: `2px solid ${checked ? '#F97316' : '#3A3A38'}`,
-                            backgroundColor: checked ? '#F97316' : 'transparent',
+                            border: `2px solid ${checked ? '#ea580c' : '#3A3A38'}`,
+                            backgroundColor: checked ? '#ea580c' : 'transparent',
                             display: 'flex', alignItems: 'center', justifyContent: 'center',
                             transition: 'all 0.1s',
                           }}>
@@ -556,7 +556,7 @@ export default function CompteRenduDetail({ compteRendu: initial }: { compteRend
                           width: '100%', display: 'flex', alignItems: 'center', gap: '8px',
                           padding: '10px 14px', backgroundColor: 'transparent',
                           borderTop: '1px solid #2A2A28', border: 'none', borderRadius: 0,
-                          cursor: 'pointer', textAlign: 'left', color: '#F97316',
+                          cursor: 'pointer', textAlign: 'left', color: '#ea580c',
                           fontSize: '13px', fontFamily: 'var(--font-dm-sans), sans-serif',
                           fontWeight: 500,
                         }}
@@ -600,7 +600,7 @@ export default function CompteRenduDetail({ compteRendu: initial }: { compteRend
                           <button
                             type="submit"
                             disabled={creatingArtisan || !newArtisan.nom.trim()}
-                            style={{ flex: 1, padding: '8px', backgroundColor: creatingArtisan ? '#9E8630' : '#F97316', color: '#0D0D0B', border: 'none', borderRadius: '6px', fontSize: '12px', fontWeight: 600, cursor: creatingArtisan ? 'not-allowed' : 'pointer', fontFamily: 'var(--font-dm-sans), sans-serif' }}
+                            style={{ flex: 1, padding: '8px', backgroundColor: creatingArtisan ? '#9E8630' : '#ea580c', color: '#0D0D0B', border: 'none', borderRadius: '6px', fontSize: '12px', fontWeight: 600, cursor: creatingArtisan ? 'not-allowed' : 'pointer', fontFamily: 'var(--font-dm-sans), sans-serif' }}
                           >
                             {creatingArtisan ? 'Création…' : 'Créer et ajouter'}
                           </button>
@@ -625,7 +625,7 @@ export default function CompteRenduDetail({ compteRendu: initial }: { compteRend
                     <span key={nom} style={{
                       display: 'inline-flex', alignItems: 'center', gap: '6px',
                       padding: '4px 10px', backgroundColor: '#1E1E1C', borderRadius: '20px',
-                      fontSize: '13px', color: '#F97316', fontFamily: 'var(--font-dm-sans), sans-serif',
+                      fontSize: '13px', color: '#ea580c', fontFamily: 'var(--font-dm-sans), sans-serif',
                     }}>
                       {nom}
                       <button
@@ -642,7 +642,7 @@ export default function CompteRenduDetail({ compteRendu: initial }: { compteRend
             {error && <p style={{ fontSize: '13px', color: '#E85447', margin: 0, fontFamily: 'var(--font-dm-sans), sans-serif' }}>{error}</p>}
 
             <div style={{ display: 'flex', gap: '10px' }}>
-              <button onClick={handleSave} disabled={saving} style={{ padding: '10px 20px', backgroundColor: saving ? '#9E8630' : '#F97316', color: '#0D0D0B', border: 'none', borderRadius: '8px', fontSize: '13px', fontWeight: 600, cursor: saving ? 'not-allowed' : 'pointer', fontFamily: 'var(--font-dm-sans), sans-serif' }}>
+              <button onClick={handleSave} disabled={saving} style={{ padding: '10px 20px', backgroundColor: saving ? '#9E8630' : '#ea580c', color: '#0D0D0B', border: 'none', borderRadius: '8px', fontSize: '13px', fontWeight: 600, cursor: saving ? 'not-allowed' : 'pointer', fontFamily: 'var(--font-dm-sans), sans-serif' }}>
                 {saving ? 'Sauvegarde…' : 'Sauvegarder'}
               </button>
               <button onClick={() => { setEditing(false); setError(null) }} style={{ padding: '10px 20px', backgroundColor: 'transparent', color: '#8A8880', border: '1px solid #1E1E1C', borderRadius: '8px', fontSize: '13px', cursor: 'pointer', fontFamily: 'var(--font-dm-sans), sans-serif' }}>
@@ -738,7 +738,7 @@ export default function CompteRenduDetail({ compteRendu: initial }: { compteRend
               <button
                 onClick={handleSendEmail}
                 disabled={sendingEmail || !emailEmails.length}
-                style={{ flex: 1, padding: '10px', backgroundColor: sendingEmail || !emailEmails.length ? '#9E8630' : '#F97316', color: '#0D0D0B', border: 'none', borderRadius: '8px', fontSize: '13px', fontWeight: 600, cursor: sendingEmail || !emailEmails.length ? 'not-allowed' : 'pointer', fontFamily: 'var(--font-dm-sans), sans-serif' }}
+                style={{ flex: 1, padding: '10px', backgroundColor: sendingEmail || !emailEmails.length ? '#9E8630' : '#ea580c', color: '#0D0D0B', border: 'none', borderRadius: '8px', fontSize: '13px', fontWeight: 600, cursor: sendingEmail || !emailEmails.length ? 'not-allowed' : 'pointer', fontFamily: 'var(--font-dm-sans), sans-serif' }}
               >
                 {sendingEmail ? 'Envoi…' : 'Envoyer'}
               </button>

@@ -33,7 +33,7 @@ const labelStyle: React.CSSProperties = {
 }
 
 const focus = (e: React.FocusEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
-  e.target.style.borderColor = '#F97316'
+  e.target.style.borderColor = '#ea580c'
   e.target.style.boxShadow = '0 0 0 2px rgba(249,115,22,0.12)'
 }
 const blur = (e: React.FocusEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
@@ -173,10 +173,10 @@ export default function NouvelleFacturePage() {
       <Link
         href={`/dashboard/chantiers/${chantierId}/factures`}
         style={{ display: 'inline-flex', alignItems: 'center', gap: 8, backgroundColor: '#111110', border: '1px solid #1E1E1C', borderRadius: 8, padding: '8px 14px', color: '#F0EDE6', fontSize: 13, fontWeight: 500, cursor: 'pointer', textDecoration: 'none', transition: 'all 0.15s ease', fontFamily: 'var(--font-dm-sans), sans-serif', marginBottom: 28 }}
-        onMouseEnter={e => { e.currentTarget.style.background = '#1E1E1C'; e.currentTarget.style.borderColor = '#F97316'; e.currentTarget.style.color = '#F97316' }}
+        onMouseEnter={e => { e.currentTarget.style.background = '#1E1E1C'; e.currentTarget.style.borderColor = '#ea580c'; e.currentTarget.style.color = '#ea580c' }}
         onMouseLeave={e => { e.currentTarget.style.background = '#111110'; e.currentTarget.style.borderColor = '#1E1E1C'; e.currentTarget.style.color = '#F0EDE6' }}
       >
-        <span style={{ color: '#F97316' }}>←</span>
+        <span style={{ color: '#ea580c' }}>←</span>
         Retour aux factures
       </Link>
 
@@ -184,7 +184,7 @@ export default function NouvelleFacturePage() {
         Nouvelle facture
       </h1>
       {devisId && (
-        <p style={{ fontSize: '13px', color: '#F97316', fontFamily: 'var(--font-dm-sans), sans-serif', margin: '0 0 28px' }}>
+        <p style={{ fontSize: '13px', color: '#ea580c', fontFamily: 'var(--font-dm-sans), sans-serif', margin: '0 0 28px' }}>
           Pré-remplie depuis le devis
         </p>
       )}
@@ -208,7 +208,7 @@ export default function NouvelleFacturePage() {
               <button
                 type="button"
                 onClick={() => setStatutOpen(p => !p)}
-                style={{ ...inputStyle, display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer', borderColor: statutOpen ? '#F97316' : '#1E1E1C', boxShadow: statutOpen ? '0 0 0 2px rgba(249,115,22,0.12)' : 'none' }}
+                style={{ ...inputStyle, display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer', borderColor: statutOpen ? '#ea580c' : '#1E1E1C', boxShadow: statutOpen ? '0 0 0 2px rgba(249,115,22,0.12)' : 'none' }}
               >
                 <span>{form.statut}</span>
                 <svg width="14" height="14" viewBox="0 0 14 14" fill="none" style={{ flexShrink: 0, transform: statutOpen ? 'rotate(180deg)' : 'rotate(0)', transition: 'transform 0.2s' }}>
@@ -221,7 +221,7 @@ export default function NouvelleFacturePage() {
                     <div
                       key={s}
                       onMouseDown={() => { setForm(p => ({ ...p, statut: s })); setStatutOpen(false) }}
-                      style={{ padding: '10px 16px', fontSize: '14px', fontFamily: 'var(--font-dm-sans), sans-serif', cursor: 'pointer', color: form.statut === s ? '#F97316' : '#F0EDE6' }}
+                      style={{ padding: '10px 16px', fontSize: '14px', fontFamily: 'var(--font-dm-sans), sans-serif', cursor: 'pointer', color: form.statut === s ? '#ea580c' : '#F0EDE6' }}
                       onMouseEnter={e => { e.currentTarget.style.backgroundColor = '#1E1E1C' }}
                       onMouseLeave={e => { e.currentTarget.style.backgroundColor = 'transparent' }}
                     >
@@ -288,7 +288,7 @@ export default function NouvelleFacturePage() {
 
         <button
           onClick={addLigne}
-          style={{ padding: '8px 16px', backgroundColor: 'transparent', color: '#F97316', border: '1px dashed rgba(249,115,22,0.3)', borderRadius: '8px', fontSize: '13px', cursor: 'pointer', fontFamily: 'var(--font-dm-sans), sans-serif' }}
+          style={{ padding: '8px 16px', backgroundColor: 'transparent', color: '#ea580c', border: '1px dashed rgba(249,115,22,0.3)', borderRadius: '8px', fontSize: '13px', cursor: 'pointer', fontFamily: 'var(--font-dm-sans), sans-serif' }}
           onMouseEnter={e => { e.currentTarget.style.backgroundColor = 'rgba(249,115,22,0.06)' }}
           onMouseLeave={e => { e.currentTarget.style.backgroundColor = 'transparent' }}
         >
@@ -306,7 +306,7 @@ export default function NouvelleFacturePage() {
           </div>
           <div style={{ display: 'flex', gap: '24px', fontSize: '16px', fontWeight: 700, fontFamily: 'var(--font-syne), sans-serif', marginTop: '4px', paddingTop: '8px', borderTop: '1px solid #1E1E1C' }}>
             <span style={{ color: '#F0EDE6' }}>Total TTC</span>
-            <span style={{ color: '#F97316', minWidth: '100px', textAlign: 'right' }}>{formatEur(totaux.ttc)}</span>
+            <span style={{ color: '#ea580c', minWidth: '100px', textAlign: 'right' }}>{formatEur(totaux.ttc)}</span>
           </div>
         </div>
       </div>
@@ -321,7 +321,7 @@ export default function NouvelleFacturePage() {
         <button
           onClick={handleSave}
           disabled={saving}
-          style={{ padding: '11px 28px', backgroundColor: saving ? '#c45a10' : '#F97316', color: '#0D0D0B', border: 'none', borderRadius: '8px', fontSize: '14px', fontWeight: 600, cursor: saving ? 'not-allowed' : 'pointer', fontFamily: 'var(--font-dm-sans), sans-serif', transition: 'all 0.2s' }}
+          style={{ padding: '11px 28px', backgroundColor: saving ? '#c45a10' : '#ea580c', color: '#0D0D0B', border: 'none', borderRadius: '8px', fontSize: '14px', fontWeight: 600, cursor: saving ? 'not-allowed' : 'pointer', fontFamily: 'var(--font-dm-sans), sans-serif', transition: 'all 0.2s' }}
           onMouseEnter={e => { if (!saving) { e.currentTarget.style.transform = 'translateY(-1px)'; e.currentTarget.style.boxShadow = '0 0 20px rgba(249,115,22,0.4)' } }}
           onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = 'none' }}
         >

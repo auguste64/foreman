@@ -67,10 +67,10 @@ export default function NouvelArtisanPage() {
         <Link
           href="/dashboard/artisans"
           style={{ display: 'inline-flex', alignItems: 'center', gap: 8, backgroundColor: '#111110', border: '1px solid #1E1E1C', borderRadius: 8, padding: '8px 14px', color: '#F0EDE6', fontSize: 13, fontWeight: 500, cursor: 'pointer', textDecoration: 'none', transition: 'all 0.15s ease', fontFamily: 'var(--font-dm-sans), sans-serif', marginBottom: 16 }}
-          onMouseEnter={e => { e.currentTarget.style.background = '#1E1E1C'; e.currentTarget.style.borderColor = '#F97316'; e.currentTarget.style.color = '#F97316' }}
+          onMouseEnter={e => { e.currentTarget.style.background = '#1E1E1C'; e.currentTarget.style.borderColor = '#ea580c'; e.currentTarget.style.color = '#ea580c' }}
           onMouseLeave={e => { e.currentTarget.style.background = '#111110'; e.currentTarget.style.borderColor = '#1E1E1C'; e.currentTarget.style.color = '#F0EDE6' }}
         >
-          <span style={{ color: '#F97316' }}>←</span>
+          <span style={{ color: '#ea580c' }}>←</span>
           Retour aux artisans
         </Link>
         <h1
@@ -105,7 +105,7 @@ export default function NouvelArtisanPage() {
               required
               placeholder="Ex : Jean Martin"
               style={inputStyle}
-              onFocus={(e) => (e.target.style.borderColor = '#F97316')}
+              onFocus={(e) => (e.target.style.borderColor = '#ea580c')}
               onBlur={(e) => (e.target.style.borderColor = '#1E1E1C')}
             />
           </div>
@@ -129,7 +129,7 @@ export default function NouvelArtisanPage() {
                 required
                 placeholder="jean@exemple.com"
                 style={inputStyle}
-                onFocus={(e) => (e.target.style.borderColor = '#F97316')}
+                onFocus={(e) => (e.target.style.borderColor = '#ea580c')}
                 onBlur={(e) => (e.target.style.borderColor = '#1E1E1C')}
               />
             </div>
@@ -142,7 +142,7 @@ export default function NouvelArtisanPage() {
                 required
                 placeholder="06 00 00 00 00"
                 style={inputStyle}
-                onFocus={(e) => (e.target.style.borderColor = '#F97316')}
+                onFocus={(e) => (e.target.style.borderColor = '#ea580c')}
                 onBlur={(e) => (e.target.style.borderColor = '#1E1E1C')}
               />
             </div>
@@ -161,7 +161,7 @@ export default function NouvelArtisanPage() {
               style={{
                 flex: 1,
                 padding: '12px',
-                backgroundColor: loading ? '#9E8630' : '#F97316',
+                backgroundColor: loading ? '#9E8630' : '#ea580c',
                 color: '#0D0D0B',
                 border: 'none',
                 borderRadius: '8px',

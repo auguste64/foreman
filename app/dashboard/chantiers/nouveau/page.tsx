@@ -68,10 +68,10 @@ export default function NouveauChantierPage() {
         <Link
           href="/dashboard/chantiers"
           style={{ display: 'inline-flex', alignItems: 'center', gap: 8, backgroundColor: '#111110', border: '1px solid #1E1E1C', borderRadius: 8, padding: '8px 14px', color: '#F0EDE6', fontSize: 13, fontWeight: 500, cursor: 'pointer', textDecoration: 'none', transition: 'all 0.15s ease', fontFamily: 'var(--font-dm-sans), sans-serif', marginBottom: 16 }}
-          onMouseEnter={e => { e.currentTarget.style.background = '#1E1E1C'; e.currentTarget.style.borderColor = '#F97316'; e.currentTarget.style.color = '#F97316' }}
+          onMouseEnter={e => { e.currentTarget.style.background = '#1E1E1C'; e.currentTarget.style.borderColor = '#ea580c'; e.currentTarget.style.color = '#ea580c' }}
           onMouseLeave={e => { e.currentTarget.style.background = '#111110'; e.currentTarget.style.borderColor = '#1E1E1C'; e.currentTarget.style.color = '#F0EDE6' }}
         >
-          <span style={{ color: '#F97316' }}>←</span>
+          <span style={{ color: '#ea580c' }}>←</span>
           Retour aux chantiers
         </Link>
         <h1
@@ -107,7 +107,7 @@ export default function NouveauChantierPage() {
               required
               placeholder="Ex : Villa Dupont — Rénovation complète"
               style={inputStyle}
-              onFocus={(e) => (e.target.style.borderColor = '#F97316')}
+              onFocus={(e) => (e.target.style.borderColor = '#ea580c')}
               onBlur={(e) => (e.target.style.borderColor = '#1E1E1C')}
             />
           </div>
@@ -121,7 +121,7 @@ export default function NouveauChantierPage() {
               required
               placeholder="Ex : 12 rue de la Paix, 75001 Paris"
               style={inputStyle}
-              onFocus={(e) => (e.target.style.borderColor = '#F97316')}
+              onFocus={(e) => (e.target.style.borderColor = '#ea580c')}
               onBlur={(e) => (e.target.style.borderColor = '#1E1E1C')}
             />
           </div>
@@ -135,7 +135,7 @@ export default function NouveauChantierPage() {
               required
               placeholder="Ex : M. et Mme Dupont"
               style={inputStyle}
-              onFocus={(e) => (e.target.style.borderColor = '#F97316')}
+              onFocus={(e) => (e.target.style.borderColor = '#ea580c')}
               onBlur={(e) => (e.target.style.borderColor = '#1E1E1C')}
             />
           </div>
@@ -151,7 +151,7 @@ export default function NouveauChantierPage() {
                 ...inputStyle,
                 colorScheme: 'dark',
               }}
-              onFocus={(e) => (e.target.style.borderColor = '#F97316')}
+              onFocus={(e) => (e.target.style.borderColor = '#ea580c')}
               onBlur={(e) => (e.target.style.borderColor = '#1E1E1C')}
             />
           </div>
@@ -170,7 +170,7 @@ export default function NouveauChantierPage() {
               style={{
                 flex: 1,
                 padding: '12px',
-                backgroundColor: loading ? '#9E8630' : '#F97316',
+                backgroundColor: loading ? '#9E8630' : '#ea580c',
                 color: '#0D0D0B',
                 border: 'none',
                 borderRadius: '8px',

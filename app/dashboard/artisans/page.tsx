@@ -1,13 +1,19 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import type { Artisan } from '@/lib/supabase/artisans'
+import GoogleContactsModal from '@/components/GoogleContactsModal'
+import SortPills from '@/components/SortPills'
+
+type SortArtisan = 'date_desc' | 'date_asc' | 'nom_asc' | 'nom_desc' | 'metier'
 
 export default function ArtisansPage() {
   const [artisans, setArtisans] = useState<Artisan[]>([])
   const [loading, setLoading] = useState(true)
+  const [showGoogleModal, setShowGoogleModal] = useState(false)
+  const [sort, setSort] = useState<SortArtisan>('date_desc')
 
   useEffect(() => {
     const supabase = createClient()
@@ -40,23 +46,32 @@ export default function ArtisansPage() {
             {loading ? '…' : `${artisans.length} artisan${artisans.length !== 1 ? 's' : ''}`}
           </p>
         </div>
-        <Link
-          href="/dashboard/artisans/nouveau"
-          className="transition-all duration-200 hover:scale-105 hover:shadow-[0_0_25px_rgba(249,115,22,0.5)] active:scale-95"
-          style={{
-            padding: '10px 20px',
-            backgroundColor: '#F97316',
-            color: '#0D0D0B',
-            borderRadius: '8px',
-            fontSize: '14px',
-            fontWeight: 600,
-            textDecoration: 'none',
-            fontFamily: 'var(--font-dm-sans), sans-serif',
-            letterSpacing: '0.01em',
-          }}
-        >
-          + Nouvel artisan
-        </Link>
+        <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+          <SortPills
+            value={sort}
+            onChange={v => setSort(v as SortArtisan)}
+            options={[
+              { key: 'nom', label: 'Nom', hasDirection: true, defaultDir: 'asc' },
+              { key: 'date', label: 'Date', hasDirection: true, defaultDir: 'desc' },
+              { key: 'metier', label: 'Métier' },
+            ]}
+          />
+          <button
+            onClick={() => setShowGoogleModal(true)}
+            style={{ padding: '10px 16px', backgroundColor: 'transparent', color: '#ea580c', border: '1px solid #ea580c', borderRadius: '8px', fontSize: '13px', fontWeight: 600, cursor: 'pointer', fontFamily: 'var(--font-dm-sans), sans-serif', whiteSpace: 'nowrap' }}
+            onMouseEnter={e => { e.currentTarget.style.backgroundColor = 'rgba(249,115,22,0.08)' }}
+            onMouseLeave={e => { e.currentTarget.style.backgroundColor = 'transparent' }}
+          >
+            ↓ Importer des contacts
+          </button>
+          <Link
+            href="/dashboard/artisans/nouveau"
+            className="transition-all duration-200 hover:scale-105 hover:shadow-[0_0_25px_rgba(249,115,22,0.5)] active:scale-95"
+            style={{ padding: '10px 20px', backgroundColor: '#ea580c', color: '#0D0D0B', borderRadius: '8px', fontSize: '14px', fontWeight: 600, textDecoration: 'none', fontFamily: 'var(--font-dm-sans), sans-serif', letterSpacing: '0.01em' }}
+          >
+            + Nouvel artisan
+          </Link>
+        </div>
       </div>
 
       {loading && (
@@ -70,7 +85,7 @@ export default function ArtisansPage() {
           <svg width="48" height="48" viewBox="0 0 48 48" fill="none" style={{ margin: '0 auto 20px', display: 'block' }}>
             <rect x="10" y="6" width="28" height="36" rx="2" stroke="#1E1E1C" strokeWidth="2"/>
             <circle cx="24" cy="20" r="7" stroke="#1E1E1C" strokeWidth="2"/>
-            <path d="M24 29v4M16 42c0-4.418 3.582-8 8-8s8 3.582 8 8" stroke="#F97316" strokeWidth="2" strokeLinecap="round"/>
+            <path d="M24 29v4M16 42c0-4.418 3.582-8 8-8s8 3.582 8 8" stroke="#ea580c" strokeWidth="2" strokeLinecap="round"/>
           </svg>
           <h2 style={{ fontFamily: 'var(--font-syne), sans-serif', fontSize: '16px', fontWeight: 600, color: '#8A8880', marginBottom: '8px' }}>
             Aucun artisan pour l&apos;instant
@@ -80,7 +95,7 @@ export default function ArtisansPage() {
           </p>
           <Link
             href="/dashboard/artisans/nouveau"
-            style={{ display: 'inline-block', padding: '10px 20px', backgroundColor: '#F97316', color: '#0D0D0B', borderRadius: '8px', fontSize: '14px', fontWeight: 600, textDecoration: 'none', fontFamily: 'var(--font-dm-sans), sans-serif' }}
+            style={{ display: 'inline-block', padding: '10px 20px', backgroundColor: '#ea580c', color: '#0D0D0B', borderRadius: '8px', fontSize: '14px', fontWeight: 600, textDecoration: 'none', fontFamily: 'var(--font-dm-sans), sans-serif' }}
           >
             + Ajouter mon premier artisan
           </Link>
@@ -89,7 +104,13 @@ export default function ArtisansPage() {
 
       {!loading && artisans.length > 0 && (
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '20px' }}>
-          {artisans.map((artisan) => {
+          {[...artisans].sort((a, b) => {
+            if (sort === 'nom_asc')  return a.nom.localeCompare(b.nom, 'fr')
+            if (sort === 'nom_desc') return b.nom.localeCompare(a.nom, 'fr')
+            if (sort === 'date_asc') return a.created_at.localeCompare(b.created_at)
+            if (sort === 'metier')   return a.metier.localeCompare(b.metier, 'fr')
+            return b.created_at.localeCompare(a.created_at)
+          }).map((artisan) => {
             const initials = artisan.nom.split(' ').map((w: string) => w[0]).slice(0, 2).join('').toUpperCase()
             return (
               <Link
@@ -101,14 +122,14 @@ export default function ArtisansPage() {
               >
                 <div style={{ backgroundColor: '#111110', border: '1px solid #1E1E1C', borderRadius: '12px', padding: '28px', height: '100%', boxSizing: 'border-box', transition: 'border-color 0.25s ease' }}>
                   {/* Initials */}
-                  <div style={{ width: '48px', height: '48px', borderRadius: '50%', background: 'rgba(249,115,22,0.1)', color: '#F97316', fontFamily: 'var(--font-syne), sans-serif', fontWeight: 700, fontSize: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '16px' }}>
+                  <div style={{ width: '48px', height: '48px', borderRadius: '50%', background: 'rgba(249,115,22,0.1)', color: '#ea580c', fontFamily: 'var(--font-syne), sans-serif', fontWeight: 700, fontSize: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '16px' }}>
                     {initials}
                   </div>
                   {/* Name + badge */}
                   <h3 style={{ fontFamily: 'var(--font-syne), sans-serif', fontSize: '16px', fontWeight: 700, color: '#F0EDE6', margin: '0 0 8px' }}>
                     {artisan.nom}
                   </h3>
-                  <span style={{ display: 'inline-block', padding: '2px 10px', borderRadius: '20px', fontSize: '12px', fontWeight: 500, backgroundColor: 'rgba(249,115,22,0.1)', color: '#F97316', fontFamily: 'var(--font-dm-sans), sans-serif', marginBottom: '14px' }}>
+                  <span style={{ display: 'inline-block', padding: '2px 10px', borderRadius: '20px', fontSize: '12px', fontWeight: 500, backgroundColor: 'rgba(249,115,22,0.1)', color: '#ea580c', fontFamily: 'var(--font-dm-sans), sans-serif', marginBottom: '14px' }}>
                     {artisan.metier}
                   </span>
                   {/* Contact */}
@@ -121,6 +142,17 @@ export default function ArtisansPage() {
             )
           })}
         </div>
+      )}
+
+      {showGoogleModal && (
+        <GoogleContactsModal
+          onClose={() => setShowGoogleModal(false)}
+          onImported={() => {
+            const supabase = createClient()
+            supabase.from('artisans').select('*').order('created_at', { ascending: false })
+              .then(({ data }) => setArtisans(data ?? []))
+          }}
+        />
       )}
     </div>
   )

@@ -33,7 +33,7 @@ p, span, div, a, button, input, select, textarea, li, td, th, label {
   .row-animated { transition: all 0.15s ease; display: block; }
   .row-animated:hover { background: rgba(249,115,22,0.05) !important; transform: translateX(4px); }
   .sidebar-link { transition: all 0.2s ease !important; font-family: var(--font-syne), sans-serif !important; font-weight: 500 !important; }
-  .sidebar-link:hover { color: #F97316 !important; background: rgba(249,115,22,0.06) !important; padding-left: 20px !important; }
+  .sidebar-link:hover { color: #ea580c !important; background: rgba(249,115,22,0.06) !important; padding-left: 20px !important; }
   .glow-on-hover:hover { box-shadow: 0 0 20px rgba(249,115,22,0.2); }
 }
 
@@ -42,7 +42,7 @@ p, span, div, a, button, input, select, textarea, li, td, th, label {
   --bg: #0D0D0B;
   --surface: #111110;
   --border: #1E1E1C;
-  --accent: #F97316;
+  --accent: #ea580c;
   --text: #F0EDE6;
   --muted: #7A7870;
 }
@@ -206,8 +206,8 @@ button:active {
 }
 
 /* Bouton primaire (fond jaune) */
-button[class*="bg-"][class*="F97316"]:hover,
-button[style*="F97316"]:hover {
+button[class*="bg-"][class*="ea580c"]:hover,
+button[style*="ea580c"]:hover {
   box-shadow: 0 0 28px rgba(249, 115, 22, 0.5) !important;
 }
 
@@ -428,7 +428,7 @@ tr:hover td {
   font-weight: 500 !important;
 }
 .sidebar-link:hover {
-  color: #F97316 !important;
+  color: #ea580c !important;
   background: rgba(249,115,22,0.06) !important;
   padding-left: 20px !important;
 }

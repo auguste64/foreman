@@ -89,7 +89,7 @@ const pdfSectionTitle: React.CSSProperties = {
 
 const focus = (e: React.FocusEvent<HTMLElement>) => {
   const t = e.target as HTMLElement
-  t.style.borderColor = '#F97316'
+  t.style.borderColor = '#ea580c'
   t.style.boxShadow = '0 0 0 2px rgba(249,115,22,0.15)'
   t.style.outline = 'none'
 }
@@ -464,10 +464,10 @@ export default function ModifierCompteRendu({ compteRendu: cr }: { compteRendu: 
       {/* Page header */}
       <div style={{ marginBottom: '28px' }}>
         <Link href={`/dashboard/comptes-rendus/${cr.id}`} style={{ display: 'inline-flex', alignItems: 'center', gap: 8, backgroundColor: '#111110', border: '1px solid #1E1E1C', borderRadius: 8, padding: '8px 14px', color: '#F0EDE6', fontSize: 13, fontWeight: 500, cursor: 'pointer', textDecoration: 'none', transition: 'all 0.15s ease', fontFamily: 'var(--font-dm-sans), sans-serif', marginBottom: 12 }}
-          onMouseEnter={e => { e.currentTarget.style.background = '#1E1E1C'; e.currentTarget.style.borderColor = '#F97316'; e.currentTarget.style.color = '#F97316' }}
+          onMouseEnter={e => { e.currentTarget.style.background = '#1E1E1C'; e.currentTarget.style.borderColor = '#ea580c'; e.currentTarget.style.color = '#ea580c' }}
           onMouseLeave={e => { e.currentTarget.style.background = '#111110'; e.currentTarget.style.borderColor = '#1E1E1C'; e.currentTarget.style.color = '#F0EDE6' }}
         >
-          <span style={{ color: '#F97316' }}>←</span>
+          <span style={{ color: '#ea580c' }}>←</span>
           Retour au compte rendu
         </Link>
         <h1 style={{ fontFamily: 'var(--font-syne), sans-serif', fontSize: '24px', fontWeight: 700, color: '#F0EDE6', margin: 0 }}>
@@ -487,8 +487,8 @@ export default function ModifierCompteRendu({ compteRendu: cr }: { compteRendu: 
               {TABS.map((t) => (
                 <button key={t.id} type="button" onClick={() => setTab(t.id)} style={{
                   padding: '12px 16px', fontSize: '13px', background: 'none', border: 'none',
-                  borderBottom: tab === t.id ? '2px solid #F97316' : '2px solid transparent',
-                  color: tab === t.id ? '#F97316' : '#7A7870',
+                  borderBottom: tab === t.id ? '2px solid #ea580c' : '2px solid transparent',
+                  color: tab === t.id ? '#ea580c' : '#7A7870',
                   fontFamily: 'var(--font-dm-sans), sans-serif', fontWeight: tab === t.id ? 600 : 400,
                   cursor: 'pointer', whiteSpace: 'nowrap', marginBottom: '-1px', transition: 'color 0.15s',
                 }}>
@@ -517,7 +517,7 @@ export default function ModifierCompteRendu({ compteRendu: cr }: { compteRendu: 
                       </select>
                       <svg width="16" height="16" viewBox="0 0 16 16" fill="none"
                         style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none', opacity: 0.5, transition: 'opacity 0.15s' }}>
-                        <path d="M4 6L8 10L12 6" stroke="#F97316" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                        <path d="M4 6L8 10L12 6" stroke="#ea580c" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
                       </svg>
                     </div>
                   </div>
@@ -536,11 +536,11 @@ export default function ModifierCompteRendu({ compteRendu: cr }: { compteRendu: 
                   <div>
                     <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
                       <label style={{ ...labelStyle, marginBottom: 0 }}>Avancement</label>
-                      <span style={{ fontFamily: 'var(--font-syne), sans-serif', fontSize: '14px', fontWeight: 700, color: '#F97316' }}>{form.progression}%</span>
+                      <span style={{ fontFamily: 'var(--font-syne), sans-serif', fontSize: '14px', fontWeight: 700, color: '#ea580c' }}>{form.progression}%</span>
                     </div>
                     <input type="range" min={0} max={100} step={5} value={form.progression}
                       onChange={(e) => setField('progression', parseInt(e.target.value))}
-                      style={{ width: '100%', accentColor: '#F97316', cursor: 'pointer' }} />
+                      style={{ width: '100%', accentColor: '#ea580c', cursor: 'pointer' }} />
                   </div>
                   <div>
                     <label style={labelStyle}>Observations / remarques</label>
@@ -602,8 +602,8 @@ export default function ModifierCompteRendu({ compteRendu: cr }: { compteRendu: 
                                 <button type="button" onClick={() => toggleConvoque(p.artisanId)}
                                   style={{
                                     width: '20px', height: '20px', borderRadius: '4px', cursor: 'pointer',
-                                    border: `2px solid ${p.convoque ? '#F97316' : '#3A3A38'}`,
-                                    backgroundColor: p.convoque ? '#F97316' : 'transparent',
+                                    border: `2px solid ${p.convoque ? '#ea580c' : '#3A3A38'}`,
+                                    backgroundColor: p.convoque ? '#ea580c' : 'transparent',
                                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                                   }}>
                                   {p.convoque && <span style={{ color: '#0D0D0B', fontSize: '10px', fontWeight: 700, lineHeight: 1 }}>✓</span>}
@@ -634,7 +634,7 @@ export default function ModifierCompteRendu({ compteRendu: cr }: { compteRendu: 
                           borderRadius: '8px', color: '#8A8880', fontSize: '13px', cursor: 'pointer',
                           fontFamily: 'var(--font-dm-sans), sans-serif', transition: 'all 0.15s',
                         }}
-                        onMouseEnter={(e) => { e.currentTarget.style.borderColor = 'rgba(249,115,22,0.4)'; e.currentTarget.style.color = '#F97316' }}
+                        onMouseEnter={(e) => { e.currentTarget.style.borderColor = 'rgba(249,115,22,0.4)'; e.currentTarget.style.color = '#ea580c' }}
                         onMouseLeave={(e) => { e.currentTarget.style.borderColor = '#1E1E1C'; e.currentTarget.style.color = '#8A8880' }}>
                         + Ajouter un artisan
                       </button>
@@ -690,7 +690,7 @@ export default function ModifierCompteRendu({ compteRendu: cr }: { compteRendu: 
                   {reserves.map((r, idx) => (
                     <div key={r.id} style={{ backgroundColor: '#0D0D0B', border: '1px solid #1E1E1C', borderRadius: '10px', padding: '20px' }}>
                       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
-                        <span style={{ fontFamily: 'var(--font-syne), sans-serif', fontWeight: 700, fontSize: '14px', color: '#F97316' }}>
+                        <span style={{ fontFamily: 'var(--font-syne), sans-serif', fontWeight: 700, fontSize: '14px', color: '#ea580c' }}>
                           Réserve 1.{idx + 1}
                         </span>
                         <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
@@ -739,7 +739,7 @@ export default function ModifierCompteRendu({ compteRendu: cr }: { compteRendu: 
                           <span style={{ ...labelStyle, marginBottom: 0 }}>Photos annotées</span>
                           <label style={{ cursor: 'pointer' }}>
                             <span style={{
-                              padding: '3px 10px', backgroundColor: 'rgba(249,115,22,0.1)', color: '#F97316',
+                              padding: '3px 10px', backgroundColor: 'rgba(249,115,22,0.1)', color: '#ea580c',
                               borderRadius: '6px', fontSize: '12px', fontWeight: 500,
                               fontFamily: 'var(--font-dm-sans), sans-serif',
                             }}>
@@ -774,7 +774,7 @@ export default function ModifierCompteRendu({ compteRendu: cr }: { compteRendu: 
                   ))}
                   <button type="button" onClick={addReserve}
                     style={{ padding: '14px', border: '1px dashed #1E1E1C', borderRadius: '10px', backgroundColor: 'transparent', color: '#8A8880', fontSize: '13px', fontFamily: 'var(--font-dm-sans), sans-serif', cursor: 'pointer', transition: 'all 0.15s' }}
-                    onMouseEnter={(e) => { e.currentTarget.style.borderColor = 'rgba(249,115,22,0.4)'; e.currentTarget.style.color = '#F97316' }}
+                    onMouseEnter={(e) => { e.currentTarget.style.borderColor = 'rgba(249,115,22,0.4)'; e.currentTarget.style.color = '#ea580c' }}
                     onMouseLeave={(e) => { e.currentTarget.style.borderColor = '#1E1E1C'; e.currentTarget.style.color = '#8A8880' }}>
                     + Ajouter une réserve
                   </button>
@@ -810,7 +810,7 @@ export default function ModifierCompteRendu({ compteRendu: cr }: { compteRendu: 
                   ))}
                   <button type="button" onClick={addDecision}
                     style={{ padding: '14px', border: '1px dashed #1E1E1C', borderRadius: '10px', backgroundColor: 'transparent', color: '#8A8880', fontSize: '13px', fontFamily: 'var(--font-dm-sans), sans-serif', cursor: 'pointer', transition: 'all 0.15s' }}
-                    onMouseEnter={(e) => { e.currentTarget.style.borderColor = 'rgba(249,115,22,0.4)'; e.currentTarget.style.color = '#F97316' }}
+                    onMouseEnter={(e) => { e.currentTarget.style.borderColor = 'rgba(249,115,22,0.4)'; e.currentTarget.style.color = '#ea580c' }}
                     onMouseLeave={(e) => { e.currentTarget.style.borderColor = '#1E1E1C'; e.currentTarget.style.color = '#8A8880' }}>
                     + Ajouter une décision
                   </button>
@@ -839,33 +839,33 @@ export default function ModifierCompteRendu({ compteRendu: cr }: { compteRendu: 
                             <td style={{ padding: '6px 8px' }}>
                               <input value={l.nom} onChange={(e) => updateLot(l.id, 'nom', e.target.value)} placeholder="Nom du lot"
                                 style={cellInput}
-                                onFocus={(e) => { e.target.style.borderColor = '#F97316'; e.target.style.backgroundColor = '#0D0D0B' }}
+                                onFocus={(e) => { e.target.style.borderColor = '#ea580c'; e.target.style.backgroundColor = '#0D0D0B' }}
                                 onBlur={(e) => { e.target.style.borderColor = 'transparent'; e.target.style.backgroundColor = 'transparent' }} />
                             </td>
                             <td style={{ padding: '6px 8px' }}>
                               <input value={l.intervenant} onChange={(e) => updateLot(l.id, 'intervenant', e.target.value)} placeholder="Entreprise"
                                 style={cellInput}
-                                onFocus={(e) => { e.target.style.borderColor = '#F97316'; e.target.style.backgroundColor = '#0D0D0B' }}
+                                onFocus={(e) => { e.target.style.borderColor = '#ea580c'; e.target.style.backgroundColor = '#0D0D0B' }}
                                 onBlur={(e) => { e.target.style.borderColor = 'transparent'; e.target.style.backgroundColor = 'transparent' }} />
                             </td>
                             <td style={{ padding: '6px 8px' }}>
                               <input type="date" value={l.dateDemarrage} onChange={(e) => updateLot(l.id, 'dateDemarrage', e.target.value)}
                                 style={{ ...cellInput, colorScheme: 'dark' } as React.CSSProperties}
-                                onFocus={(e) => { e.target.style.borderColor = '#F97316'; e.target.style.backgroundColor = '#0D0D0B' }}
+                                onFocus={(e) => { e.target.style.borderColor = '#ea580c'; e.target.style.backgroundColor = '#0D0D0B' }}
                                 onBlur={(e) => { e.target.style.borderColor = 'transparent'; e.target.style.backgroundColor = 'transparent' }} />
                             </td>
                             <td style={{ padding: '6px 8px' }}>
                               <input type="date" value={l.dateFin} onChange={(e) => updateLot(l.id, 'dateFin', e.target.value)}
                                 style={{ ...cellInput, colorScheme: 'dark' } as React.CSSProperties}
-                                onFocus={(e) => { e.target.style.borderColor = '#F97316'; e.target.style.backgroundColor = '#0D0D0B' }}
+                                onFocus={(e) => { e.target.style.borderColor = '#ea580c'; e.target.style.backgroundColor = '#0D0D0B' }}
                                 onBlur={(e) => { e.target.style.borderColor = 'transparent'; e.target.style.backgroundColor = 'transparent' }} />
                             </td>
                             <td style={{ padding: '6px 8px', minWidth: '130px' }}>
                               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                                 <input type="range" min={0} max={100} step={5} value={l.avancement}
                                   onChange={(e) => updateLot(l.id, 'avancement', parseInt(e.target.value))}
-                                  style={{ flex: 1, accentColor: '#F97316', cursor: 'pointer' }} />
-                                <span style={{ fontSize: '12px', color: '#F97316', fontWeight: 600, fontFamily: 'var(--font-syne), sans-serif', width: '32px', textAlign: 'right', flexShrink: 0 }}>
+                                  style={{ flex: 1, accentColor: '#ea580c', cursor: 'pointer' }} />
+                                <span style={{ fontSize: '12px', color: '#ea580c', fontWeight: 600, fontFamily: 'var(--font-syne), sans-serif', width: '32px', textAlign: 'right', flexShrink: 0 }}>
                                   {l.avancement}%
                                 </span>
                               </div>
@@ -881,7 +881,7 @@ export default function ModifierCompteRendu({ compteRendu: cr }: { compteRendu: 
                   )}
                   <button type="button" onClick={addLot}
                     style={{ padding: '14px', border: '1px dashed #1E1E1C', borderRadius: '10px', backgroundColor: 'transparent', color: '#8A8880', fontSize: '13px', fontFamily: 'var(--font-dm-sans), sans-serif', cursor: 'pointer', width: '100%', transition: 'all 0.15s' }}
-                    onMouseEnter={(e) => { e.currentTarget.style.borderColor = 'rgba(249,115,22,0.4)'; e.currentTarget.style.color = '#F97316' }}
+                    onMouseEnter={(e) => { e.currentTarget.style.borderColor = 'rgba(249,115,22,0.4)'; e.currentTarget.style.color = '#ea580c' }}
                     onMouseLeave={(e) => { e.currentTarget.style.borderColor = '#1E1E1C'; e.currentTarget.style.color = '#8A8880' }}>
                     + Ajouter un lot
                   </button>
@@ -1012,7 +1012,7 @@ export default function ModifierCompteRendu({ compteRendu: cr }: { compteRendu: 
           )}
           <div style={{ display: 'flex', gap: '12px' }}>
             <button type="submit" disabled={loading}
-              style={{ flex: 1, padding: '12px', backgroundColor: loading ? '#9E8630' : '#F97316', color: '#0D0D0B', border: 'none', borderRadius: '8px', fontSize: '14px', fontWeight: 600, cursor: loading ? 'not-allowed' : 'pointer', fontFamily: 'var(--font-dm-sans), sans-serif' }}>
+              style={{ flex: 1, padding: '12px', backgroundColor: loading ? '#9E8630' : '#ea580c', color: '#0D0D0B', border: 'none', borderRadius: '8px', fontSize: '14px', fontWeight: 600, cursor: loading ? 'not-allowed' : 'pointer', fontFamily: 'var(--font-dm-sans), sans-serif' }}>
               {loading ? 'Enregistrement…' : 'Enregistrer les modifications'}
             </button>
             <Link href={`/dashboard/comptes-rendus/${cr.id}`}

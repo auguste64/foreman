@@ -50,7 +50,7 @@ const lbl: React.CSSProperties = {
   display: 'block', fontSize: '11px', color: '#8A8880', marginBottom: '5px',
   fontFamily: 'var(--font-dm-sans), sans-serif', textTransform: 'uppercase', letterSpacing: '0.06em',
 }
-const f = (e: React.FocusEvent<HTMLElement>) => { (e.target as HTMLElement).style.borderColor = '#F97316' }
+const f = (e: React.FocusEvent<HTMLElement>) => { (e.target as HTMLElement).style.borderColor = '#ea580c' }
 const b = (e: React.FocusEvent<HTMLElement>) => { (e.target as HTMLElement).style.borderColor = '#1E1E1C' }
 
 // ─── Component ───────────────────────────────────────────────────────────────
@@ -172,7 +172,7 @@ export default function MiniCalendrier({ chantierId }: Props) {
         </div>
         <button
           onClick={() => openCreate()}
-          style={{ padding: '6px 12px', backgroundColor: '#F97316', color: '#0D0D0B', border: 'none', borderRadius: '6px', fontSize: '12px', fontWeight: 600, cursor: 'pointer', fontFamily: 'var(--font-dm-sans), sans-serif' }}
+          style={{ padding: '6px 12px', backgroundColor: '#ea580c', color: '#0D0D0B', border: 'none', borderRadius: '6px', fontSize: '12px', fontWeight: 600, cursor: 'pointer', fontFamily: 'var(--font-dm-sans), sans-serif' }}
         >
           + Ajouter
         </button>
@@ -215,7 +215,7 @@ export default function MiniCalendrier({ chantierId }: Props) {
                   <div style={{
                     width: '20px', height: '20px', borderRadius: '50%', margin: '0 auto 3px',
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    backgroundColor: today ? '#F97316' : 'transparent',
+                    backgroundColor: today ? '#ea580c' : 'transparent',
                     fontSize: '11px', fontWeight: today ? 700 : 400,
                     color: today ? '#0D0D0B' : '#F0EDE6',
                     fontFamily: 'var(--font-dm-sans), sans-serif',
@@ -323,7 +323,7 @@ export default function MiniCalendrier({ chantierId }: Props) {
             {createError && <p style={{ fontSize: '12px', color: '#E85447', marginTop: '10px', fontFamily: 'var(--font-dm-sans), sans-serif' }}>{createError}</p>}
             <div style={{ display: 'flex', gap: '8px', marginTop: '18px' }}>
               <button onClick={handleCreate} disabled={creating}
-                style={{ flex: 1, padding: '9px', backgroundColor: creating ? '#9E8630' : '#F97316', color: '#0D0D0B', border: 'none', borderRadius: '8px', fontSize: '13px', fontWeight: 600, cursor: creating ? 'not-allowed' : 'pointer', fontFamily: 'var(--font-dm-sans), sans-serif' }}>
+                style={{ flex: 1, padding: '9px', backgroundColor: creating ? '#9E8630' : '#ea580c', color: '#0D0D0B', border: 'none', borderRadius: '8px', fontSize: '13px', fontWeight: 600, cursor: creating ? 'not-allowed' : 'pointer', fontFamily: 'var(--font-dm-sans), sans-serif' }}>
                 {creating ? 'Création...' : 'Créer'}
               </button>
               <button onClick={() => setShowCreate(false)}

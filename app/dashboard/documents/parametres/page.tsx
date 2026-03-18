@@ -29,7 +29,7 @@ const labelStyle: React.CSSProperties = {
   fontFamily: 'var(--font-dm-sans), sans-serif',
 }
 const focus = (e: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-  e.target.style.borderColor = '#F97316'
+  e.target.style.borderColor = '#ea580c'
   e.target.style.boxShadow = '0 0 0 2px rgba(249,115,22,0.12)'
 }
 const blur = (e: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -142,10 +142,10 @@ export default function ParametresPage() {
   return (
     <div className="page-enter" style={{ flex: 1, padding: '40px', overflowY: 'auto', maxWidth: 800 }}>
       <Link href="/dashboard/documents" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, backgroundColor: '#111110', border: '1px solid #1E1E1C', borderRadius: 8, padding: '8px 14px', color: '#F0EDE6', fontSize: 13, fontWeight: 500, cursor: 'pointer', textDecoration: 'none', transition: 'all 0.15s ease', fontFamily: 'var(--font-dm-sans), sans-serif', marginBottom: 28 }}
-        onMouseEnter={e => { e.currentTarget.style.background = '#1E1E1C'; e.currentTarget.style.borderColor = '#F97316'; e.currentTarget.style.color = '#F97316' }}
+        onMouseEnter={e => { e.currentTarget.style.background = '#1E1E1C'; e.currentTarget.style.borderColor = '#ea580c'; e.currentTarget.style.color = '#ea580c' }}
         onMouseLeave={e => { e.currentTarget.style.background = '#111110'; e.currentTarget.style.borderColor = '#1E1E1C'; e.currentTarget.style.color = '#F0EDE6' }}
       >
-        <span style={{ color: '#F97316' }}>←</span>
+        <span style={{ color: '#ea580c' }}>←</span>
         Retour aux documents
       </Link>
 
@@ -172,7 +172,7 @@ export default function ParametresPage() {
           onDragOver={e => { e.preventDefault(); setLogoDragging(true) }}
           onDragLeave={() => setLogoDragging(false)}
           onDrop={e => { e.preventDefault(); setLogoDragging(false); const f = e.dataTransfer.files?.[0]; if (f) processLogoFile(f) }}
-          style={{ width: 200, height: 100, backgroundColor: '#111110', border: `2px dashed ${logoDragging ? '#F97316' : '#1E1E1C'}`, borderRadius: 8, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', marginBottom: form.logo_url ? 10 : 0, transition: 'border-color 0.15s' }}
+          style={{ width: 200, height: 100, backgroundColor: '#111110', border: `2px dashed ${logoDragging ? '#ea580c' : '#1E1E1C'}`, borderRadius: 8, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', marginBottom: form.logo_url ? 10 : 0, transition: 'border-color 0.15s' }}
         >
           {form.logo_url ? (
             <img src={form.logo_url} alt="Logo" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
@@ -242,7 +242,7 @@ export default function ParametresPage() {
               <p style={{ margin: '5px 0 0', fontSize: 12, color: '#EF4444', fontFamily: 'var(--font-dm-sans), sans-serif' }}>{ibanValidation.error}</p>
             )}
             {ibanTouched && !ibanValidation.error && ibanValidation.warning && (
-              <p style={{ margin: '5px 0 0', fontSize: 12, color: '#F97316', fontFamily: 'var(--font-dm-sans), sans-serif' }}>{ibanValidation.warning}</p>
+              <p style={{ margin: '5px 0 0', fontSize: 12, color: '#ea580c', fontFamily: 'var(--font-dm-sans), sans-serif' }}>{ibanValidation.warning}</p>
             )}
           </div>
           <div>
@@ -324,7 +324,7 @@ export default function ParametresPage() {
         <button
           onClick={handleSave}
           disabled={saving}
-          style={{ padding: '11px 28px', backgroundColor: saving ? '#c45a10' : '#F97316', color: '#0D0D0B', border: 'none', borderRadius: 8, fontSize: 14, fontWeight: 600, cursor: saving ? 'not-allowed' : 'pointer', fontFamily: 'var(--font-dm-sans), sans-serif' }}
+          style={{ padding: '11px 28px', backgroundColor: saving ? '#c45a10' : '#ea580c', color: '#0D0D0B', border: 'none', borderRadius: 8, fontSize: 14, fontWeight: 600, cursor: saving ? 'not-allowed' : 'pointer', fontFamily: 'var(--font-dm-sans), sans-serif' }}
           onMouseEnter={e => { if (!saving) { e.currentTarget.style.transform = 'translateY(-1px)'; e.currentTarget.style.boxShadow = '0 0 20px rgba(249,115,22,0.4)' } }}
           onMouseLeave={e => { e.currentTarget.style.transform = 'none'; e.currentTarget.style.boxShadow = 'none' }}
         >

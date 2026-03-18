@@ -71,7 +71,7 @@ export function Sidebar({ user }: { user: User }) {
             className="tracking-widest font-black text-xl hover:opacity-80 transition-opacity"
             style={{ fontFamily: 'var(--font-syne), sans-serif', color: '#F0EDE6' }}
           >
-            FORE<span style={{ color: '#F97316' }}>MAN</span>
+            FORE<span style={{ color: '#ea580c' }}>MAN</span>
           </span>
         </Link>
       </div>
@@ -87,9 +87,9 @@ export function Sidebar({ user }: { user: User }) {
                 href={item.href}
                 className={[
                   'group flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200',
-                  'hover:bg-[rgba(249,115,22,0.08)] hover:text-[#F97316] hover:translate-x-1 hover:shadow-[inset_2px_0_0_#F97316]',
+                  'hover:bg-[rgba(249,115,22,0.08)] hover:text-[#ea580c] hover:translate-x-1 hover:shadow-[inset_2px_0_0_#ea580c]',
                   isActive
-                    ? 'bg-[rgba(249,115,22,0.1)] text-[#F97316] shadow-[inset_2px_0_0_#F97316]'
+                    ? 'bg-[rgba(249,115,22,0.1)] text-[#ea580c] shadow-[inset_2px_0_0_#ea580c]'
                     : 'text-[#8A8880]',
                 ].join(' ')}
                 style={{ fontFamily: 'var(--font-dm-sans), sans-serif', textDecoration: 'none' }}
@@ -110,7 +110,7 @@ export function Sidebar({ user }: { user: User }) {
           className="flex items-center gap-2.5 rounded-lg transition-all duration-200 hover:bg-[rgba(249,115,22,0.06)]"
           style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '8px 4px', textDecoration: 'none' }}
         >
-          <div style={{ width: 36, height: 36, borderRadius: '50%', backgroundColor: '#F97316', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'var(--font-syne), sans-serif', fontWeight: 700, fontSize: 16, color: '#fff', flexShrink: 0 }}>
+          <div style={{ width: 36, height: 36, borderRadius: '50%', backgroundColor: '#ea580c', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'var(--font-syne), sans-serif', fontWeight: 700, fontSize: 16, color: '#fff', flexShrink: 0 }}>
             {user.email?.[0]?.toUpperCase() ?? '?'}
           </div>
           <span style={{ fontSize: 13, color: '#F0EDE6', fontFamily: 'var(--font-dm-sans), sans-serif', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1 }}>
@@ -196,7 +196,7 @@ export default function DashboardClient({
   const fmtEur = (n: number) => new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(n)
 
   const statCards = [
-    { label: 'CHANTIERS ACTIFS', value: String(stats.actifs), color: '#F97316', desc: 'en cours actuellement', hint: stats.actifs > 0 ? { text: '● Actif', color: '#F97316' } : null, href: null },
+    { label: 'CHANTIERS ACTIFS', value: String(stats.actifs), color: '#ea580c', desc: 'en cours actuellement', hint: stats.actifs > 0 ? { text: '● Actif', color: '#ea580c' } : null, href: null },
     { label: 'TOTAL CHANTIERS',  value: String(stats.total),  color: '#3B82F6', desc: 'depuis le début',       hint: null, href: null },
     {
       label: 'DEVIS ACCEPTÉS',
@@ -226,7 +226,7 @@ export default function DashboardClient({
           </h1>
           <p style={{ color: '#8A8880', fontSize: '14px', marginTop: '6px', fontFamily: 'var(--font-dm-sans), sans-serif' }}>
             {greeting && (
-              <>{greeting}, <span style={{ color: '#F97316', fontFamily: 'var(--font-syne)', fontWeight: 700 }}>{displayName}</span> — Voici l&apos;état de vos chantiers.</>
+              <>{greeting}, <span style={{ color: '#ea580c', fontFamily: 'var(--font-syne)', fontWeight: 700 }}>{displayName}</span> — Voici l&apos;état de vos chantiers.</>
             )}
           </p>
         </div>
@@ -292,7 +292,7 @@ export default function DashboardClient({
           href="/dashboard/chantiers/nouveau"
           onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-3px)'; e.currentTarget.style.boxShadow = '0 0 28px rgba(249,115,22,0.55)'; }}
           onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = 'none'; }}
-          style={{ display: 'inline-block', padding: '8px 14px', backgroundColor: '#F97316', color: '#0D0D0B', borderRadius: '8px', fontSize: '13px', fontWeight: 600, textDecoration: 'none', fontFamily: 'var(--font-dm-sans), sans-serif', letterSpacing: '0.01em', transition: 'all 0.2s ease', whiteSpace: 'nowrap' }}
+          style={{ display: 'inline-block', padding: '8px 14px', backgroundColor: '#ea580c', color: '#0D0D0B', borderRadius: '8px', fontSize: '13px', fontWeight: 600, textDecoration: 'none', fontFamily: 'var(--font-dm-sans), sans-serif', letterSpacing: '0.01em', transition: 'all 0.2s ease', whiteSpace: 'nowrap' }}
         >
           + Nouveau chantier
         </Link>
@@ -351,7 +351,7 @@ export default function DashboardClient({
               Chantiers en cours
             </h3>
             <Link href="/dashboard/chantiers" className="transition-all duration-200 hover:opacity-70"
-              style={{ fontSize: '12px', fontWeight: 500, color: '#F97316', textDecoration: 'none', letterSpacing: '0.04em', transition: 'opacity 0.2s' }}>
+              style={{ fontSize: '12px', fontWeight: 500, color: '#ea580c', textDecoration: 'none', letterSpacing: '0.04em', transition: 'opacity 0.2s' }}>
               Voir tous →
             </Link>
           </div>
@@ -360,16 +360,16 @@ export default function DashboardClient({
           {chantiersEnCours.length === 0 ? (
             <div style={{ textAlign: 'center', padding: '32px 16px' }}>
               <svg width="40" height="40" viewBox="0 0 40 40" fill="none" style={{ margin: '0 auto 12px', display: 'block', opacity: 0.3 }}>
-                <rect x="4" y="20" width="32" height="16" rx="2" stroke="#F97316" strokeWidth="1.5"/>
-                <path d="M10 20V14a2 2 0 012-2h16a2 2 0 012 2v6" stroke="#F97316" strokeWidth="1.5"/>
-                <path d="M16 28v-4h8v4" stroke="#F97316" strokeWidth="1.5"/>
-                <path d="M2 20h36" stroke="#F97316" strokeWidth="1.5"/>
+                <rect x="4" y="20" width="32" height="16" rx="2" stroke="#ea580c" strokeWidth="1.5"/>
+                <path d="M10 20V14a2 2 0 012-2h16a2 2 0 012 2v6" stroke="#ea580c" strokeWidth="1.5"/>
+                <path d="M16 28v-4h8v4" stroke="#ea580c" strokeWidth="1.5"/>
+                <path d="M2 20h36" stroke="#ea580c" strokeWidth="1.5"/>
               </svg>
               <p style={{ fontSize: '14px', color: '#7A7870', fontFamily: 'Inter, sans-serif', margin: '0 0 16px' }}>
                 Aucun chantier en cours
               </p>
               <Link href="/dashboard/chantiers/nouveau"
-                style={{ display: 'inline-block', padding: '8px 16px', backgroundColor: 'rgba(249,115,22,0.1)', color: '#F97316', border: '1px solid rgba(249,115,22,0.2)', borderRadius: '6px', fontSize: '13px', fontWeight: 500, textDecoration: 'none', fontFamily: 'Inter, sans-serif' }}>
+                style={{ display: 'inline-block', padding: '8px 16px', backgroundColor: 'rgba(249,115,22,0.1)', color: '#ea580c', border: '1px solid rgba(249,115,22,0.2)', borderRadius: '6px', fontSize: '13px', fontWeight: 500, textDecoration: 'none', fontFamily: 'Inter, sans-serif' }}>
                 + Créer un chantier
               </Link>
             </div>
@@ -406,7 +406,7 @@ export default function DashboardClient({
               Prochains événements
             </h3>
             <Link href="/dashboard/planning" className="transition-all duration-200 hover:opacity-70"
-              style={{ fontSize: '12px', fontWeight: 500, color: '#F97316', textDecoration: 'none', letterSpacing: '0.04em', transition: 'opacity 0.2s' }}>
+              style={{ fontSize: '12px', fontWeight: 500, color: '#ea580c', textDecoration: 'none', letterSpacing: '0.04em', transition: 'opacity 0.2s' }}>
               Voir tous →
             </Link>
           </div>
@@ -415,16 +415,16 @@ export default function DashboardClient({
           {prochainsEvenements.length === 0 ? (
             <div style={{ textAlign: 'center', padding: '32px 16px' }}>
               <svg width="40" height="40" viewBox="0 0 40 40" fill="none" style={{ margin: '0 auto 12px', display: 'block', opacity: 0.3 }}>
-                <rect x="4" y="8" width="32" height="28" rx="2" stroke="#F97316" strokeWidth="1.5"/>
-                <path d="M4 16h32" stroke="#F97316" strokeWidth="1.5"/>
-                <path d="M13 4v8M27 4v8" stroke="#F97316" strokeWidth="1.5" strokeLinecap="round"/>
-                <rect x="10" y="22" width="6" height="5" rx="1" fill="#F97316" opacity="0.4"/>
+                <rect x="4" y="8" width="32" height="28" rx="2" stroke="#ea580c" strokeWidth="1.5"/>
+                <path d="M4 16h32" stroke="#ea580c" strokeWidth="1.5"/>
+                <path d="M13 4v8M27 4v8" stroke="#ea580c" strokeWidth="1.5" strokeLinecap="round"/>
+                <rect x="10" y="22" width="6" height="5" rx="1" fill="#ea580c" opacity="0.4"/>
               </svg>
               <p style={{ fontSize: '14px', color: '#7A7870', fontFamily: 'Inter, sans-serif', margin: '0 0 16px' }}>
                 Aucun événement prévu
               </p>
               <Link href="/dashboard/planning"
-                style={{ display: 'inline-block', padding: '8px 16px', backgroundColor: 'rgba(249,115,22,0.1)', color: '#F97316', border: '1px solid rgba(249,115,22,0.2)', borderRadius: '6px', fontSize: '13px', fontWeight: 500, textDecoration: 'none', fontFamily: 'Inter, sans-serif' }}>
+                style={{ display: 'inline-block', padding: '8px 16px', backgroundColor: 'rgba(249,115,22,0.1)', color: '#ea580c', border: '1px solid rgba(249,115,22,0.2)', borderRadius: '6px', fontSize: '13px', fontWeight: 500, textDecoration: 'none', fontFamily: 'Inter, sans-serif' }}>
                 + Planifier
               </Link>
             </div>

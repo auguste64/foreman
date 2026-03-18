@@ -27,7 +27,7 @@ export default function CustomSelect({ value, onChange, options, placeholder = '
 
   const selected = options.find(o => o.value === value)
 
-  const triggerBorderColor = open ? '#F97316' : hovered ? '#2E2E2C' : '#1E1E1C'
+  const triggerBorderColor = open ? '#ea580c' : hovered ? '#2E2E2C' : '#1E1E1C'
   const padding = compact ? '6px 10px' : '10px 14px'
   const fontSize = compact ? 12 : 14
 
@@ -119,7 +119,7 @@ function OptionRow({ option, isSelected, fontSize, onClick }: {
       onMouseLeave={() => setHovered(false)}
       style={{
         padding: '10px 14px',
-        color: isSelected ? '#F97316' : '#F0EDE6',
+        color: isSelected ? '#ea580c' : '#F0EDE6',
         cursor: 'pointer',
         fontSize,
         fontFamily: 'var(--font-dm-sans), sans-serif',

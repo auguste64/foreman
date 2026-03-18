@@ -191,10 +191,10 @@ export default function ArtisanDetail({ artisan }: { artisan: Artisan }) {
       <Link
         href="/dashboard/artisans"
         style={{ display: 'inline-flex', alignItems: 'center', gap: 8, backgroundColor: '#111110', border: '1px solid #1E1E1C', borderRadius: 8, padding: '8px 14px', color: '#F0EDE6', fontSize: 13, fontWeight: 500, cursor: 'pointer', textDecoration: 'none', transition: 'all 0.15s ease', fontFamily: 'var(--font-dm-sans), sans-serif', marginBottom: 28 }}
-        onMouseEnter={e => { e.currentTarget.style.background = '#1E1E1C'; e.currentTarget.style.borderColor = '#F97316'; e.currentTarget.style.color = '#F97316' }}
+        onMouseEnter={e => { e.currentTarget.style.background = '#1E1E1C'; e.currentTarget.style.borderColor = '#ea580c'; e.currentTarget.style.color = '#ea580c' }}
         onMouseLeave={e => { e.currentTarget.style.background = '#111110'; e.currentTarget.style.borderColor = '#1E1E1C'; e.currentTarget.style.color = '#F0EDE6' }}
       >
-        <span style={{ color: '#F97316' }}>←</span>
+        <span style={{ color: '#ea580c' }}>←</span>
         Retour aux artisans
       </Link>
 
@@ -220,7 +220,7 @@ export default function ArtisanDetail({ artisan }: { artisan: Artisan }) {
               fontSize: '12px',
               fontWeight: 500,
               backgroundColor: '#1a2019',
-              color: '#F97316',
+              color: '#ea580c',
               fontFamily: 'var(--font-dm-sans), sans-serif',
             }}
           >
@@ -235,7 +235,7 @@ export default function ArtisanDetail({ artisan }: { artisan: Artisan }) {
               style={{
                 padding: '8px 14px',
                 backgroundColor: '#1E1E1C',
-                color: '#F97316',
+                color: '#ea580c',
                 border: '1px solid #1E1E1C',
                 borderRadius: '8px',
                 fontSize: '13px',
@@ -319,7 +319,7 @@ export default function ArtisanDetail({ artisan }: { artisan: Artisan }) {
         <div
           style={{
             backgroundColor: '#111110',
-            border: '1px solid #F97316',
+            border: '1px solid #ea580c',
             borderRadius: '12px',
             padding: '28px',
             marginBottom: '32px',
@@ -333,7 +333,7 @@ export default function ArtisanDetail({ artisan }: { artisan: Artisan }) {
                 value={form.nom}
                 onChange={set('nom')}
                 style={inputStyle}
-                onFocus={(e) => (e.target.style.borderColor = '#F97316')}
+                onFocus={(e) => (e.target.style.borderColor = '#ea580c')}
                 onBlur={(e) => (e.target.style.borderColor = '#1E1E1C')}
               />
             </div>
@@ -351,7 +351,7 @@ export default function ArtisanDetail({ artisan }: { artisan: Artisan }) {
                 value={form.email}
                 onChange={set('email')}
                 style={inputStyle}
-                onFocus={(e) => (e.target.style.borderColor = '#F97316')}
+                onFocus={(e) => (e.target.style.borderColor = '#ea580c')}
                 onBlur={(e) => (e.target.style.borderColor = '#1E1E1C')}
               />
             </div>
@@ -362,7 +362,7 @@ export default function ArtisanDetail({ artisan }: { artisan: Artisan }) {
                 value={form.telephone}
                 onChange={set('telephone')}
                 style={inputStyle}
-                onFocus={(e) => (e.target.style.borderColor = '#F97316')}
+                onFocus={(e) => (e.target.style.borderColor = '#ea580c')}
                 onBlur={(e) => (e.target.style.borderColor = '#1E1E1C')}
               />
             </div>
@@ -380,7 +380,7 @@ export default function ArtisanDetail({ artisan }: { artisan: Artisan }) {
               disabled={saving}
               style={{
                 padding: '10px 20px',
-                backgroundColor: saving ? '#9E8630' : '#F97316',
+                backgroundColor: saving ? '#9E8630' : '#ea580c',
                 color: '#0D0D0B',
                 border: 'none',
                 borderRadius: '8px',
@@ -441,7 +441,7 @@ export default function ArtisanDetail({ artisan }: { artisan: Artisan }) {
             onClick={openAssigner}
             style={{
               padding: '8px 14px',
-              backgroundColor: '#F97316',
+              backgroundColor: '#ea580c',
               color: '#0D0D0B',
               border: 'none',
               borderRadius: '8px',
@@ -542,7 +542,7 @@ export default function ArtisanDetail({ artisan }: { artisan: Artisan }) {
                 value={selectedChantier}
                 onChange={(e) => setSelectedChantier(e.target.value)}
                 style={{ ...inputStyle, cursor: 'pointer', marginBottom: '20px' }}
-                onFocus={(e) => (e.target.style.borderColor = '#F97316')}
+                onFocus={(e) => (e.target.style.borderColor = '#ea580c')}
                 onBlur={(e) => (e.target.style.borderColor = '#1E1E1C')}
               >
                 <option value="">— Sélectionner un chantier —</option>
@@ -571,7 +571,7 @@ export default function ArtisanDetail({ artisan }: { artisan: Artisan }) {
                 style={{
                   flex: 1,
                   padding: '10px',
-                  backgroundColor: !selectedChantier ? '#5a5030' : assigning ? '#9E8630' : '#F97316',
+                  backgroundColor: !selectedChantier ? '#5a5030' : assigning ? '#9E8630' : '#ea580c',
                   color: '#0D0D0B',
                   border: 'none',
                   borderRadius: '8px',
@@ -625,8 +625,8 @@ export default function ArtisanDetail({ artisan }: { artisan: Artisan }) {
                 <select
                   value={convocation.chantier_id}
                   onChange={(e) => setConvocation((prev) => ({ ...prev, chantier_id: e.target.value }))}
-                  style={{ width: '100%', padding: '12px 16px', background: '#111110', border: '1px solid #1E1E1C', borderRadius: '6px', color: '#F0EDE6', fontSize: '14px', appearance: 'none', WebkitAppearance: 'none', backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23F97316' d='M6 8L1 3h10z'/%3E%3C/svg%3E")`, backgroundRepeat: 'no-repeat', backgroundPosition: 'right 14px center', paddingRight: '36px', cursor: 'pointer', outline: 'none', transition: 'border-color 0.2s ease, box-shadow 0.2s ease' }}
-                  onFocus={e => { e.currentTarget.style.borderColor = '#F97316'; e.currentTarget.style.boxShadow = '0 0 0 2px rgba(249,115,22,0.15)'; }}
+                  style={{ width: '100%', padding: '12px 16px', background: '#111110', border: '1px solid #1E1E1C', borderRadius: '6px', color: '#F0EDE6', fontSize: '14px', appearance: 'none', WebkitAppearance: 'none', backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23ea580c' d='M6 8L1 3h10z'/%3E%3C/svg%3E")`, backgroundRepeat: 'no-repeat', backgroundPosition: 'right 14px center', paddingRight: '36px', cursor: 'pointer', outline: 'none', transition: 'border-color 0.2s ease, box-shadow 0.2s ease' }}
+                  onFocus={e => { e.currentTarget.style.borderColor = '#ea580c'; e.currentTarget.style.boxShadow = '0 0 0 2px rgba(249,115,22,0.15)'; }}
                   onBlur={e => { e.currentTarget.style.borderColor = '#1E1E1C'; e.currentTarget.style.boxShadow = 'none'; }}
                 >
                   <option value="">— Sélectionner un chantier —</option>
@@ -646,7 +646,7 @@ export default function ArtisanDetail({ artisan }: { artisan: Artisan }) {
                   onChange={(e) => setConvocation((prev) => ({ ...prev, objet: e.target.value }))}
                   placeholder="Ex : Réunion de chantier"
                   style={inputStyle}
-                  onFocus={(e) => (e.target.style.borderColor = '#F97316')}
+                  onFocus={(e) => (e.target.style.borderColor = '#ea580c')}
                   onBlur={(e) => (e.target.style.borderColor = '#1E1E1C')}
                 />
               </div>
@@ -659,7 +659,7 @@ export default function ArtisanDetail({ artisan }: { artisan: Artisan }) {
                     value={convocation.date}
                     onChange={(e) => setConvocation((prev) => ({ ...prev, date: e.target.value }))}
                     style={{ width: '100%', padding: '12px 16px', background: '#111110', border: '1px solid #1E1E1C', borderRadius: '6px', color: '#F0EDE6', fontSize: '14px', outline: 'none', colorScheme: 'dark', fontFamily: 'var(--font-dm-sans), sans-serif', boxSizing: 'border-box', transition: 'border-color 0.2s ease, box-shadow 0.2s ease' } as React.CSSProperties}
-                    onFocus={e => { e.currentTarget.style.borderColor = '#F97316'; e.currentTarget.style.boxShadow = '0 0 0 2px rgba(249,115,22,0.15)'; }}
+                    onFocus={e => { e.currentTarget.style.borderColor = '#ea580c'; e.currentTarget.style.boxShadow = '0 0 0 2px rgba(249,115,22,0.15)'; }}
                     onBlur={e => { e.currentTarget.style.borderColor = '#1E1E1C'; e.currentTarget.style.boxShadow = 'none'; }}
                   />
                 </div>
@@ -670,7 +670,7 @@ export default function ArtisanDetail({ artisan }: { artisan: Artisan }) {
                     value={convocation.heure}
                     onChange={(e) => setConvocation((prev) => ({ ...prev, heure: e.target.value }))}
                     style={{ width: '100%', padding: '12px 16px', background: '#111110', border: '1px solid #1E1E1C', borderRadius: '6px', color: '#F0EDE6', fontSize: '14px', outline: 'none', colorScheme: 'dark', fontFamily: 'var(--font-dm-sans), sans-serif', boxSizing: 'border-box', transition: 'border-color 0.2s ease, box-shadow 0.2s ease' } as React.CSSProperties}
-                    onFocus={e => { e.currentTarget.style.borderColor = '#F97316'; e.currentTarget.style.boxShadow = '0 0 0 2px rgba(249,115,22,0.15)'; }}
+                    onFocus={e => { e.currentTarget.style.borderColor = '#ea580c'; e.currentTarget.style.boxShadow = '0 0 0 2px rgba(249,115,22,0.15)'; }}
                     onBlur={e => { e.currentTarget.style.borderColor = '#1E1E1C'; e.currentTarget.style.boxShadow = 'none'; }}
                   />
                 </div>
@@ -684,7 +684,7 @@ export default function ArtisanDetail({ artisan }: { artisan: Artisan }) {
                   placeholder="Instructions particulières, matériaux à apporter…"
                   rows={4}
                   style={{ width: '100%', padding: '12px 16px', background: '#111110', border: '1px solid #1E1E1C', borderRadius: '6px', color: '#F0EDE6', fontSize: '14px', outline: 'none', fontFamily: 'var(--font-dm-sans), sans-serif', boxSizing: 'border-box', resize: 'vertical', lineHeight: '1.5', transition: 'border-color 0.2s ease, box-shadow 0.2s ease' } as React.CSSProperties}
-                  onFocus={e => { e.currentTarget.style.borderColor = '#F97316'; e.currentTarget.style.boxShadow = '0 0 0 2px rgba(249,115,22,0.15)'; }}
+                  onFocus={e => { e.currentTarget.style.borderColor = '#ea580c'; e.currentTarget.style.boxShadow = '0 0 0 2px rgba(249,115,22,0.15)'; }}
                   onBlur={e => { e.currentTarget.style.borderColor = '#1E1E1C'; e.currentTarget.style.boxShadow = 'none'; }}
                 />
               </div>
@@ -708,7 +708,7 @@ export default function ArtisanDetail({ artisan }: { artisan: Artisan }) {
                 style={{
                   flex: 1,
                   padding: '10px',
-                  backgroundColor: sending || sendSuccess ? '#9E8630' : '#F97316',
+                  backgroundColor: sending || sendSuccess ? '#9E8630' : '#ea580c',
                   color: '#0D0D0B',
                   border: 'none',
                   borderRadius: '8px',

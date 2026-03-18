@@ -24,7 +24,7 @@ const styles = StyleSheet.create({
   logo: {
     fontSize: 22,
     fontFamily: 'Helvetica-Bold',
-    color: '#F97316',
+    color: '#ea580c',
     letterSpacing: 3,
   },
   headerSubtitle: {
@@ -78,7 +78,7 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 10,
     fontFamily: 'Helvetica-Bold',
-    color: '#F97316',
+    color: '#ea580c',
     textTransform: 'uppercase',
     letterSpacing: 1.2,
     marginBottom: 8,
@@ -106,7 +106,7 @@ const styles = StyleSheet.create({
   },
   progressFill: {
     height: 8,
-    backgroundColor: '#F97316',
+    backgroundColor: '#ea580c',
     borderRadius: 4,
   },
   progressLabel: {
@@ -168,7 +168,7 @@ const styles = StyleSheet.create({
   },
   footerAccent: {
     fontSize: 8,
-    color: '#F97316',
+    color: '#ea580c',
     fontFamily: 'Helvetica-Bold',
     letterSpacing: 1,
   },

@@ -76,7 +76,7 @@ export default function StatsPage() {
   }, [])
 
   const metricCards = [
-    { label: 'CR CE MOIS', value: stats.crCeMois, color: '#F97316' },
+    { label: 'CR CE MOIS', value: stats.crCeMois, color: '#ea580c' },
     { label: 'CR TOTAL', value: stats.crTotal, color: '#60a5fa' },
     { label: 'CHANTIERS ACTIFS', value: stats.chantiersActifs, color: '#4ade80' },
     { label: 'ARTISANS', value: stats.artisans, color: '#a78bfa' },
@@ -135,9 +135,9 @@ export default function StatsPage() {
                 <Tooltip
                   contentStyle={{ backgroundColor: '#111110', border: '1px solid #1E1E1C', borderRadius: '6px', fontFamily: 'var(--font-dm-sans), sans-serif', fontSize: '13px', color: '#F0EDE6' }}
                   cursor={{ fill: 'rgba(249,115,22,0.06)' }}
-                  labelStyle={{ color: '#F97316', fontWeight: 600 }}
+                  labelStyle={{ color: '#ea580c', fontWeight: 600 }}
                 />
-                <Bar dataKey="cr" fill="#F97316" radius={[4, 4, 0, 0]} name="CR" />
+                <Bar dataKey="cr" fill="#ea580c" radius={[4, 4, 0, 0]} name="CR" />
               </BarChart>
             </ResponsiveContainer>
           </div>

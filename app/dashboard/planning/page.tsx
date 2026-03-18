@@ -39,7 +39,7 @@ function StyledSelect({ value, onChange, children, placeholder }: {
         onClick={() => setOpen(!open)}
         style={{
           width: '100%', padding: '12px 16px', background: '#111110',
-          border: `1px solid ${open ? '#F97316' : '#1E1E1C'}`,
+          border: `1px solid ${open ? '#ea580c' : '#1E1E1C'}`,
           boxShadow: open ? '0 0 0 2px rgba(249,115,22,0.15)' : 'none',
           borderRadius: '6px', color: selected ? '#F0EDE6' : '#7A7870',
           fontSize: '14px', cursor: 'pointer', display: 'flex',
@@ -49,12 +49,12 @@ function StyledSelect({ value, onChange, children, placeholder }: {
         }}
       >
         <span>{selected ? selected.props.children : placeholder ?? 'Sélectionner...'}</span>
-        <span style={{ color: '#F97316', transition: 'transform 0.2s', transform: open ? 'rotate(180deg)' : 'rotate(0deg)', fontSize: '10px' }}>▼</span>
+        <span style={{ color: '#ea580c', transition: 'transform 0.2s', transform: open ? 'rotate(180deg)' : 'rotate(0deg)', fontSize: '10px' }}>▼</span>
       </div>
       {open && (
         <div style={{
           position: 'absolute', top: 'calc(100% + 4px)', left: 0, right: 0,
-          background: '#111110', border: '1px solid #F97316',
+          background: '#111110', border: '1px solid #ea580c',
           borderRadius: '6px', zIndex: 999, overflow: 'hidden',
           boxShadow: '0 8px 32px rgba(0,0,0,0.4)',
           animation: 'dropdownIn 0.15s ease both',
@@ -65,7 +65,7 @@ function StyledSelect({ value, onChange, children, placeholder }: {
               onClick={() => { onChange(opt.props.value); setOpen(false) }}
               style={{
                 padding: '11px 16px', fontSize: '14px', cursor: 'pointer',
-                color: opt.props.value === value ? '#F97316' : '#F0EDE6',
+                color: opt.props.value === value ? '#ea580c' : '#F0EDE6',
                 background: opt.props.value === value ? 'rgba(249,115,22,0.08)' : 'transparent',
                 transition: 'all 0.15s ease',
                 borderBottom: i < options.length - 1 ? '1px solid #1E1E1C' : 'none',
@@ -144,7 +144,7 @@ const lbl: React.CSSProperties = {
   display: 'block', fontSize: '12px', color: '#8A8880', marginBottom: '6px',
   fontFamily: 'var(--font-dm-sans), sans-serif', textTransform: 'uppercase', letterSpacing: '0.06em',
 }
-const onFocus = (e: React.FocusEvent<HTMLElement>) => { (e.target as HTMLElement).style.borderColor = '#F97316' }
+const onFocus = (e: React.FocusEvent<HTMLElement>) => { (e.target as HTMLElement).style.borderColor = '#ea580c' }
 const onBlur  = (e: React.FocusEvent<HTMLElement>) => { (e.target as HTMLElement).style.borderColor = '#1E1E1C' }
 
 // ─── Form state ────────────────────────────────────────────────────────────
@@ -268,11 +268,11 @@ function EventFormFields({
               width: '100%', padding: '12px 16px', background: '#111110',
               border: '1px solid #1E1E1C', borderRadius: '6px', color: '#F0EDE6',
               fontSize: '14px', appearance: 'none',
-              backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23F97316' d='M6 8L1 3h10z'/%3E%3C/svg%3E")`,
+              backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23ea580c' d='M6 8L1 3h10z'/%3E%3C/svg%3E")`,
               backgroundRepeat: 'no-repeat', backgroundPosition: 'right 14px center',
               paddingRight: '36px', cursor: 'pointer', outline: 'none',
             }}
-            onFocus={e => { e.currentTarget.style.borderColor = '#F97316'; e.currentTarget.style.boxShadow = '0 0 0 2px rgba(249,115,22,0.15)'; }}
+            onFocus={e => { e.currentTarget.style.borderColor = '#ea580c'; e.currentTarget.style.boxShadow = '0 0 0 2px rgba(249,115,22,0.15)'; }}
             onBlur={e => { e.currentTarget.style.borderColor = '#1E1E1C'; e.currentTarget.style.boxShadow = 'none'; }}
           >
             <option value="">— Sélectionner —</option>
@@ -363,7 +363,7 @@ function MonthView({
               <div style={{
                 width: '24px', height: '24px', borderRadius: '50%', display: 'flex',
                 alignItems: 'center', justifyContent: 'center', marginBottom: '4px',
-                backgroundColor: today ? '#F97316' : 'transparent',
+                backgroundColor: today ? '#ea580c' : 'transparent',
                 fontSize: '12px', fontWeight: today ? 700 : 400,
                 color: today ? '#0D0D0B' : '#F0EDE6',
                 fontFamily: 'var(--font-dm-sans), sans-serif',
@@ -404,7 +404,7 @@ function WeekView({
         const today = isToday(day)
         return (
           <div key={i} style={{ backgroundColor: '#111110',
-            border: `1px solid ${today ? '#F97316' : '#1E1E1C'}`,
+            border: `1px solid ${today ? '#ea580c' : '#1E1E1C'}`,
             borderRadius: '10px', overflow: 'hidden', minHeight: '200px' }}>
             <div style={{ padding: '10px 10px 8px', borderBottom: '1px solid #1E1E1C',
               backgroundColor: today ? '#1a1a0d' : 'transparent' }}>
@@ -413,7 +413,7 @@ function WeekView({
                 {JOURS_COURTS[i]}
               </div>
               <div style={{ fontSize: today ? '20px' : '18px', fontWeight: today ? 700 : 400,
-                color: today ? '#F97316' : '#F0EDE6', fontFamily: 'var(--font-syne), sans-serif', lineHeight: 1.2 }}>
+                color: today ? '#ea580c' : '#F0EDE6', fontFamily: 'var(--font-syne), sans-serif', lineHeight: 1.2 }}>
                 {day.getDate()}
               </div>
               <div style={{ fontSize: '10px', color: '#8A8880', fontFamily: 'var(--font-dm-sans), sans-serif' }}>
@@ -658,7 +658,7 @@ export default function PlanningPage() {
                 padding: '7px 14px', cursor: 'pointer', fontSize: '13px', transition: 'all 0.15s',
                 fontFamily: 'var(--font-dm-sans), sans-serif',
                 fontWeight: view === v ? 600 : 500,
-                backgroundColor: view === v ? '#F97316' : 'transparent',
+                backgroundColor: view === v ? '#ea580c' : 'transparent',
                 color: view === v ? '#0D0D0B' : '#7A7870',
                 border: view === v ? 'none' : '1px solid transparent',
               }}>
@@ -676,7 +676,7 @@ export default function PlanningPage() {
           </div>
           <button
             onClick={() => { setCreateForm(emptyForm()); setCreateError(null); setShowCreate(true) }}
-            style={{ padding: '8px 16px', backgroundColor: '#F97316', color: '#0D0D0B', border: 'none', borderRadius: '8px', fontSize: '13px', fontWeight: 600, cursor: 'pointer', fontFamily: 'var(--font-dm-sans), sans-serif', transition: 'all 0.2s ease' }}
+            style={{ padding: '8px 16px', backgroundColor: '#ea580c', color: '#0D0D0B', border: 'none', borderRadius: '8px', fontSize: '13px', fontWeight: 600, cursor: 'pointer', fontFamily: 'var(--font-dm-sans), sans-serif', transition: 'all 0.2s ease' }}
             onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 0 24px rgba(249,115,22,0.5)'; }}
             onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = 'none'; }}
           >
@@ -727,7 +727,7 @@ export default function PlanningPage() {
             )}
             <div style={{ display: 'flex', gap: '10px', marginTop: '20px' }}>
               <button onClick={handleCreate} disabled={creating}
-                style={{ flex: 1, padding: '10px', backgroundColor: creating ? '#9E8630' : '#F97316', color: '#0D0D0B', border: 'none', borderRadius: '8px', fontSize: '13px', fontWeight: 600, cursor: creating ? 'not-allowed' : 'pointer', fontFamily: 'var(--font-dm-sans), sans-serif' }}>
+                style={{ flex: 1, padding: '10px', backgroundColor: creating ? '#9E8630' : '#ea580c', color: '#0D0D0B', border: 'none', borderRadius: '8px', fontSize: '13px', fontWeight: 600, cursor: creating ? 'not-allowed' : 'pointer', fontFamily: 'var(--font-dm-sans), sans-serif' }}>
                 {creating ? 'Création...' : 'Créer'}
               </button>
               <button onClick={() => setShowCreate(false)}
@@ -803,7 +803,7 @@ export default function PlanningPage() {
                 )}
                 <div style={{ display: 'flex', gap: '10px', marginTop: '20px' }}>
                   <button onClick={handleSave} disabled={saving}
-                    style={{ flex: 1, padding: '10px', backgroundColor: saving ? '#9E8630' : '#F97316', color: '#0D0D0B', border: 'none', borderRadius: '8px', fontSize: '13px', fontWeight: 600, cursor: saving ? 'not-allowed' : 'pointer', fontFamily: 'var(--font-dm-sans), sans-serif' }}>
+                    style={{ flex: 1, padding: '10px', backgroundColor: saving ? '#9E8630' : '#ea580c', color: '#0D0D0B', border: 'none', borderRadius: '8px', fontSize: '13px', fontWeight: 600, cursor: saving ? 'not-allowed' : 'pointer', fontFamily: 'var(--font-dm-sans), sans-serif' }}>
                     {saving ? 'Sauvegarde...' : 'Sauvegarder'}
                   </button>
                   <button onClick={() => setEditMode(false)}
@@ -845,7 +845,7 @@ export default function PlanningPage() {
                   navigator.clipboard.writeText(url).then(() => showToast('URL copiée'))
                 }}
                 disabled={!icalToken}
-                style={{ padding: '8px 16px', backgroundColor: icalToken ? 'rgba(249,115,22,0.12)' : 'transparent', color: icalToken ? '#F97316' : '#8A8880', border: `1px solid ${icalToken ? '#F97316' : '#1E1E1C'}`, borderRadius: '8px', fontSize: '12px', fontWeight: 600, cursor: icalToken ? 'pointer' : 'not-allowed', fontFamily: 'var(--font-dm-sans), sans-serif', whiteSpace: 'nowrap', transition: 'all 0.2s' }}
+                style={{ padding: '8px 16px', backgroundColor: icalToken ? 'rgba(249,115,22,0.12)' : 'transparent', color: icalToken ? '#ea580c' : '#8A8880', border: `1px solid ${icalToken ? '#ea580c' : '#1E1E1C'}`, borderRadius: '8px', fontSize: '12px', fontWeight: 600, cursor: icalToken ? 'pointer' : 'not-allowed', fontFamily: 'var(--font-dm-sans), sans-serif', whiteSpace: 'nowrap', transition: 'all 0.2s' }}
               >
                 {icalToken ? '⎘ Copier le lien' : 'Chargement…'}
               </button>
@@ -870,17 +870,29 @@ export default function PlanningPage() {
               </div>
               <div style={{ display: 'flex', gap: '8px' }}>
                 {googleConnected ? (
-                  <button
-                    onClick={handleGoogleSync}
-                    disabled={syncing}
-                    style={{ padding: '8px 16px', backgroundColor: syncing ? 'transparent' : 'rgba(249,115,22,0.12)', color: syncing ? '#8A8880' : '#F97316', border: `1px solid ${syncing ? '#1E1E1C' : '#F97316'}`, borderRadius: '8px', fontSize: '12px', fontWeight: 600, cursor: syncing ? 'not-allowed' : 'pointer', fontFamily: 'var(--font-dm-sans), sans-serif', whiteSpace: 'nowrap', transition: 'all 0.2s' }}
-                  >
-                    {syncing ? 'Synchronisation…' : '↻ Synchroniser'}
-                  </button>
+                  <>
+                    <button
+                      onClick={handleGoogleSync}
+                      disabled={syncing}
+                      style={{ padding: '8px 16px', backgroundColor: syncing ? 'transparent' : 'rgba(249,115,22,0.12)', color: syncing ? '#8A8880' : '#ea580c', border: `1px solid ${syncing ? '#1E1E1C' : '#ea580c'}`, borderRadius: '8px', fontSize: '12px', fontWeight: 600, cursor: syncing ? 'not-allowed' : 'pointer', fontFamily: 'var(--font-dm-sans), sans-serif', whiteSpace: 'nowrap', transition: 'all 0.2s' }}
+                    >
+                      {syncing ? 'Synchronisation…' : '↻ Synchroniser'}
+                    </button>
+                    <button
+                      onClick={async () => {
+                        const res = await fetch('/api/calendar/google/disconnect', { method: 'POST' })
+                        if (res.ok) { setGoogleConnected(false); showToast('Google Calendar déconnecté') }
+                      }}
+                      disabled={syncing}
+                      style={{ padding: '8px 16px', backgroundColor: 'rgba(239,68,68,0.12)', color: '#EF4444', border: '1px solid #EF4444', borderRadius: '8px', fontSize: '12px', fontWeight: 600, cursor: syncing ? 'not-allowed' : 'pointer', fontFamily: 'var(--font-dm-sans), sans-serif', whiteSpace: 'nowrap', transition: 'all 0.2s' }}
+                    >
+                      Déconnecter
+                    </button>
+                  </>
                 ) : (
                   <a
                     href="/api/calendar/google/auth"
-                    style={{ padding: '8px 16px', backgroundColor: 'rgba(249,115,22,0.12)', color: '#F97316', border: '1px solid #F97316', borderRadius: '8px', fontSize: '12px', fontWeight: 600, cursor: 'pointer', fontFamily: 'var(--font-dm-sans), sans-serif', whiteSpace: 'nowrap', textDecoration: 'none', display: 'inline-block' }}
+                    style={{ padding: '8px 16px', backgroundColor: 'rgba(249,115,22,0.12)', color: '#ea580c', border: '1px solid #ea580c', borderRadius: '8px', fontSize: '12px', fontWeight: 600, cursor: 'pointer', fontFamily: 'var(--font-dm-sans), sans-serif', whiteSpace: 'nowrap', textDecoration: 'none', display: 'inline-block' }}
                   >
                     Connecter Google Calendar
                   </a>

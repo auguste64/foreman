@@ -1,9 +1,10 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import type { Chantier } from '@/lib/supabase/chantiers'
+import SortPills from '@/components/SortPills'
 
 const STATUT_COLORS: Record<string, { bg: string; text: string }> = {
   'En cours': { bg: 'rgba(74,222,128,0.1)', text: '#4ade80' },
@@ -11,9 +12,12 @@ const STATUT_COLORS: Record<string, { bg: string; text: string }> = {
   'En pause': { bg: 'rgba(251,191,36,0.1)', text: '#fbbf24' },
 }
 
+type SortChantier = 'date_desc' | 'date_asc' | 'nom_asc' | 'nom_desc' | 'statut'
+
 export default function ChantiersPage() {
   const [chantiers, setChantiers] = useState<Chantier[]>([])
   const [loading, setLoading] = useState(true)
+  const [sort, setSort] = useState<SortChantier>('date_desc')
 
   useEffect(() => {
     const supabase = createClient()
@@ -27,6 +31,14 @@ export default function ChantiersPage() {
       })
   }, [])
 
+  const sorted = [...chantiers].sort((a, b) => {
+    if (sort === 'nom_asc')  return a.nom.localeCompare(b.nom, 'fr')
+    if (sort === 'nom_desc') return b.nom.localeCompare(a.nom, 'fr')
+    if (sort === 'date_asc') return a.created_at.localeCompare(b.created_at)
+    if (sort === 'statut')   return a.statut.localeCompare(b.statut, 'fr')
+    return b.created_at.localeCompare(a.created_at) // date_desc
+  })
+
   return (
     <div className="page-enter" style={{ flex: 1, padding: '40px', overflowY: 'auto' }}>
       {/* Header */}
@@ -39,14 +51,25 @@ export default function ChantiersPage() {
             {loading ? '…' : `${chantiers.length} chantier${chantiers.length !== 1 ? 's' : ''}`}
           </p>
         </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <SortPills
+            value={sort}
+            onChange={v => setSort(v as SortChantier)}
+            options={[
+              { key: 'nom', label: 'Nom', hasDirection: true, defaultDir: 'asc' },
+              { key: 'date', label: 'Date', hasDirection: true, defaultDir: 'desc' },
+              { key: 'statut', label: 'Statut' },
+            ]}
+          />
         <Link
           href="/dashboard/chantiers/nouveau"
           onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 0 24px rgba(249,115,22,0.5)'; }}
           onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = 'none'; }}
-          style={{ padding: '10px 20px', backgroundColor: '#F97316', color: '#0D0D0B', borderRadius: '8px', fontSize: '14px', fontWeight: 600, textDecoration: 'none', fontFamily: 'var(--font-dm-sans), sans-serif', letterSpacing: '0.01em', transition: 'all 0.2s ease' }}
+          style={{ padding: '10px 20px', backgroundColor: '#ea580c', color: '#0D0D0B', borderRadius: '8px', fontSize: '14px', fontWeight: 600, textDecoration: 'none', fontFamily: 'var(--font-dm-sans), sans-serif', letterSpacing: '0.01em', transition: 'all 0.2s ease' }}
         >
           + Nouveau chantier
         </Link>
+        </div>
       </div>
 
       {loading && (
@@ -58,10 +81,10 @@ export default function ChantiersPage() {
           <svg width="48" height="48" viewBox="0 0 48 48" fill="none" style={{ margin: '0 auto 20px', display: 'block' }}>
             <rect x="4" y="24" width="40" height="20" rx="2" stroke="#1E1E1C" strokeWidth="2"/>
             <path d="M12 24V17a2 2 0 012-2h20a2 2 0 012 2v7" stroke="#1E1E1C" strokeWidth="2"/>
-            <path d="M20 34v-6h8v6" stroke="#F97316" strokeWidth="2"/>
-            <path d="M2 24h44" stroke="#F97316" strokeWidth="2"/>
-            <rect x="8" y="28" width="6" height="6" rx="1" fill="#F97316" opacity="0.4"/>
-            <rect x="34" y="28" width="6" height="6" rx="1" fill="#F97316" opacity="0.4"/>
+            <path d="M20 34v-6h8v6" stroke="#ea580c" strokeWidth="2"/>
+            <path d="M2 24h44" stroke="#ea580c" strokeWidth="2"/>
+            <rect x="8" y="28" width="6" height="6" rx="1" fill="#ea580c" opacity="0.4"/>
+            <rect x="34" y="28" width="6" height="6" rx="1" fill="#ea580c" opacity="0.4"/>
           </svg>
           <h2 style={{ fontFamily: 'var(--font-syne), sans-serif', fontSize: '16px', fontWeight: 600, color: '#8A8880', marginBottom: '8px' }}>
             Aucun chantier pour l&apos;instant
@@ -71,7 +94,7 @@ export default function ChantiersPage() {
           </p>
           <Link
             href="/dashboard/chantiers/nouveau"
-            style={{ display: 'inline-block', padding: '10px 20px', backgroundColor: '#F97316', color: '#0D0D0B', borderRadius: '8px', fontSize: '14px', fontWeight: 600, textDecoration: 'none', fontFamily: 'var(--font-dm-sans), sans-serif' }}
+            style={{ display: 'inline-block', padding: '10px 20px', backgroundColor: '#ea580c', color: '#0D0D0B', borderRadius: '8px', fontSize: '14px', fontWeight: 600, textDecoration: 'none', fontFamily: 'var(--font-dm-sans), sans-serif' }}
           >
             + Créer mon premier chantier
           </Link>
@@ -80,7 +103,7 @@ export default function ChantiersPage() {
 
       {!loading && chantiers.length > 0 && (
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '24px' }}>
-          {chantiers.map((c) => {
+          {sorted.map((c) => {
             const colors = STATUT_COLORS[c.statut] ?? STATUT_COLORS['En cours']
             return (
               <Link
@@ -89,7 +112,7 @@ export default function ChantiersPage() {
                 style={{ textDecoration: 'none', display: 'block', transition: 'all 0.25s ease' }}
                 onMouseEnter={e => {
                   e.currentTarget.style.transform = 'translateY(-2px)'
-                  e.currentTarget.style.borderColor = '#F97316'
+                  e.currentTarget.style.borderColor = '#ea580c'
                   e.currentTarget.style.boxShadow = '0 4px 20px rgba(249,115,22,0.1)'
                 }}
                 onMouseLeave={e => {

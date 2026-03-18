@@ -18,7 +18,7 @@ const labelStyle: React.CSSProperties = {
   textTransform: 'uppercase', color: '#8A8880', marginBottom: 6, fontFamily: 'var(--font-dm-sans), sans-serif',
 }
 const focus = (e: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-  e.target.style.borderColor = '#F97316'; e.target.style.boxShadow = '0 0 0 2px rgba(249,115,22,0.12)'
+  e.target.style.borderColor = '#ea580c'; e.target.style.boxShadow = '0 0 0 2px rgba(249,115,22,0.12)'
 }
 const blur = (e: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement>) => {
   e.target.style.borderColor = '#1E1E1C'; e.target.style.boxShadow = 'none'
@@ -114,10 +114,10 @@ export default function NouvelAvoirPage() {
   return (
     <div className="page-enter" style={{ flex: 1, padding: '40px', overflowY: 'auto', maxWidth: 800 }}>
       <Link href={`/dashboard/documents/factures/${factureId}`} style={{ display: 'inline-flex', alignItems: 'center', gap: 8, backgroundColor: '#111110', border: '1px solid #1E1E1C', borderRadius: 8, padding: '8px 14px', color: '#F0EDE6', fontSize: 13, fontWeight: 500, cursor: 'pointer', textDecoration: 'none', transition: 'all 0.15s ease', fontFamily: 'var(--font-dm-sans), sans-serif', marginBottom: 28 }}
-        onMouseEnter={e => { e.currentTarget.style.background = '#1E1E1C'; e.currentTarget.style.borderColor = '#F97316'; e.currentTarget.style.color = '#F97316' }}
+        onMouseEnter={e => { e.currentTarget.style.background = '#1E1E1C'; e.currentTarget.style.borderColor = '#ea580c'; e.currentTarget.style.color = '#ea580c' }}
         onMouseLeave={e => { e.currentTarget.style.background = '#111110'; e.currentTarget.style.borderColor = '#1E1E1C'; e.currentTarget.style.color = '#F0EDE6' }}
       >
-        <span style={{ color: '#F97316' }}>←</span>
+        <span style={{ color: '#ea580c' }}>←</span>
         Retour à la facture {factureNumero}
       </Link>
 
@@ -125,7 +125,7 @@ export default function NouvelAvoirPage() {
         Nouvel avoir
       </h1>
       <p style={{ color: '#8A8880', fontSize: 13, fontFamily: 'var(--font-dm-sans), sans-serif', marginBottom: 28 }}>
-        Avoir lié à la facture <strong style={{ color: '#F97316' }}>{factureNumero}</strong>
+        Avoir lié à la facture <strong style={{ color: '#ea580c' }}>{factureNumero}</strong>
       </p>
 
       {/* Infos */}
@@ -188,7 +188,7 @@ export default function NouvelAvoirPage() {
         </div>
 
         <button onClick={addLigne}
-          style={{ padding: '8px 16px', backgroundColor: 'transparent', color: '#F97316', border: '1px dashed rgba(249,115,22,0.3)', borderRadius: 8, fontSize: 13, cursor: 'pointer', fontFamily: 'var(--font-dm-sans), sans-serif', marginBottom: 20 }}
+          style={{ padding: '8px 16px', backgroundColor: 'transparent', color: '#ea580c', border: '1px dashed rgba(249,115,22,0.3)', borderRadius: 8, fontSize: 13, cursor: 'pointer', fontFamily: 'var(--font-dm-sans), sans-serif', marginBottom: 20 }}
           onMouseEnter={e => { e.currentTarget.style.backgroundColor = 'rgba(249,115,22,0.06)' }}
           onMouseLeave={e => { e.currentTarget.style.backgroundColor = 'transparent' }}
         >+ Ajouter une ligne</button>

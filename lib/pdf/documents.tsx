@@ -64,7 +64,7 @@ const S = StyleSheet.create({
   metaLabel: { fontSize: 8, color: '#444444', textAlign: 'right', marginBottom: 2 },
   metaBold: { fontFamily: 'Helvetica-Bold' },
   metaEcheance: { fontSize: 8, color: '#B45309', textAlign: 'right', marginBottom: 2 },
-  metaObjet: { fontSize: 8, color: '#F97316', textAlign: 'right', marginTop: 4, fontStyle: 'italic' },
+  metaObjet: { fontSize: 8, color: '#ea580c', textAlign: 'right', marginTop: 4, fontStyle: 'italic' },
 
   // Divider
   divider: { borderBottomWidth: 1, borderBottomColor: '#DDDDDD', marginBottom: 14 },
@@ -126,7 +126,7 @@ const S = StyleSheet.create({
   totalLabel: { fontSize: 9, color: '#333333', textAlign: 'right', flex: 1, paddingRight: 14 },
   totalValue: { fontSize: 9, color: '#111111', width: 90, textAlign: 'right' },
   totalTTCLabel: { fontSize: 11, fontFamily: 'Helvetica-Bold', color: '#111111', textAlign: 'right', flex: 1, paddingRight: 14 },
-  totalTTCValue: { fontSize: 13, fontFamily: 'Helvetica-Bold', color: '#F97316', width: 90, textAlign: 'right' },
+  totalTTCValue: { fontSize: 13, fontFamily: 'Helvetica-Bold', color: '#ea580c', width: 90, textAlign: 'right' },
 
   // Footer
   footer: { flexDirection: 'row', justifyContent: 'space-between', gap: 20 },

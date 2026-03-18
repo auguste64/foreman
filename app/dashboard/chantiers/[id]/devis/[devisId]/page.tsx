@@ -89,10 +89,10 @@ export default function DevisDetailPage() {
       <Link
         href={`/dashboard/chantiers/${chantierId}/devis`}
         style={{ display: 'inline-flex', alignItems: 'center', gap: 8, backgroundColor: '#111110', border: '1px solid #1E1E1C', borderRadius: 8, padding: '8px 14px', color: '#F0EDE6', fontSize: 13, fontWeight: 500, cursor: 'pointer', textDecoration: 'none', transition: 'all 0.15s ease', fontFamily: 'var(--font-dm-sans), sans-serif', marginBottom: 28 }}
-        onMouseEnter={e => { e.currentTarget.style.background = '#1E1E1C'; e.currentTarget.style.borderColor = '#F97316'; e.currentTarget.style.color = '#F97316' }}
+        onMouseEnter={e => { e.currentTarget.style.background = '#1E1E1C'; e.currentTarget.style.borderColor = '#ea580c'; e.currentTarget.style.color = '#ea580c' }}
         onMouseLeave={e => { e.currentTarget.style.background = '#111110'; e.currentTarget.style.borderColor = '#1E1E1C'; e.currentTarget.style.color = '#F0EDE6' }}
       >
-        <span style={{ color: '#F97316' }}>←</span>
+        <span style={{ color: '#ea580c' }}>←</span>
         Retour aux devis
       </Link>
 
@@ -100,7 +100,7 @@ export default function DevisDetailPage() {
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '16px', marginBottom: '32px' }}>
         <div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '6px' }}>
-            <span style={{ padding: '2px 8px', backgroundColor: 'rgba(249,115,22,0.08)', color: '#F97316', borderRadius: '4px', fontSize: '11px', fontWeight: 600, fontFamily: 'var(--font-dm-sans), sans-serif' }}>
+            <span style={{ padding: '2px 8px', backgroundColor: 'rgba(249,115,22,0.08)', color: '#ea580c', borderRadius: '4px', fontSize: '11px', fontWeight: 600, fontFamily: 'var(--font-dm-sans), sans-serif' }}>
               {devis.numero}
             </span>
             <span style={{ padding: '3px 10px', borderRadius: '20px', fontSize: '11px', fontWeight: 500, fontFamily: 'var(--font-dm-sans), sans-serif', backgroundColor: sc.bg, color: sc.text }}>
@@ -118,7 +118,7 @@ export default function DevisDetailPage() {
         <div style={{ display: 'flex', gap: '8px', flexShrink: 0, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
           <Link
             href={`/dashboard/chantiers/${chantierId}/factures/nouveau?devis_id=${devisId}`}
-            style={{ padding: '8px 14px', backgroundColor: '#F97316', color: '#0D0D0B', borderRadius: '8px', fontSize: '13px', fontWeight: 600, textDecoration: 'none', fontFamily: 'var(--font-dm-sans), sans-serif', display: 'inline-flex', alignItems: 'center', gap: '6px' }}
+            style={{ padding: '8px 14px', backgroundColor: '#ea580c', color: '#0D0D0B', borderRadius: '8px', fontSize: '13px', fontWeight: 600, textDecoration: 'none', fontFamily: 'var(--font-dm-sans), sans-serif', display: 'inline-flex', alignItems: 'center', gap: '6px' }}
             onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-1px)'; e.currentTarget.style.boxShadow = '0 0 20px rgba(249,115,22,0.4)' }}
             onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = 'none' }}
           >
@@ -127,7 +127,7 @@ export default function DevisDetailPage() {
           <Link
             href={`/dashboard/chantiers/${chantierId}/devis/${devisId}/modifier`}
             style={{ padding: '8px 14px', backgroundColor: 'transparent', color: '#F0EDE6', border: '1px solid #1E1E1C', borderRadius: '8px', fontSize: '13px', fontWeight: 500, textDecoration: 'none', fontFamily: 'var(--font-dm-sans), sans-serif', display: 'inline-flex', alignItems: 'center' }}
-            onMouseEnter={e => { e.currentTarget.style.borderColor = '#F97316'; e.currentTarget.style.color = '#F97316' }}
+            onMouseEnter={e => { e.currentTarget.style.borderColor = '#ea580c'; e.currentTarget.style.color = '#ea580c' }}
             onMouseLeave={e => { e.currentTarget.style.borderColor = '#1E1E1C'; e.currentTarget.style.color = '#F0EDE6' }}
           >
             Modifier
@@ -191,7 +191,7 @@ export default function DevisDetailPage() {
                 <span style={{ fontSize: '13px', color: '#F0EDE6', fontFamily: 'var(--font-dm-sans), sans-serif', textAlign: 'right' }}>{l.quantite}</span>
                 <span style={{ fontSize: '13px', color: '#8A8880', fontFamily: 'var(--font-dm-sans), sans-serif' }}>{l.unite}</span>
                 <span style={{ fontSize: '13px', color: '#F0EDE6', fontFamily: 'var(--font-dm-sans), sans-serif', textAlign: 'right' }}>{formatMontant(l.prix_unitaire)}</span>
-                <span style={{ fontSize: '13px', color: '#F97316', fontFamily: 'var(--font-dm-sans), sans-serif', textAlign: 'right', fontWeight: 500 }}>{formatMontant(l.quantite * l.prix_unitaire)}</span>
+                <span style={{ fontSize: '13px', color: '#ea580c', fontFamily: 'var(--font-dm-sans), sans-serif', textAlign: 'right', fontWeight: 500 }}>{formatMontant(l.quantite * l.prix_unitaire)}</span>
               </div>
             ))}
 
@@ -206,7 +206,7 @@ export default function DevisDetailPage() {
               </div>
               <div style={{ display: 'flex', gap: '24px', fontSize: '16px', fontWeight: 700, fontFamily: 'var(--font-syne), sans-serif', marginTop: '4px', paddingTop: '8px', borderTop: '1px solid #1E1E1C' }}>
                 <span style={{ color: '#F0EDE6' }}>Total TTC</span>
-                <span style={{ color: '#F97316', minWidth: '100px', textAlign: 'right' }}>{formatMontant(totaux.ttc)}</span>
+                <span style={{ color: '#ea580c', minWidth: '100px', textAlign: 'right' }}>{formatMontant(totaux.ttc)}</span>
               </div>
             </div>
           </>

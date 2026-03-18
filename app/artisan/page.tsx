@@ -52,7 +52,7 @@ export default function ArtisanLoginPage() {
               color: '#F0EDE6',
             }}
           >
-            FORE<span style={{ color: '#F97316' }}>MAN</span>
+            FORE<span style={{ color: '#ea580c' }}>MAN</span>
           </span>
           <p
             style={{
@@ -131,7 +131,7 @@ export default function ArtisanLoginPage() {
                       transition: 'border-color 0.15s',
                       boxSizing: 'border-box',
                     }}
-                    onFocus={(e) => (e.target.style.borderColor = '#F97316')}
+                    onFocus={(e) => (e.target.style.borderColor = '#ea580c')}
                     onBlur={(e) => (e.target.style.borderColor = '#1E1E1C')}
                   />
                 </div>
@@ -147,7 +147,7 @@ export default function ArtisanLoginPage() {
                   disabled={loading}
                   style={{
                     padding: '12px',
-                    backgroundColor: loading ? '#9E8630' : '#F97316',
+                    backgroundColor: loading ? '#9E8630' : '#ea580c',
                     color: '#0D0D0B',
                     border: 'none',
                     borderRadius: '8px',

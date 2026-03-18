@@ -21,7 +21,7 @@ const labelStyle: React.CSSProperties = {
   textTransform: 'uppercase', color: '#8A8880', marginBottom: 6, fontFamily: 'var(--font-dm-sans), sans-serif',
 }
 const focus = (e: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-  e.target.style.borderColor = '#F97316'; e.target.style.boxShadow = '0 0 0 2px rgba(249,115,22,0.12)'
+  e.target.style.borderColor = '#ea580c'; e.target.style.boxShadow = '0 0 0 2px rgba(249,115,22,0.12)'
 }
 const blur = (e: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
   e.target.style.borderColor = '#1E1E1C'; e.target.style.boxShadow = 'none'
@@ -41,7 +41,7 @@ const smallInput: React.CSSProperties = {
   fontFamily: 'var(--font-dm-sans), sans-serif', boxSizing: 'border-box',
 }
 const smallFocus = (e: React.FocusEvent<HTMLInputElement | HTMLSelectElement>) => {
-  e.target.style.borderColor = '#F97316'; e.target.style.boxShadow = '0 0 0 2px rgba(249,115,22,0.12)'
+  e.target.style.borderColor = '#ea580c'; e.target.style.boxShadow = '0 0 0 2px rgba(249,115,22,0.12)'
 }
 const smallBlur = (e: React.FocusEvent<HTMLInputElement | HTMLSelectElement>) => {
   e.target.style.borderColor = '#1E1E1C'; e.target.style.boxShadow = 'none'
@@ -56,7 +56,7 @@ function LigneCard({ ligne, canDelete, onChange, onDelete }: {
   const [cardActive, setCardActive] = useState(false)
   const totalHt = (parseFloat(ligne.quantite) || 0) * (parseFloat(ligne.prix_unitaire) || 0)
   const expanded = descFocused || ligne.libelle.includes('\n') || ligne.libelle.length > 60
-  const borderColor = cardActive ? '#F97316' : hovered ? '#2E2E2C' : '#1E1E1C'
+  const borderColor = cardActive ? '#ea580c' : hovered ? '#2E2E2C' : '#1E1E1C'
   return (
     <div
       style={{ backgroundColor: '#111110', border: `1px solid ${borderColor}`, borderRadius: 8, padding: 16, boxShadow: cardActive ? '0 0 0 2px rgba(249,115,22,0.15)' : 'none', transition: 'border-color 0.15s, box-shadow 0.15s' }}
@@ -71,7 +71,7 @@ function LigneCard({ ligne, canDelete, onChange, onDelete }: {
         onFocus={() => setDescFocused(true)}
         onBlur={() => setDescFocused(false)}
         placeholder="Description de la prestation..."
-        style={{ display: 'block', width: '100%', height: expanded ? 80 : 36, padding: '6px 0', border: 'none', borderBottom: `1px solid ${descFocused ? '#F97316' : 'transparent'}`, borderRadius: 0, backgroundColor: 'transparent', color: '#F0EDE6', fontSize: 14, fontFamily: 'var(--font-dm-sans), sans-serif', outline: 'none', resize: 'none', lineHeight: 1.5, boxSizing: 'border-box', overflow: expanded ? 'auto' : 'hidden', marginBottom: 12, transition: 'height 0.2s ease' } as React.CSSProperties}
+        style={{ display: 'block', width: '100%', height: expanded ? 80 : 36, padding: '6px 0', border: 'none', borderBottom: `1px solid ${descFocused ? '#ea580c' : 'transparent'}`, borderRadius: 0, backgroundColor: 'transparent', color: '#F0EDE6', fontSize: 14, fontFamily: 'var(--font-dm-sans), sans-serif', outline: 'none', resize: 'none', lineHeight: 1.5, boxSizing: 'border-box', overflow: expanded ? 'auto' : 'hidden', marginBottom: 12, transition: 'height 0.2s ease' } as React.CSSProperties}
       />
       <div style={{ display: 'flex', gap: 10, alignItems: 'flex-end' }}>
         <div style={{ width: 80, flexShrink: 0 }}>
@@ -203,10 +203,10 @@ export default function NouveauDevisPage() {
   return (
     <div className="page-enter" style={{ flex: 1, padding: '40px', overflowY: 'auto' }}>
       <Link href="/dashboard/documents" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, backgroundColor: '#111110', border: '1px solid #1E1E1C', borderRadius: 8, padding: '8px 14px', color: '#F0EDE6', fontSize: 13, fontWeight: 500, cursor: 'pointer', textDecoration: 'none', transition: 'all 0.15s ease', fontFamily: 'var(--font-dm-sans), sans-serif', marginBottom: 28 }}
-        onMouseEnter={e => { e.currentTarget.style.background = '#1E1E1C'; e.currentTarget.style.borderColor = '#F97316'; e.currentTarget.style.color = '#F97316' }}
+        onMouseEnter={e => { e.currentTarget.style.background = '#1E1E1C'; e.currentTarget.style.borderColor = '#ea580c'; e.currentTarget.style.color = '#ea580c' }}
         onMouseLeave={e => { e.currentTarget.style.background = '#111110'; e.currentTarget.style.borderColor = '#1E1E1C'; e.currentTarget.style.color = '#F0EDE6' }}
       >
-        <span style={{ color: '#F97316' }}>←</span>
+        <span style={{ color: '#ea580c' }}>←</span>
         Retour aux documents
       </Link>
       <h1 style={{ fontFamily: 'var(--font-syne), sans-serif', fontSize: 24, fontWeight: 700, color: '#F0EDE6', margin: '0 0 28px' }}>
@@ -258,7 +258,7 @@ export default function NouveauDevisPage() {
                     {selectedClientId && (
                       <button onClick={() => { setSelectedClientId(''); setForm(p => ({ ...p, client_nom: '', client_email: '', client_adresse: '' })) }}
                         style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#8A8880', fontSize: 12, fontFamily: 'var(--font-dm-sans), sans-serif', padding: 0 }}
-                        onMouseEnter={e => { e.currentTarget.style.color = '#F97316' }}
+                        onMouseEnter={e => { e.currentTarget.style.color = '#ea580c' }}
                         onMouseLeave={e => { e.currentTarget.style.color = '#8A8880' }}>
                         × Effacer
                       </button>
@@ -314,8 +314,8 @@ export default function NouveauDevisPage() {
               ))}
             </div>
             <button onClick={addLigne}
-              style={{ width: '100%', padding: '14px', backgroundColor: 'transparent', color: '#F97316', border: '1px dashed #1E1E1C', borderRadius: 8, fontSize: 14, cursor: 'pointer', fontFamily: 'var(--font-dm-sans), sans-serif', transition: 'background-color 0.15s, border-color 0.15s' }}
-              onMouseEnter={e => { e.currentTarget.style.backgroundColor = '#111110'; e.currentTarget.style.borderColor = '#F97316' }}
+              style={{ width: '100%', padding: '14px', backgroundColor: 'transparent', color: '#ea580c', border: '1px dashed #1E1E1C', borderRadius: 8, fontSize: 14, cursor: 'pointer', fontFamily: 'var(--font-dm-sans), sans-serif', transition: 'background-color 0.15s, border-color 0.15s' }}
+              onMouseEnter={e => { e.currentTarget.style.backgroundColor = '#111110'; e.currentTarget.style.borderColor = '#ea580c' }}
               onMouseLeave={e => { e.currentTarget.style.backgroundColor = 'transparent'; e.currentTarget.style.borderColor = '#1E1E1C' }}
             >+ Ajouter une ligne</button>
 
@@ -350,7 +350,7 @@ export default function NouveauDevisPage() {
 
           <div style={{ display: 'flex', gap: 10 }}>
             <button onClick={handleSave} disabled={saving}
-              style={{ padding: '11px 28px', backgroundColor: saving ? '#c45a10' : '#F97316', color: '#0D0D0B', border: 'none', borderRadius: 8, fontSize: 14, fontWeight: 600, cursor: saving ? 'not-allowed' : 'pointer', fontFamily: 'var(--font-dm-sans), sans-serif' }}
+              style={{ padding: '11px 28px', backgroundColor: saving ? '#c45a10' : '#ea580c', color: '#0D0D0B', border: 'none', borderRadius: 8, fontSize: 14, fontWeight: 600, cursor: saving ? 'not-allowed' : 'pointer', fontFamily: 'var(--font-dm-sans), sans-serif' }}
               onMouseEnter={e => { if (!saving) { e.currentTarget.style.transform = 'translateY(-1px)'; e.currentTarget.style.boxShadow = '0 0 20px rgba(249,115,22,0.4)' } }}
               onMouseLeave={e => { e.currentTarget.style.transform = 'none'; e.currentTarget.style.boxShadow = 'none' }}
             >{saving ? 'Enregistrement…' : 'Enregistrer en brouillon'}</button>
@@ -403,7 +403,7 @@ function TotauxBlock({ totaux, tvaTaux, remisePct }: { totaux: ReturnType<typeof
       <div style={rowStyle}><span style={{ color: '#8A8880' }}>TVA ({tvaTaux}%)</span><span style={{ color: '#F0EDE6', minWidth: 110, textAlign: 'right' }}>{formatEurDoc(totaux.tva)}</span></div>
       <div style={{ ...rowStyle, fontSize: 16, fontWeight: 700, fontFamily: 'var(--font-syne), sans-serif', paddingTop: 8, borderTop: '1px solid #1E1E1C', marginTop: 4 }}>
         <span style={{ color: '#F0EDE6' }}>Total TTC</span>
-        <span style={{ color: '#F97316', minWidth: 110, textAlign: 'right' }}>{formatEurDoc(totaux.ttc)}</span>
+        <span style={{ color: '#ea580c', minWidth: 110, textAlign: 'right' }}>{formatEurDoc(totaux.ttc)}</span>
       </div>
     </div>
   )

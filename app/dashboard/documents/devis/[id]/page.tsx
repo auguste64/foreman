@@ -14,7 +14,7 @@ const DEVIS_STATUT: Record<string, { label: string; bg: string; color: string }>
   envoye:    { label: 'Envoyé',    bg: 'rgba(96,165,250,0.15)',  color: '#60a5fa' },
   accepte:   { label: 'Accepté',  bg: 'rgba(74,222,128,0.15)',  color: '#4ade80' },
   refuse:    { label: 'Refusé',   bg: 'rgba(232,84,71,0.15)',   color: '#E85447' },
-  expire:    { label: 'Expiré',   bg: 'rgba(249,115,22,0.15)',  color: '#F97316' },
+  expire:    { label: 'Expiré',   bg: 'rgba(249,115,22,0.15)',  color: '#ea580c' },
 }
 
 export default function DevisDetailPage() {
@@ -136,10 +136,10 @@ export default function DevisDetailPage() {
   return (
     <div className="page-enter" style={{ flex: 1, padding: '40px', overflowY: 'auto', maxWidth: 900 }}>
       <Link href="/dashboard/documents" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, backgroundColor: '#111110', border: '1px solid #1E1E1C', borderRadius: 8, padding: '8px 14px', color: '#F0EDE6', fontSize: 13, fontWeight: 500, cursor: 'pointer', textDecoration: 'none', transition: 'all 0.15s ease', fontFamily: 'var(--font-dm-sans), sans-serif', marginBottom: 24 }}
-        onMouseEnter={e => { e.currentTarget.style.background = '#1E1E1C'; e.currentTarget.style.borderColor = '#F97316'; e.currentTarget.style.color = '#F97316' }}
+        onMouseEnter={e => { e.currentTarget.style.background = '#1E1E1C'; e.currentTarget.style.borderColor = '#ea580c'; e.currentTarget.style.color = '#ea580c' }}
         onMouseLeave={e => { e.currentTarget.style.background = '#111110'; e.currentTarget.style.borderColor = '#1E1E1C'; e.currentTarget.style.color = '#F0EDE6' }}
       >
-        <span style={{ color: '#F97316' }}>←</span>
+        <span style={{ color: '#ea580c' }}>←</span>
         Retour aux documents
       </Link>
 
@@ -230,7 +230,7 @@ export default function DevisDetailPage() {
           <TotalRow label={`TVA (${devis.tva_taux}%)`} value={formatEurDoc(devis.total_tva)} />
           <div style={{ display: 'flex', gap: 32, fontSize: 16, fontWeight: 700, fontFamily: 'var(--font-syne), sans-serif', marginTop: 6, paddingTop: 8, borderTop: '1px solid #1E1E1C' }}>
             <span style={{ color: '#F0EDE6' }}>Total TTC</span>
-            <span style={{ color: '#F97316', minWidth: 120, textAlign: 'right' }}>{formatEurDoc(devis.total_ttc)}</span>
+            <span style={{ color: '#ea580c', minWidth: 120, textAlign: 'right' }}>{formatEurDoc(devis.total_ttc)}</span>
           </div>
         </div>
       </div>
@@ -266,7 +266,7 @@ export default function DevisDetailPage() {
   )
 }
 
-const btnPrimary: React.CSSProperties = { padding: '8px 16px', backgroundColor: '#F97316', color: '#0D0D0B', border: 'none', borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'var(--font-dm-sans), sans-serif' }
+const btnPrimary: React.CSSProperties = { padding: '8px 16px', backgroundColor: '#ea580c', color: '#0D0D0B', border: 'none', borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'var(--font-dm-sans), sans-serif' }
 const btnOutline: React.CSSProperties = { padding: '8px 16px', backgroundColor: 'transparent', color: '#F0EDE6', border: '1px solid #1E1E1C', borderRadius: 8, fontSize: 13, fontWeight: 500, cursor: 'pointer', fontFamily: 'var(--font-dm-sans), sans-serif', textDecoration: 'none', display: 'inline-block' }
 const btnDanger: React.CSSProperties = { padding: '8px 16px', backgroundColor: 'rgba(232,84,71,0.1)', color: '#E85447', border: '1px solid rgba(232,84,71,0.2)', borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'var(--font-dm-sans), sans-serif' }
 

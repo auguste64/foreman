@@ -30,7 +30,7 @@ const labelStyle: React.CSSProperties = {
 }
 
 const focus = (e: React.FocusEvent<HTMLInputElement>) => {
-  e.target.style.borderColor = '#F97316'
+  e.target.style.borderColor = '#ea580c'
   e.target.style.boxShadow = '0 0 0 2px rgba(249,115,22,0.12)'
 }
 const blur = (e: React.FocusEvent<HTMLInputElement>) => {
@@ -249,7 +249,7 @@ export default function ParametresPage() {
               <button
                 onClick={handleSave}
                 disabled={saving}
-                style={{ padding: '10px 24px', backgroundColor: saving ? '#c45a10' : '#F97316', color: '#0D0D0B', border: 'none', borderRadius: '8px', fontSize: '14px', fontWeight: 600, cursor: saving ? 'not-allowed' : 'pointer', fontFamily: 'var(--font-dm-sans), sans-serif', transition: 'all 0.2s ease' }}
+                style={{ padding: '10px 24px', backgroundColor: saving ? '#c45a10' : '#ea580c', color: '#0D0D0B', border: 'none', borderRadius: '8px', fontSize: '14px', fontWeight: 600, cursor: saving ? 'not-allowed' : 'pointer', fontFamily: 'var(--font-dm-sans), sans-serif', transition: 'all 0.2s ease' }}
                 onMouseEnter={e => { if (!saving) { e.currentTarget.style.transform = 'translateY(-1px)'; e.currentTarget.style.boxShadow = '0 0 20px rgba(249,115,22,0.4)' } }}
                 onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = 'none' }}
               >
@@ -301,7 +301,7 @@ export default function ParametresPage() {
                   onClick={handleChangePassword}
                   disabled={savingPw}
                   style={{ padding: '10px 24px', backgroundColor: 'transparent', color: '#F0EDE6', border: '1px solid #1E1E1C', borderRadius: '8px', fontSize: '14px', fontWeight: 500, cursor: savingPw ? 'not-allowed' : 'pointer', fontFamily: 'var(--font-dm-sans), sans-serif', transition: 'all 0.2s ease' }}
-                  onMouseEnter={e => { if (!savingPw) { e.currentTarget.style.borderColor = '#F97316'; e.currentTarget.style.color = '#F97316' } }}
+                  onMouseEnter={e => { if (!savingPw) { e.currentTarget.style.borderColor = '#ea580c'; e.currentTarget.style.color = '#ea580c' } }}
                   onMouseLeave={e => { e.currentTarget.style.borderColor = '#1E1E1C'; e.currentTarget.style.color = '#F0EDE6' }}
                 >
                   {savingPw ? 'Modification...' : 'Changer le mot de passe'}

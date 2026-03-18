@@ -108,7 +108,7 @@ export default function DocumentPreview({
             href={`/api/documents-pdf?type=${type === 'acompte' ? 'facture' : type}&id=${documentId}`}
             target="_blank"
             rel="noreferrer"
-            style={{ fontSize: 11, color: '#F97316', fontFamily: 'var(--font-dm-sans), sans-serif', textDecoration: 'none', padding: '3px 10px', border: '1px solid rgba(249,115,22,0.35)', borderRadius: 5 }}
+            style={{ fontSize: 11, color: '#ea580c', fontFamily: 'var(--font-dm-sans), sans-serif', textDecoration: 'none', padding: '3px 10px', border: '1px solid rgba(249,115,22,0.35)', borderRadius: 5 }}
           >
             ↓ Télécharger PDF
           </a>
@@ -169,7 +169,7 @@ export default function DocumentPreview({
                 {date_validite && <MetaRow label="Validité" value={fmtD(date_validite)} />}
                 {date_echeance && <MetaRow label="Échéance" value={fmtD(date_echeance)} color="#B45309" />}
                 {(chantierNom || objet) && (
-                  <p style={{ margin: '8px 0 0', fontSize: 11, color: '#F97316', fontFamily: FONT, fontStyle: 'italic', textAlign: 'right' }}>
+                  <p style={{ margin: '8px 0 0', fontSize: 11, color: '#ea580c', fontFamily: FONT, fontStyle: 'italic', textAlign: 'right' }}>
                     {[chantierNom, objet].filter(Boolean).join(' — ')}
                   </p>
                 )}
@@ -202,7 +202,7 @@ export default function DocumentPreview({
               </div>
 
               {/* Destinataire */}
-              <div style={{ paddingLeft: 20, borderLeft: '3px solid #F97316' }}>
+              <div style={{ paddingLeft: 20, borderLeft: '3px solid #ea580c' }}>
                 <p style={{ margin: '0 0 8px', fontSize: 11, fontWeight: 700, letterSpacing: '2px', textTransform: 'uppercase', color: '#111111', fontFamily: FONT }}>
                   Destinataire :
                 </p>
@@ -272,7 +272,7 @@ export default function DocumentPreview({
                 <div style={{ borderTop: '2px solid #111111', margin: '8px 0' }} />
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
                   <span style={{ fontSize: 16, fontWeight: 800, color: '#111111', fontFamily: FONT }}>Total TTC :</span>
-                  <span style={{ fontSize: 16, fontWeight: 800, color: '#F97316', fontFamily: FONT }}>{formatEurDoc(totaux.ttc)}</span>
+                  <span style={{ fontSize: 16, fontWeight: 800, color: '#ea580c', fontFamily: FONT }}>{formatEurDoc(totaux.ttc)}</span>
                 </div>
               </div>
             </div>

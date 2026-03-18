@@ -12,7 +12,7 @@ import CustomSelect from '@/components/CustomSelect'
 const FACTURE_STATUT: Record<string, { label: string; bg: string; color: string }> = {
   brouillon:           { label: 'Brouillon',    bg: 'rgba(138,136,128,0.15)', color: '#8A8880' },
   envoyee:             { label: 'Envoyée',      bg: 'rgba(96,165,250,0.15)',  color: '#60a5fa' },
-  partiellement_payee: { label: 'Part. payée',  bg: 'rgba(249,115,22,0.15)',  color: '#F97316' },
+  partiellement_payee: { label: 'Part. payée',  bg: 'rgba(249,115,22,0.15)',  color: '#ea580c' },
   payee:               { label: 'Payée',        bg: 'rgba(74,222,128,0.15)',  color: '#4ade80' },
   annulee:             { label: 'Annulée',      bg: 'rgba(232,84,71,0.15)',   color: '#E85447' },
 }
@@ -123,10 +123,10 @@ export default function FactureDetailPage() {
   return (
     <div className="page-enter" style={{ flex: 1, padding: '40px', overflowY: 'auto', maxWidth: 900 }}>
       <Link href="/dashboard/documents" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, backgroundColor: '#111110', border: '1px solid #1E1E1C', borderRadius: 8, padding: '8px 14px', color: '#F0EDE6', fontSize: 13, fontWeight: 500, cursor: 'pointer', textDecoration: 'none', transition: 'all 0.15s ease', fontFamily: 'var(--font-dm-sans), sans-serif', marginBottom: 24 }}
-        onMouseEnter={e => { e.currentTarget.style.background = '#1E1E1C'; e.currentTarget.style.borderColor = '#F97316'; e.currentTarget.style.color = '#F97316' }}
+        onMouseEnter={e => { e.currentTarget.style.background = '#1E1E1C'; e.currentTarget.style.borderColor = '#ea580c'; e.currentTarget.style.color = '#ea580c' }}
         onMouseLeave={e => { e.currentTarget.style.background = '#111110'; e.currentTarget.style.borderColor = '#1E1E1C'; e.currentTarget.style.color = '#F0EDE6' }}
       >
-        <span style={{ color: '#F97316' }}>←</span>
+        <span style={{ color: '#ea580c' }}>←</span>
         Retour aux documents
       </Link>
 
@@ -168,10 +168,10 @@ export default function FactureDetailPage() {
         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 10 }}>
           <span style={{ fontSize: 13, color: '#8A8880', fontFamily: 'var(--font-dm-sans), sans-serif' }}>Encaissé : <strong style={{ color: '#4ade80' }}>{formatEurDoc(facture.montant_paye ?? 0)}</strong></span>
           <span style={{ fontSize: 13, color: '#8A8880', fontFamily: 'var(--font-dm-sans), sans-serif' }}>Restant : <strong style={{ color: reste > 0 ? '#E85447' : '#4ade80' }}>{formatEurDoc(reste)}</strong></span>
-          <span style={{ fontSize: 13, color: '#8A8880', fontFamily: 'var(--font-dm-sans), sans-serif' }}>Total TTC : <strong style={{ color: '#F97316' }}>{formatEurDoc(facture.total_ttc ?? 0)}</strong></span>
+          <span style={{ fontSize: 13, color: '#8A8880', fontFamily: 'var(--font-dm-sans), sans-serif' }}>Total TTC : <strong style={{ color: '#ea580c' }}>{formatEurDoc(facture.total_ttc ?? 0)}</strong></span>
         </div>
         <div style={{ height: 6, backgroundColor: '#1E1E1C', borderRadius: 3 }}>
-          <div style={{ height: 6, backgroundColor: progressPct >= 100 ? '#4ade80' : '#F97316', borderRadius: 3, width: `${progressPct}%`, transition: 'width 0.5s ease' }} />
+          <div style={{ height: 6, backgroundColor: progressPct >= 100 ? '#4ade80' : '#ea580c', borderRadius: 3, width: `${progressPct}%`, transition: 'width 0.5s ease' }} />
         </div>
         {facture.date_paiement && (
           <p style={{ fontSize: 12, color: '#8A8880', fontFamily: 'var(--font-dm-sans), sans-serif', margin: '8px 0 0' }}>
@@ -230,7 +230,7 @@ export default function FactureDetailPage() {
           <TotalRow label={`TVA (${facture.tva_taux}%)`} value={formatEurDoc(facture.total_tva)} />
           <div style={{ display: 'flex', gap: 32, fontSize: 16, fontWeight: 700, fontFamily: 'var(--font-syne), sans-serif', marginTop: 6, paddingTop: 8, borderTop: '1px solid #1E1E1C' }}>
             <span style={{ color: '#F0EDE6' }}>Total TTC</span>
-            <span style={{ color: '#F97316', minWidth: 120, textAlign: 'right' }}>{formatEurDoc(facture.total_ttc)}</span>
+            <span style={{ color: '#ea580c', minWidth: 120, textAlign: 'right' }}>{formatEurDoc(facture.total_ttc)}</span>
           </div>
         </div>
       </div>
@@ -306,7 +306,7 @@ export default function FactureDetailPage() {
   )
 }
 
-const btnPrimary: React.CSSProperties = { padding: '8px 16px', backgroundColor: '#F97316', color: '#0D0D0B', border: 'none', borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'var(--font-dm-sans), sans-serif' }
+const btnPrimary: React.CSSProperties = { padding: '8px 16px', backgroundColor: '#ea580c', color: '#0D0D0B', border: 'none', borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'var(--font-dm-sans), sans-serif' }
 const btnOutline: React.CSSProperties = { padding: '8px 16px', backgroundColor: 'transparent', color: '#F0EDE6', border: '1px solid #1E1E1C', borderRadius: 8, fontSize: 13, fontWeight: 500, cursor: 'pointer', fontFamily: 'var(--font-dm-sans), sans-serif', textDecoration: 'none', display: 'inline-block' }
 const btnDanger: React.CSSProperties = { padding: '8px 16px', backgroundColor: 'rgba(232,84,71,0.1)', color: '#E85447', border: '1px solid rgba(232,84,71,0.2)', borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'var(--font-dm-sans), sans-serif' }
 const inputStyle: React.CSSProperties = { width: '100%', padding: '10px 14px', backgroundColor: '#0D0D0B', border: '1px solid #1E1E1C', borderRadius: 8, color: '#F0EDE6', fontSize: 14, outline: 'none', fontFamily: 'var(--font-dm-sans), sans-serif', boxSizing: 'border-box' }

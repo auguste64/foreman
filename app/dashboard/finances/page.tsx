@@ -11,7 +11,7 @@ import {
 // ─── Constants ───────────────────────────────────────────────────────────────
 
 const MOIS_FR = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Jun', 'Jul', 'Aoû', 'Sep', 'Oct', 'Nov', 'Déc']
-const COLORS = { orange: '#F97316', green: '#4ade80', blue: '#60a5fa', red: '#E85447', purple: '#a78bfa', muted: '#8A8880' }
+const COLORS = { orange: '#ea580c', green: '#4ade80', blue: '#60a5fa', red: '#E85447', purple: '#a78bfa', muted: '#8A8880' }
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
