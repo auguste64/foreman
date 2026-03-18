@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback, useRef, Children } from 'react'
 import type { ReactNode } from 'react'
+import { useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { useToast } from '@/components/ToastProvider'
 import {
@@ -442,12 +443,18 @@ function WeekView({
 
 export default function PlanningPage() {
   const { showToast } = useToast()
+  const searchParams = useSearchParams()
   const [view, setView]       = useState<'month' | 'week'>('month')
   const [anchor, setAnchor]   = useState(() => { const d = new Date(); d.setHours(0,0,0,0); return d })
   const [evenements, setEvenements] = useState<Evenement[]>([])
   const [chantiers, setChantiers]   = useState<Chantier[]>([])
   const [artisans, setArtisans]     = useState<Artisan[]>([])
   const [loading, setLoading]       = useState(true)
+
+  // Calendar sync state
+  const [icalToken, setIcalToken]       = useState<string | null>(null)
+  const [googleConnected, setGoogleConnected] = useState(false)
+  const [syncing, setSyncing]           = useState(false)
 
   // Create modal
   const [showCreate, setShowCreate]   = useState(false)
@@ -464,14 +471,34 @@ export default function PlanningPage() {
   const [confirmDelete, setConfirmDelete] = useState(false)
   const [detailError, setDetailError]    = useState<string | null>(null)
 
-  // ── Load reference data once
+  // ── Load reference data once + calendar sync state
   useEffect(() => {
     const supabase = createClient()
     Promise.all([
       supabase.from('chantiers').select('*').order('nom').then(r => setChantiers((r.data ?? []) as Chantier[])),
       supabase.from('artisans').select('*').order('nom').then(r => setArtisans((r.data ?? []) as Artisan[])),
+      supabase.auth.getUser().then(async ({ data: { user } }) => {
+        if (!user) return
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('ical_token, google_access_token')
+          .eq('id', user.id)
+          .maybeSingle()
+        if (profile) {
+          setIcalToken(profile.ical_token ?? null)
+          setGoogleConnected(!!profile.google_access_token)
+        }
+      }),
     ])
   }, [])
+
+  // Handle ?google=connected toast
+  useEffect(() => {
+    if (searchParams.get('google') === 'connected') {
+      setGoogleConnected(true)
+      showToast('Google Calendar connecté')
+    }
+  }, [searchParams, showToast])
 
   // ── Load events
   const loadEvents = useCallback(async () => {
@@ -590,6 +617,21 @@ export default function PlanningPage() {
       setDetailError(err instanceof Error ? err.message : 'Erreur')
       setDeleting(false)
       setConfirmDelete(false)
+    }
+  }
+
+  // ── Google Calendar sync
+  async function handleGoogleSync() {
+    setSyncing(true)
+    try {
+      const res = await fetch('/api/calendar/google/sync', { method: 'POST' })
+      if (!res.ok) throw new Error('Erreur lors de la synchronisation')
+      const { synced } = await res.json()
+      showToast(`${synced} événement${synced !== 1 ? 's' : ''} synchronisé${synced !== 1 ? 's' : ''}`)
+    } catch {
+      showToast('Erreur de synchronisation')
+    } finally {
+      setSyncing(false)
     }
   }
 
@@ -774,6 +816,80 @@ export default function PlanningPage() {
           </div>
         </div>
       )}
+
+      {/* ── Calendar sync section ────────────────────────────────────────── */}
+      <div style={{ marginTop: '40px', padding: '24px', backgroundColor: '#111110', border: '1px solid #1E1E1C', borderRadius: '12px' }}>
+        <h2 style={{ fontFamily: 'var(--font-syne), sans-serif', fontSize: '16px', fontWeight: 600, color: '#F0EDE6', margin: '0 0 4px' }}>
+          Synchronisation calendrier
+        </h2>
+        <p style={{ fontSize: '13px', color: '#8A8880', fontFamily: 'var(--font-dm-sans), sans-serif', margin: '0 0 20px' }}>
+          Exportez vos événements vers Apple Calendar, Google Calendar ou tout client compatible iCal.
+        </p>
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+          {/* iCal feed */}
+          <div style={{ padding: '16px', backgroundColor: '#0D0D0B', border: '1px solid #1E1E1C', borderRadius: '8px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px', flexWrap: 'wrap' }}>
+              <div>
+                <div style={{ fontSize: '13px', fontWeight: 600, color: '#F0EDE6', fontFamily: 'var(--font-dm-sans), sans-serif', marginBottom: '4px' }}>
+                  Flux iCal (Apple Calendar, Outlook…)
+                </div>
+                <div style={{ fontSize: '12px', color: '#8A8880', fontFamily: 'var(--font-dm-sans), sans-serif' }}>
+                  URL publique en lecture seule — se met à jour automatiquement
+                </div>
+              </div>
+              <button
+                onClick={() => {
+                  if (!icalToken) return
+                  const url = `${window.location.origin}/api/calendar/${icalToken}`
+                  navigator.clipboard.writeText(url).then(() => showToast('URL copiée'))
+                }}
+                disabled={!icalToken}
+                style={{ padding: '8px 16px', backgroundColor: icalToken ? 'rgba(249,115,22,0.12)' : 'transparent', color: icalToken ? '#F97316' : '#8A8880', border: `1px solid ${icalToken ? '#F97316' : '#1E1E1C'}`, borderRadius: '8px', fontSize: '12px', fontWeight: 600, cursor: icalToken ? 'pointer' : 'not-allowed', fontFamily: 'var(--font-dm-sans), sans-serif', whiteSpace: 'nowrap', transition: 'all 0.2s' }}
+              >
+                {icalToken ? '⎘ Copier le lien' : 'Chargement…'}
+              </button>
+            </div>
+          </div>
+
+          {/* Google Calendar */}
+          <div style={{ padding: '16px', backgroundColor: '#0D0D0B', border: '1px solid #1E1E1C', borderRadius: '8px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px', flexWrap: 'wrap' }}>
+              <div>
+                <div style={{ fontSize: '13px', fontWeight: 600, color: '#F0EDE6', fontFamily: 'var(--font-dm-sans), sans-serif', marginBottom: '4px' }}>
+                  Google Calendar
+                  {googleConnected && (
+                    <span style={{ marginLeft: '8px', padding: '2px 8px', backgroundColor: 'rgba(16,185,129,0.12)', color: '#10B981', borderRadius: '20px', fontSize: '11px', fontWeight: 500 }}>
+                      Connecté
+                    </span>
+                  )}
+                </div>
+                <div style={{ fontSize: '12px', color: '#8A8880', fontFamily: 'var(--font-dm-sans), sans-serif' }}>
+                  {googleConnected ? 'Synchronisez manuellement vos événements vers Google Calendar' : 'Connectez votre compte Google pour synchroniser les événements'}
+                </div>
+              </div>
+              <div style={{ display: 'flex', gap: '8px' }}>
+                {googleConnected ? (
+                  <button
+                    onClick={handleGoogleSync}
+                    disabled={syncing}
+                    style={{ padding: '8px 16px', backgroundColor: syncing ? 'transparent' : 'rgba(249,115,22,0.12)', color: syncing ? '#8A8880' : '#F97316', border: `1px solid ${syncing ? '#1E1E1C' : '#F97316'}`, borderRadius: '8px', fontSize: '12px', fontWeight: 600, cursor: syncing ? 'not-allowed' : 'pointer', fontFamily: 'var(--font-dm-sans), sans-serif', whiteSpace: 'nowrap', transition: 'all 0.2s' }}
+                  >
+                    {syncing ? 'Synchronisation…' : '↻ Synchroniser'}
+                  </button>
+                ) : (
+                  <a
+                    href="/api/calendar/google/auth"
+                    style={{ padding: '8px 16px', backgroundColor: 'rgba(249,115,22,0.12)', color: '#F97316', border: '1px solid #F97316', borderRadius: '8px', fontSize: '12px', fontWeight: 600, cursor: 'pointer', fontFamily: 'var(--font-dm-sans), sans-serif', whiteSpace: 'nowrap', textDecoration: 'none', display: 'inline-block' }}
+                  >
+                    Connecter Google Calendar
+                  </a>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
 
       {/* ── Delete confirm ───────────────────────────────────────────────── */}
       {selected && confirmDelete && (
