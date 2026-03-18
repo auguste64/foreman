@@ -110,8 +110,8 @@ export async function deleteDevis(id: string): Promise<void> {
 }
 
 export function calcTotaux(lignes: Pick<LigneDevis, 'quantite' | 'prix_unitaire'>[], tvaPct: number) {
-  const ht = lignes.reduce((sum, l) => sum + l.quantite * l.prix_unitaire, 0)
-  const tva = ht * tvaPct / 100
+  const ht = lignes.reduce((sum, l) => sum + (Number(l.quantite) || 0) * (Number(l.prix_unitaire) || 0), 0)
+  const tva = ht * (Number(tvaPct) || 0) / 100
   return { ht, tva, ttc: ht + tva }
 }
 

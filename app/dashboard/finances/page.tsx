@@ -341,7 +341,7 @@ export default function FinancesPage() {
       {/* Header */}
       <div>
         <h1 style={{ fontFamily: 'var(--font-syne), sans-serif', fontSize: 24, fontWeight: 700, color: '#F0EDE6', margin: 0 }}>
-          Finances
+          Analyse
         </h1>
         <p style={{ color: '#8A8880', fontSize: 14, fontFamily: 'var(--font-dm-sans), sans-serif', margin: '6px 0 0' }}>
           Tableau de bord financier — analyse et projections

@@ -4,7 +4,6 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useParams, usePathname } from 'next/navigation'
 import { getFacturesByChantier, type Facture } from '@/lib/supabase/factures'
-import { calcTotaux } from '@/lib/supabase/devis'
 import { createClient } from '@/lib/supabase/client'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -14,9 +13,19 @@ function formatMontant(val: any) {
 }
 
 const STATUT_COLORS: Record<string, { bg: string; text: string }> = {
-  'En attente': { bg: '#2e2a1a', text: '#fbbf24' },
-  'Payée':      { bg: '#1a2e1a', text: '#4ade80' },
-  'Annulée':    { bg: '#2e1a1a', text: '#E85447' },
+  brouillon:           { bg: 'rgba(138,136,128,0.15)', text: '#8A8880' },
+  envoyee:             { bg: 'rgba(96,165,250,0.15)',  text: '#60a5fa' },
+  partiellement_payee: { bg: 'rgba(249,115,22,0.15)',  text: '#F97316' },
+  payee:               { bg: '#15803d',                text: '#ffffff' },
+  annulee:             { bg: 'rgba(232,84,71,0.15)',   text: '#E85447' },
+}
+
+const STATUT_LABELS: Record<string, string> = {
+  brouillon:           'Brouillon',
+  envoyee:             'Envoyée',
+  partiellement_payee: 'Partiel',
+  payee:               'Payée',
+  annulee:             'Annulée',
 }
 
 function ChantierTabs({ chantierId }: { chantierId: string }) {
@@ -124,7 +133,7 @@ export default function FacturesListPage() {
       {!loading && factures.length > 0 && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
           {factures.map(f => {
-            const sc = STATUT_COLORS[f.statut] ?? STATUT_COLORS['En attente']
+            const sc = STATUT_COLORS[f.statut] ?? { bg: 'rgba(138,136,128,0.15)', text: '#8A8880' }
             return (
               <Link
                 key={f.id}
@@ -133,22 +142,39 @@ export default function FacturesListPage() {
                 onMouseEnter={e => { e.currentTarget.style.transform = 'translateX(4px)'; e.currentTarget.style.borderColor = 'rgba(249,115,22,0.2)' }}
                 onMouseLeave={e => { e.currentTarget.style.transform = 'translateX(0)'; e.currentTarget.style.borderColor = '#1E1E1C' }}
               >
-                <span style={{ padding: '2px 8px', backgroundColor: 'rgba(249,115,22,0.08)', color: '#F97316', borderRadius: '4px', fontSize: '11px', fontWeight: 600, fontFamily: 'var(--font-dm-sans), sans-serif', flexShrink: 0 }}>
-                  {f.numero}
-                </span>
+                {/* Numéro + montant */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', flexShrink: 0 }}>
+                  <span style={{ padding: '2px 8px', backgroundColor: 'rgba(249,115,22,0.08)', color: '#F97316', borderRadius: '4px', fontSize: '11px', fontWeight: 600, fontFamily: 'var(--font-dm-sans), sans-serif' }}>
+                    {f.numero}
+                  </span>
+                  <span style={{ fontSize: '13px', fontWeight: 600, color: '#F0EDE6', fontFamily: 'var(--font-dm-sans), sans-serif', paddingLeft: '2px' }}>
+                    {formatMontant(f.total_ttc)}
+                  </span>
+                </div>
+
+                {/* Titre + client + échéance */}
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <p style={{ fontSize: '14px', fontWeight: 500, color: '#F0EDE6', fontFamily: 'var(--font-dm-sans), sans-serif', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                    {f.titre || '—'}
+                    {f.client_nom || f.titre || '—'}
                   </p>
+                  {f.titre && f.client_nom && (
+                    <p style={{ fontSize: '12px', color: '#7A7870', fontFamily: 'var(--font-dm-sans), sans-serif', margin: '2px 0 0', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      {f.titre}
+                    </p>
+                  )}
                   {f.date_echeance && (
                     <p style={{ fontSize: '12px', color: '#7A7870', fontFamily: 'var(--font-dm-sans), sans-serif', margin: '2px 0 0' }}>
                       Échéance : {new Date(f.date_echeance).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' })}
                     </p>
                   )}
                 </div>
+
+                {/* Statut */}
                 <span style={{ padding: '3px 10px', borderRadius: '20px', fontSize: '11px', fontWeight: 500, fontFamily: 'var(--font-dm-sans), sans-serif', backgroundColor: sc.bg, color: sc.text, flexShrink: 0 }}>
-                  {f.statut}
+                  {STATUT_LABELS[f.statut] ?? f.statut}
                 </span>
+
+                {/* Date */}
                 <span style={{ fontSize: '12px', color: '#8A8880', fontFamily: 'var(--font-dm-sans), sans-serif', flexShrink: 0 }}>
                   {new Date(f.date_emission).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' })}
                 </span>

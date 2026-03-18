@@ -274,7 +274,7 @@ export default function DocumentsPage() {
         <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 32, flexWrap: 'wrap', gap: 12 }}>
           <div>
             <h1 style={{ fontFamily: 'var(--font-syne), sans-serif', fontSize: 24, fontWeight: 700, color: '#F0EDE6', margin: 0 }}>
-              {selectedChantier ? chantiers.find(c => c.id === selectedChantier)?.nom ?? 'Documents' : 'Documents'}
+              {selectedChantier ? chantiers.find(c => c.id === selectedChantier)?.nom ?? 'Comptabilité' : 'Comptabilité'}
             </h1>
             <p style={{ color: '#8A8880', fontSize: 14, marginTop: 6, fontFamily: 'var(--font-dm-sans), sans-serif', margin: '6px 0 0' }}>
               {selectedChantier ? 'Documents liés à ce chantier' : 'Devis, factures, avoirs et acomptes'}

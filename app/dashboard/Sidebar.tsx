@@ -33,12 +33,11 @@ const navItems: NavItem[] = [
   { href: '/dashboard', label: 'Tableau de bord' },
   { href: '/dashboard/chantiers', label: 'Chantiers' },
   { href: '/dashboard/comptes-rendus', label: 'Comptes rendus' },
+  { href: '/dashboard/documents', label: 'Comptabilité' },
+  { href: '/dashboard/finances', label: 'Analyse' },
   { href: '/dashboard/artisans', label: 'Artisans' },
   { href: '/dashboard/clients', label: 'Clients' },
   { href: '/dashboard/planning', label: 'Planning' },
-  { href: '/dashboard/stats', label: 'Statistiques' },
-  { href: '/dashboard/finances', label: 'Finances' },
-  { href: '/dashboard/documents', label: 'Documents' },
   { href: '/dashboard/parametres', label: 'Paramètres' },
 ]
 

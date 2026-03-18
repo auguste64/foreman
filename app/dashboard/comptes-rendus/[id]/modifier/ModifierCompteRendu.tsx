@@ -55,6 +55,7 @@ interface Profile {
   adresse: string
   telephone: string
   email: string
+  siret: string
   logo: string
 }
 
@@ -99,7 +100,7 @@ const blur = (e: React.FocusEvent<HTMLElement>) => {
 }
 
 function uid() { return Math.random().toString(36).slice(2) }
-const emptyProfile = (): Profile => ({ nom: '', societe: '', adresse: '', telephone: '', email: '', logo: '' })
+const emptyProfile = (): Profile => ({ nom: '', societe: '', adresse: '', telephone: '', email: '', siret: '', logo: '' })
 
 // ─── Normalization helpers (handle both old and new saved formats) ─────────────
 
@@ -251,12 +252,54 @@ export default function ModifierCompteRendu({ compteRendu: cr }: { compteRendu: 
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [])
 
-  // Load profile from localStorage
+  // Load profile: localStorage as base, then fill empty fields from entreprise_infos
   useEffect(() => {
+    let base = emptyProfile()
     try {
       const saved = localStorage.getItem('foreman_profile')
-      if (saved) setProfile(JSON.parse(saved))
+      if (saved) base = { ...emptyProfile(), ...JSON.parse(saved) }
     } catch {}
+    setProfile(base)
+
+    const supabase = createClient()
+    supabase.auth.getUser().then(async ({ data: { user } }) => {
+      if (!user) return
+
+      const { data: ei } = await supabase
+        .from('entreprise_infos')
+        .select('raison_sociale, adresse, code_postal, ville, telephone, email, siret, logo_url')
+        .eq('user_id', user.id)
+        .maybeSingle()
+
+      if (ei) {
+        const adresse = [ei.adresse, ei.code_postal, ei.ville].filter(Boolean).join(', ')
+        setProfile((prev) => ({
+          ...prev,
+          societe:   prev.societe   || ei.raison_sociale || '',
+          adresse:   prev.adresse   || adresse,
+          telephone: prev.telephone || ei.telephone || '',
+          email:     prev.email     || ei.email || '',
+          siret:     prev.siret     || ei.siret || '',
+          logo:      prev.logo      || ei.logo_url || '',
+        }))
+        return
+      }
+
+      const { data: prof } = await supabase
+        .from('profiles')
+        .select('entreprise, prenom, nom, adresse')
+        .eq('id', user.id)
+        .maybeSingle()
+
+      if (prof) {
+        setProfile((prev) => ({
+          ...prev,
+          societe: prev.societe || prof.entreprise || '',
+          nom:     prev.nom     || [prof.prenom, prof.nom].filter(Boolean).join(' '),
+          adresse: prev.adresse || prof.adresse || '',
+        }))
+      }
+    })
   }, [])
 
   const selectedChantier = chantiers.find((c) => c.id === form.chantier_id)
@@ -929,6 +972,11 @@ export default function ModifierCompteRendu({ compteRendu: cr }: { compteRendu: 
                       <input type="email" value={profile.email} onChange={(e) => saveProfile({ ...profile, email: e.target.value })}
                         placeholder="contact@cabinet.fr" style={inputStyle} onFocus={focus} onBlur={blur} />
                     </div>
+                    <div>
+                      <label style={labelStyle}>SIRET</label>
+                      <input value={profile.siret} onChange={(e) => saveProfile({ ...profile, siret: e.target.value })}
+                        placeholder="123 456 789 00012" style={inputStyle} onFocus={focus} onBlur={blur} />
+                    </div>
                     <div style={{ gridColumn: '1 / -1' }}>
                       <label style={labelStyle}>Logo</label>
                       <label style={{ display: 'flex', alignItems: 'center', gap: '14px', cursor: 'pointer' }}>
@@ -998,6 +1046,7 @@ export default function ModifierCompteRendu({ compteRendu: cr }: { compteRendu: 
                 {profile.adresse  && <div style={{ color: '#555', fontSize: '9px' }}>{profile.adresse}</div>}
                 {profile.telephone && <div style={{ color: '#555', fontSize: '9px' }}>{profile.telephone}</div>}
                 {profile.email    && <div style={{ color: '#555', fontSize: '9px' }}>{profile.email}</div>}
+                {profile.siret    && <div style={{ color: '#555', fontSize: '9px' }}>SIRET : {profile.siret}</div>}
               </div>
               <div style={{ textAlign: 'right' }}>
                 <div style={{ fontWeight: 700, fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Compte Rendu de Visite</div>

@@ -17,7 +17,10 @@ export type Facture = {
   devis_id: string | null
   numero: string
   titre: string
-  statut: 'En attente' | 'Payée' | 'Annulée'
+  client_nom: string | null
+  statut: 'brouillon' | 'envoyee' | 'partiellement_payee' | 'payee' | 'annulee' | string
+  total_ttc: number | string | null
+  montant_paye: number | string | null
   date_emission: string
   date_echeance: string | null
   tva_pct: number
