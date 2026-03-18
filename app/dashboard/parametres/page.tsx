@@ -118,7 +118,15 @@ export default function ParametresPage() {
     setSaving(true)
     setSaveError(null)
     try {
-      await upsertProfile(userId, form)
+      const supabase = createClient()
+      const ops: Promise<unknown>[] = [upsertProfile(userId, form)]
+      if (form.entreprise.trim()) {
+        ops.push(
+          supabase.from('entreprise_infos')
+            .upsert({ user_id: userId, raison_sociale: form.entreprise.trim() }, { onConflict: 'user_id' })
+        )
+      }
+      await Promise.all(ops)
       showToast('Profil sauvegardé')
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : String(err)

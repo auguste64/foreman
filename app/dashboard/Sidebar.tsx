@@ -49,17 +49,50 @@ export default function Sidebar({ email }: { email: string }) {
   const [initial, setInitial] = useState(email?.[0]?.toUpperCase() ?? '?')
 
   useEffect(() => {
-    const supabase = createClient()
-    supabase.auth.getUser().then(async ({ data: { user } }) => {
-      if (!user) return
-      const [{ data: entreprise }, { data: profile }] = await Promise.all([
-        supabase.from('entreprise_infos').select('raison_sociale').eq('user_id', user.id).single(),
-        supabase.from('profiles').select('prenom').eq('id', user.id).single(),
-      ])
-      const name = entreprise?.raison_sociale?.trim() || profile?.prenom?.trim() || emailFallback
-      setDisplayName(name)
-      setInitial(name[0]?.toUpperCase() ?? '?')
-    })
+    async function fetchName() {
+      const supabase = createClient()
+      const { data: { session } } = await supabase.auth.getSession()
+      const userId = session?.user?.id
+      if (!userId) return
+
+      // Priority 1: entreprise_infos.raison_sociale
+      const { data: entreprise } = await supabase
+        .from('entreprise_infos')
+        .select('raison_sociale')
+        .eq('user_id', userId)
+        .single()
+
+      const raisonSociale = entreprise?.raison_sociale?.trim()
+      if (raisonSociale) {
+        setDisplayName(raisonSociale)
+        setInitial(raisonSociale[0].toUpperCase())
+        return
+      }
+
+      // Priority 2: profiles.entreprise → prenom
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('entreprise, prenom')
+        .eq('id', userId)
+        .single()
+
+      const profileEntreprise = profile?.entreprise?.trim()
+      if (profileEntreprise) {
+        setDisplayName(profileEntreprise)
+        setInitial(profileEntreprise[0].toUpperCase())
+        return
+      }
+
+      const prenom = profile?.prenom?.trim()
+      if (prenom) {
+        setDisplayName(prenom)
+        setInitial(prenom[0].toUpperCase())
+        return
+      }
+
+      // Priority 4: email prefix (already set as default state)
+    }
+    fetchName()
   }, [])
 
   return (

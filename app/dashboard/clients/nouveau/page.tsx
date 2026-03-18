@@ -185,8 +185,12 @@ export default function NouveauClientPage() {
 
   return (
     <div className="page-enter" style={{ flex: 1, padding: '40px', overflowY: 'auto', maxWidth: 760 }}>
-      <Link href="/dashboard/clients" style={{ fontSize: 13, color: '#8A8880', textDecoration: 'none', fontFamily: 'var(--font-dm-sans), sans-serif', display: 'inline-flex', alignItems: 'center', gap: 6, marginBottom: 28 }}>
-        ← Retour aux clients
+      <Link href="/dashboard/clients" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, backgroundColor: '#111110', border: '1px solid #1E1E1C', borderRadius: 8, padding: '8px 14px', color: '#F0EDE6', fontSize: 13, fontWeight: 500, cursor: 'pointer', textDecoration: 'none', transition: 'all 0.15s ease', fontFamily: 'var(--font-dm-sans), sans-serif', marginBottom: 28 }}
+        onMouseEnter={e => { e.currentTarget.style.background = '#1E1E1C'; e.currentTarget.style.borderColor = '#F97316'; e.currentTarget.style.color = '#F97316' }}
+        onMouseLeave={e => { e.currentTarget.style.background = '#111110'; e.currentTarget.style.borderColor = '#1E1E1C'; e.currentTarget.style.color = '#F0EDE6' }}
+      >
+        <span style={{ color: '#F97316' }}>←</span>
+        Retour aux clients
       </Link>
       <h1 style={{ fontFamily: 'var(--font-syne), sans-serif', fontSize: 24, fontWeight: 700, color: '#F0EDE6', margin: '0 0 28px' }}>
         Nouveau client

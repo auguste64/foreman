@@ -4,8 +4,14 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useParams, useRouter } from 'next/navigation'
 import { getFacture, updateFactureStatut, deleteFacture, type Facture, type LigneFacture } from '@/lib/supabase/factures'
-import { calcTotaux, formatEur } from '@/lib/supabase/devis'
+import { calcTotaux } from '@/lib/supabase/devis'
 import { useToast } from '@/components/ToastProvider'
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function formatMontant(val: any) {
+  const n = parseFloat(val)
+  return isNaN(n) ? '—' : n.toLocaleString('fr-FR', { minimumFractionDigits: 2 }) + ' €'
+}
 
 const STATUT_COLORS: Record<string, { bg: string; text: string }> = {
   'En attente': { bg: '#2e2a1a', text: '#fbbf24' },
@@ -77,9 +83,12 @@ export default function FactureDetailPage() {
     <div className="page-enter" style={{ flex: 1, padding: '40px', overflowY: 'auto', maxWidth: '800px' }}>
       <Link
         href={`/dashboard/chantiers/${chantierId}/factures`}
-        style={{ fontSize: '13px', color: '#8A8880', textDecoration: 'none', fontFamily: 'var(--font-dm-sans), sans-serif', display: 'inline-flex', alignItems: 'center', gap: '6px', marginBottom: '28px' }}
+        style={{ display: 'inline-flex', alignItems: 'center', gap: 8, backgroundColor: '#111110', border: '1px solid #1E1E1C', borderRadius: 8, padding: '8px 14px', color: '#F0EDE6', fontSize: 13, fontWeight: 500, cursor: 'pointer', textDecoration: 'none', transition: 'all 0.15s ease', fontFamily: 'var(--font-dm-sans), sans-serif', marginBottom: 28 }}
+        onMouseEnter={e => { e.currentTarget.style.background = '#1E1E1C'; e.currentTarget.style.borderColor = '#F97316'; e.currentTarget.style.color = '#F97316' }}
+        onMouseLeave={e => { e.currentTarget.style.background = '#111110'; e.currentTarget.style.borderColor = '#1E1E1C'; e.currentTarget.style.color = '#F0EDE6' }}
       >
-        ← Retour aux factures
+        <span style={{ color: '#F97316' }}>←</span>
+        Retour aux factures
       </Link>
 
       {/* Header */}
@@ -158,23 +167,23 @@ export default function FactureDetailPage() {
                 <span style={{ fontSize: '13px', color: '#F0EDE6', fontFamily: 'var(--font-dm-sans), sans-serif' }}>{l.description || '—'}</span>
                 <span style={{ fontSize: '13px', color: '#F0EDE6', fontFamily: 'var(--font-dm-sans), sans-serif', textAlign: 'right' }}>{l.quantite}</span>
                 <span style={{ fontSize: '13px', color: '#8A8880', fontFamily: 'var(--font-dm-sans), sans-serif' }}>{l.unite}</span>
-                <span style={{ fontSize: '13px', color: '#F0EDE6', fontFamily: 'var(--font-dm-sans), sans-serif', textAlign: 'right' }}>{formatEur(l.prix_unitaire)}</span>
-                <span style={{ fontSize: '13px', color: '#F97316', fontFamily: 'var(--font-dm-sans), sans-serif', textAlign: 'right', fontWeight: 500 }}>{formatEur(l.quantite * l.prix_unitaire)}</span>
+                <span style={{ fontSize: '13px', color: '#F0EDE6', fontFamily: 'var(--font-dm-sans), sans-serif', textAlign: 'right' }}>{formatMontant(l.prix_unitaire)}</span>
+                <span style={{ fontSize: '13px', color: '#F97316', fontFamily: 'var(--font-dm-sans), sans-serif', textAlign: 'right', fontWeight: 500 }}>{formatMontant(l.quantite * l.prix_unitaire)}</span>
               </div>
             ))}
 
             <div style={{ marginTop: '20px', display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '6px' }}>
               <div style={{ display: 'flex', gap: '24px', fontSize: '13px', color: '#8A8880', fontFamily: 'var(--font-dm-sans), sans-serif' }}>
                 <span>Total HT</span>
-                <span style={{ color: '#F0EDE6', minWidth: '100px', textAlign: 'right' }}>{formatEur(totaux.ht)}</span>
+                <span style={{ color: '#F0EDE6', minWidth: '100px', textAlign: 'right' }}>{formatMontant(totaux.ht)}</span>
               </div>
               <div style={{ display: 'flex', gap: '24px', fontSize: '13px', color: '#8A8880', fontFamily: 'var(--font-dm-sans), sans-serif' }}>
                 <span>TVA ({facture.tva_pct}%)</span>
-                <span style={{ color: '#F0EDE6', minWidth: '100px', textAlign: 'right' }}>{formatEur(totaux.tva)}</span>
+                <span style={{ color: '#F0EDE6', minWidth: '100px', textAlign: 'right' }}>{formatMontant(totaux.tva)}</span>
               </div>
               <div style={{ display: 'flex', gap: '24px', fontSize: '16px', fontWeight: 700, fontFamily: 'var(--font-syne), sans-serif', marginTop: '4px', paddingTop: '8px', borderTop: '1px solid #1E1E1C' }}>
                 <span style={{ color: '#F0EDE6' }}>Total TTC</span>
-                <span style={{ color: '#F97316', minWidth: '100px', textAlign: 'right' }}>{formatEur(totaux.ttc)}</span>
+                <span style={{ color: '#F97316', minWidth: '100px', textAlign: 'right' }}>{formatMontant(totaux.ttc)}</span>
               </div>
             </div>
           </>

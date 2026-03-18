@@ -4,8 +4,9 @@ import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
-import { createCompteRendu } from '@/lib/supabase/comptes-rendus'
+import { updateCompteRendu } from '@/lib/supabase/comptes-rendus'
 import { useToast } from '@/components/ToastProvider'
+import type { CompteRenduWithChantier } from '@/lib/supabase/comptes-rendus'
 import type { Chantier } from '@/lib/supabase/chantiers'
 import PhotoAnnotator from '@/components/PhotoAnnotator'
 
@@ -100,37 +101,96 @@ const blur = (e: React.FocusEvent<HTMLElement>) => {
 function uid() { return Math.random().toString(36).slice(2) }
 const emptyProfile = (): Profile => ({ nom: '', societe: '', adresse: '', telephone: '', email: '', logo: '' })
 
+// ─── Normalization helpers (handle both old and new saved formats) ─────────────
+
+function normalizeReserve(r: unknown): Reserve {
+  const raw = r as Record<string, unknown>
+  const s = raw.statut as string
+  const statut: 'Ouvert' | 'Levé' = (s === 'Levé' || s === 'levee') ? 'Levé' : 'Ouvert'
+  return {
+    id: String(raw.id ?? uid()),
+    description: String(raw.description ?? ''),
+    lot: String(raw.lot ?? ''),
+    responsable: String(raw.responsable ?? ''),
+    statut,
+    dateCreation: String(raw.dateCreation ?? new Date().toISOString().split('T')[0]),
+    photos: Array.isArray(raw.photos) ? raw.photos as string[] : [],
+  }
+}
+
+function normalizeDecision(d: unknown): Decision {
+  const raw = d as Record<string, unknown>
+  return {
+    id: String(raw.id ?? uid()),
+    description: String(raw.description ?? raw.texte ?? ''),
+    responsable: String(raw.responsable ?? ''),
+    echeance: String(raw.echeance ?? ''),
+  }
+}
+
+function normalizeLot(l: unknown): Lot {
+  const raw = l as Record<string, unknown>
+  return {
+    id: String(raw.id ?? uid()),
+    nom: String(raw.nom ?? ''),
+    intervenant: String(raw.intervenant ?? ''),
+    dateDemarrage: String(raw.dateDemarrage ?? ''),
+    dateFin: String(raw.dateFin ?? ''),
+    avancement: Number(raw.avancement ?? 0),
+  }
+}
+
+function parseObservations(raw: string | null) {
+  const empty = { texte: '', presences: [] as PresenceRow[], reserves: [] as Reserve[], decisions: [] as Decision[], lots: [] as Lot[] }
+  if (!raw) return empty
+  try {
+    const p = JSON.parse(raw)
+    return {
+      texte: String(p.texte ?? p.observations ?? ''),
+      presences: (Array.isArray(p.presences) ? p.presences : []) as PresenceRow[],
+      reserves: (Array.isArray(p.reserves) ? p.reserves : []).map(normalizeReserve),
+      decisions: (Array.isArray(p.decisions) ? p.decisions : []).map(normalizeDecision),
+      lots: (Array.isArray(p.lots) ? p.lots : []).map(normalizeLot),
+    }
+  } catch {
+    return { ...empty, texte: raw }
+  }
+}
+
 // ─── Component ────────────────────────────────────────────────────────────────
 
-export default function NouveauCompteRenduPage() {
+export default function ModifierCompteRendu({ compteRendu: cr }: { compteRendu: CompteRenduWithChantier }) {
   const router = useRouter()
   const { showToast } = useToast()
+
+  const initialData = parseObservations(cr.observations)
+
   const [tab, setTab] = useState<Tab>('general')
   const [chantiers, setChantiers] = useState<Chantier[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [existingPhotos, setExistingPhotos] = useState<string[]>(cr.photos ?? [])
   const [photoFiles, setPhotoFiles] = useState<File[]>([])
   const [photoPreviews, setPhotoPreviews] = useState<string[]>([])
   const [annotatorState, setAnnotatorState] = useState<{ reserveId: string; imageSrc: string } | null>(null)
   const [profile, setProfile] = useState<Profile>(emptyProfile())
-  const [presences, setPresences] = useState<PresenceRow[]>([])
-  const [reserves, setReserves] = useState<Reserve[]>([])
-  const [decisions, setDecisions] = useState<Decision[]>([])
-  const [lots, setLots] = useState<Lot[]>([])
+  const [presences, setPresences] = useState<PresenceRow[]>(initialData.presences)
+  const [reserves, setReserves] = useState<Reserve[]>(initialData.reserves)
+  const [decisions, setDecisions] = useState<Decision[]>(initialData.decisions)
+  const [lots, setLots] = useState<Lot[]>(initialData.lots)
   const [allArtisans, setAllArtisans] = useState<{ id: string; nom: string; metier: string | null }[]>([])
   const [addArtisanOpen, setAddArtisanOpen] = useState(false)
   const addArtisanBtnRef = useRef<HTMLButtonElement>(null)
   const addArtisanDropdownRef = useRef<HTMLDivElement>(null)
+  const initialPresencesRef = useRef(initialData.presences)
 
   const [form, setForm] = useState({
-    chantier_id: '',
-    date_visite: new Date().toISOString().split('T')[0],
-    date_prochaine_visite: '',
-    progression: 50,
-    observations: '',
-    travaux_a_faire: '',
-    artisans_presents: [] as string[],
-    photos: [] as string[],
+    chantier_id: cr.chantier_id,
+    date_visite: cr.date_visite,
+    date_prochaine_visite: cr.date_prochaine_visite ?? '',
+    progression: cr.progression,
+    observations: initialData.texte,
+    travaux_a_faire: cr.travaux_a_faire ?? '',
   })
 
   // Load chantiers + all artisans for the manual-add dropdown
@@ -142,31 +202,40 @@ export default function NouveauCompteRenduPage() {
       .then(({ data }) => setAllArtisans((data ?? []) as { id: string; nom: string; metier: string | null }[]))
   }, [])
 
-  // Reload presences whenever the selected chantier changes
+  // Reload presences when chantier changes; on initial mount, merge with saved data
   useEffect(() => {
     if (!form.chantier_id) {
       setPresences([])
       return
     }
+    const saved = initialPresencesRef.current
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    const isInitialChantier = form.chantier_id === cr.chantier_id
     createClient()
       .from('chantiers_artisans')
       .select('artisan_id, artisans(id, nom, metier)')
       .eq('chantier_id', form.chantier_id)
       .then(({ data }) => {
         const rows = (data ?? []) as unknown as { artisan_id: string; artisans: { id: string; nom: string; metier: string | null } | null }[]
-        setPresences(
-          rows
-            .filter((r) => r.artisans)
-            .map((r) => ({
-              artisanId: r.artisans!.id,
-              nom: r.artisans!.nom,
-              societe: r.artisans!.metier ?? '',
-              statut: 'A' as StatutPresence,
-              convoque: false,
-            }))
-        )
+        const artisanRows = rows.filter((r) => r.artisans)
+        if (isInitialChantier && saved.length > 0) {
+          // Merge: keep saved statut/convoque for known artisans; keep manually-added ones too
+          const existingById = new Map(saved.map((p) => [p.artisanId, p]))
+          const chantierIds = new Set(artisanRows.map((r) => r.artisans!.id))
+          const merged: PresenceRow[] = [
+            ...artisanRows.map((r) => existingById.get(r.artisans!.id) ?? {
+              artisanId: r.artisans!.id, nom: r.artisans!.nom, societe: r.artisans!.metier ?? '', statut: 'A' as StatutPresence, convoque: false,
+            }),
+            ...saved.filter((p) => !chantierIds.has(p.artisanId)),
+          ]
+          setPresences(merged)
+        } else {
+          setPresences(artisanRows.map((r) => ({
+            artisanId: r.artisans!.id, nom: r.artisans!.nom, societe: r.artisans!.metier ?? '', statut: 'A' as StatutPresence, convoque: false,
+          })))
+        }
       })
-  }, [form.chantier_id])
+  }, [form.chantier_id]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // Close the add-artisan dropdown on outside click
   useEffect(() => {
@@ -182,60 +251,16 @@ export default function NouveauCompteRenduPage() {
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [])
 
-  // Load profile: localStorage (user's saved values) or Supabase defaults for new users
+  // Load profile from localStorage
   useEffect(() => {
-    // Check localStorage first — if the user already saved a profile, use it
     try {
       const saved = localStorage.getItem('foreman_profile')
-      if (saved) {
-        setProfile(JSON.parse(saved))
-        return
-      }
+      if (saved) setProfile(JSON.parse(saved))
     } catch {}
-
-    // No saved profile → auto-fill from Supabase
-    const supabase = createClient()
-    supabase.auth.getUser().then(async ({ data: { user } }) => {
-      if (!user) return
-
-      // Try entreprise_infos first
-      const { data: ei } = await supabase
-        .from('entreprise_infos')
-        .select('raison_sociale, adresse, code_postal, ville, telephone, email')
-        .eq('user_id', user.id)
-        .maybeSingle()
-
-      if (ei?.raison_sociale) {
-        const adresse = [ei.adresse, ei.code_postal, ei.ville].filter(Boolean).join(', ')
-        setProfile((prev) => ({
-          ...prev,
-          societe: ei.raison_sociale ?? '',
-          adresse,
-          telephone: ei.telephone ?? '',
-          email: ei.email ?? '',
-        }))
-        return
-      }
-
-      // Fallback to profiles table
-      const { data: prof } = await supabase
-        .from('profiles')
-        .select('entreprise, prenom, nom, adresse')
-        .eq('id', user.id)
-        .maybeSingle()
-
-      if (prof) {
-        setProfile((prev) => ({
-          ...prev,
-          societe: prof.entreprise ?? '',
-          nom: [prof.prenom, prof.nom].filter(Boolean).join(' '),
-          adresse: prof.adresse ?? '',
-        }))
-      }
-    })
   }, [])
 
   const selectedChantier = chantiers.find((c) => c.id === form.chantier_id)
+  const pdfChantier = selectedChantier ?? cr.chantiers
 
   function setField(field: string, value: unknown) {
     setForm((prev) => ({ ...prev, [field]: value }))
@@ -309,12 +334,15 @@ export default function NouveauCompteRenduPage() {
     setPhotoFiles((prev) => [...prev, ...files])
     setPhotoPreviews((prev) => [...prev, ...files.map((f) => URL.createObjectURL(f))])
   }
-  function removePhoto(i: number) {
+  function removeExistingPhoto(i: number) {
+    setExistingPhotos((prev) => prev.filter((_, j) => j !== i))
+  }
+  function removeNewPhoto(i: number) {
     setPhotoFiles((prev) => prev.filter((_, j) => j !== i))
     setPhotoPreviews((prev) => { URL.revokeObjectURL(prev[i]); return prev.filter((_, j) => j !== i) })
   }
 
-  async function uploadPhotos(): Promise<string[]> {
+  async function uploadNewPhotos(): Promise<string[]> {
     if (!photoFiles.length) return []
     const supabase = createClient()
     const urls: string[] = []
@@ -336,11 +364,10 @@ export default function NouveauCompteRenduPage() {
     setError(null)
     setLoading(true)
     try {
-      const photoUrls = await uploadPhotos()
+      const newPhotoUrls = await uploadNewPhotos()
+      const allPhotos = [...existingPhotos, ...newPhotoUrls]
       const artisansPresentsList = presences.filter((p) => p.statut === 'P').map((p) => p.nom)
 
-      // observations stocke un objet structuré JSON dans la colonne TEXT
-      // (presences/reserves/decisions/lots n'ont pas de colonnes dédiées dans le schéma DB)
       const observationsData = {
         texte: form.observations,
         presences,
@@ -349,7 +376,7 @@ export default function NouveauCompteRenduPage() {
         lots,
       }
 
-      const insertPayload = {
+      await updateCompteRendu(cr.id, {
         chantier_id: form.chantier_id,
         date_visite: form.date_visite,
         date_prochaine_visite: form.date_prochaine_visite || null,
@@ -357,41 +384,12 @@ export default function NouveauCompteRenduPage() {
         observations: JSON.stringify(observationsData),
         travaux_a_faire: form.travaux_a_faire || null,
         artisans_presents: artisansPresentsList,
-        photos: photoUrls,
-      }
-      console.log('[handleSubmit] insertPayload keys:', Object.keys(insertPayload))
-      console.log('[handleSubmit] chantier_id:', insertPayload.chantier_id)
-      console.log('[handleSubmit] date_visite:', insertPayload.date_visite)
-      console.log('[handleSubmit] progression:', insertPayload.progression)
-      console.log('[handleSubmit] artisans_presents:', insertPayload.artisans_presents)
-      console.log('[handleSubmit] observations length:', insertPayload.observations.length)
-      const cr = await createCompteRendu(insertPayload)
+        photos: allPhotos,
+      })
 
-      // Auto-create planning events
-      const supabase = createClient()
-      const { data: { user } } = await supabase.auth.getUser()
-      if (user) {
-        const nomChantier = selectedChantier?.nom ?? 'Chantier'
-        const visitDate = new Date(form.date_visite)
-        visitDate.setHours(9, 0, 0, 0)
-        void Promise.resolve(supabase.from('evenements').insert({
-          user_id: user.id, chantier_id: form.chantier_id,
-          titre: `Visite — ${nomChantier}`, type: 'visite_architecte',
-          date_debut: visitDate.toISOString(), date_fin: null, artisan_id: null,
-          notes: form.observations || null,
-        })).catch(() => {})
-        if (form.date_prochaine_visite) {
-          const nextDate = new Date(form.date_prochaine_visite)
-          nextDate.setHours(9, 0, 0, 0)
-          void Promise.resolve(supabase.from('evenements').insert({
-            user_id: user.id, chantier_id: form.chantier_id,
-            titre: `Prochaine visite — ${nomChantier}`, type: 'prochaine_visite',
-            date_debut: nextDate.toISOString(), date_fin: null, artisan_id: null, notes: null,
-          })).catch(() => {})
-        }
-      }
-      showToast('Compte rendu créé')
+      showToast('Compte rendu mis à jour')
       router.push(`/dashboard/comptes-rendus/${cr.id}`)
+      router.refresh()
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Une erreur est survenue.')
       setLoading(false)
@@ -399,13 +397,14 @@ export default function NouveauCompteRenduPage() {
   }
 
   // ── Tab definitions ──
+  const totalPhotos = existingPhotos.length + photoPreviews.length
   const TABS: { id: Tab; label: string }[] = [
     { id: 'general',   label: 'Général' },
     { id: 'presences', label: 'Présences' },
     { id: 'reserves',  label: reserves.length  ? `Réserves (${reserves.length})`   : 'Réserves'  },
     { id: 'decisions', label: decisions.length ? `Décisions (${decisions.length})` : 'Décisions' },
     { id: 'lots',      label: 'Lots' },
-    { id: 'photos',    label: photoPreviews.length ? `Photos (${photoPreviews.length})` : 'Photos' },
+    { id: 'photos',    label: totalPhotos ? `Photos (${totalPhotos})` : 'Photos' },
     { id: 'profil',    label: 'Profil' },
   ]
 
@@ -421,15 +420,15 @@ export default function NouveauCompteRenduPage() {
 
       {/* Page header */}
       <div style={{ marginBottom: '28px' }}>
-        <Link href="/dashboard/comptes-rendus" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, backgroundColor: '#111110', border: '1px solid #1E1E1C', borderRadius: 8, padding: '8px 14px', color: '#F0EDE6', fontSize: 13, fontWeight: 500, cursor: 'pointer', textDecoration: 'none', transition: 'all 0.15s ease', fontFamily: 'var(--font-dm-sans), sans-serif', marginBottom: 12 }}
+        <Link href={`/dashboard/comptes-rendus/${cr.id}`} style={{ display: 'inline-flex', alignItems: 'center', gap: 8, backgroundColor: '#111110', border: '1px solid #1E1E1C', borderRadius: 8, padding: '8px 14px', color: '#F0EDE6', fontSize: 13, fontWeight: 500, cursor: 'pointer', textDecoration: 'none', transition: 'all 0.15s ease', fontFamily: 'var(--font-dm-sans), sans-serif', marginBottom: 12 }}
           onMouseEnter={e => { e.currentTarget.style.background = '#1E1E1C'; e.currentTarget.style.borderColor = '#F97316'; e.currentTarget.style.color = '#F97316' }}
           onMouseLeave={e => { e.currentTarget.style.background = '#111110'; e.currentTarget.style.borderColor = '#1E1E1C'; e.currentTarget.style.color = '#F0EDE6' }}
         >
           <span style={{ color: '#F97316' }}>←</span>
-          Retour aux comptes rendus
+          Retour au compte rendu
         </Link>
         <h1 style={{ fontFamily: 'var(--font-syne), sans-serif', fontSize: '24px', fontWeight: 700, color: '#F0EDE6', margin: 0 }}>
-          Nouveau compte rendu
+          Modifier le compte rendu
         </h1>
       </div>
 
@@ -463,14 +462,21 @@ export default function NouveauCompteRenduPage() {
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
                   <div>
                     <label style={labelStyle}>Chantier associé *</label>
-                    <select value={form.chantier_id} onChange={(e) => setField('chantier_id', e.target.value)} required
-                      style={{ width: '100%', padding: '10px 14px', backgroundColor: '#111110', border: '1px solid #1E1E1C', borderRadius: '8px', color: form.chantier_id ? '#F0EDE6' : '#8A8880', fontSize: '14px', outline: 'none', fontFamily: 'var(--font-dm-sans), sans-serif', cursor: 'pointer', appearance: 'none', WebkitAppearance: 'none', colorScheme: 'dark', boxSizing: 'border-box' } as React.CSSProperties}
-                      onFocus={focus} onBlur={blur}>
-                      <option value="" style={{ backgroundColor: '#111110' }}>Sélectionner un chantier…</option>
-                      {chantiers.map((c) => (
-                        <option key={c.id} value={c.id} style={{ backgroundColor: '#111110' }}>{c.nom} — {c.client}</option>
-                      ))}
-                    </select>
+                    <div style={{ position: 'relative' }}>
+                      <select value={form.chantier_id} onChange={(e) => setField('chantier_id', e.target.value)} required
+                        style={{ ...inputStyle, cursor: 'pointer', appearance: 'none', WebkitAppearance: 'none', paddingRight: '40px' } as React.CSSProperties}
+                        onFocus={(e) => { focus(e); (e.target.nextSibling as HTMLElement).style.opacity = '1' }}
+                        onBlur={(e) => { blur(e); (e.target.nextSibling as HTMLElement).style.opacity = '0.5' }}>
+                        <option value="" style={{ backgroundColor: '#111110' }}>Sélectionner un chantier…</option>
+                        {chantiers.map((c) => (
+                          <option key={c.id} value={c.id} style={{ backgroundColor: '#111110' }}>{c.nom} — {c.client}</option>
+                        ))}
+                      </select>
+                      <svg width="16" height="16" viewBox="0 0 16 16" fill="none"
+                        style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none', opacity: 0.5, transition: 'opacity 0.15s' }}>
+                        <path d="M4 6L8 10L12 6" stroke="#F97316" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                      </svg>
+                    </div>
                   </div>
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
                     <div>
@@ -483,6 +489,15 @@ export default function NouveauCompteRenduPage() {
                       <input type="date" value={form.date_prochaine_visite} onChange={(e) => setField('date_prochaine_visite', e.target.value)}
                         style={{ ...inputStyle, colorScheme: 'dark' } as React.CSSProperties} onFocus={focus} onBlur={blur} />
                     </div>
+                  </div>
+                  <div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
+                      <label style={{ ...labelStyle, marginBottom: 0 }}>Avancement</label>
+                      <span style={{ fontFamily: 'var(--font-syne), sans-serif', fontSize: '14px', fontWeight: 700, color: '#F97316' }}>{form.progression}%</span>
+                    </div>
+                    <input type="range" min={0} max={100} step={5} value={form.progression}
+                      onChange={(e) => setField('progression', parseInt(e.target.value))}
+                      style={{ width: '100%', accentColor: '#F97316', cursor: 'pointer' }} />
                   </div>
                   <div>
                     <label style={labelStyle}>Observations / remarques</label>
@@ -833,6 +848,25 @@ export default function NouveauCompteRenduPage() {
               {/* ── PHOTOS ── */}
               {tab === 'photos' && (
                 <div>
+                  {/* Existing photos */}
+                  {existingPhotos.length > 0 && (
+                    <div style={{ marginBottom: '20px' }}>
+                      <p style={{ ...labelStyle, marginBottom: '10px' }}>Photos existantes ({existingPhotos.length})</p>
+                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '10px' }}>
+                        {existingPhotos.map((url, i) => (
+                          <div key={i} style={{ position: 'relative', borderRadius: '6px', overflow: 'hidden', aspectRatio: '1' }}>
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img src={url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                            <button type="button" onClick={() => removeExistingPhoto(i)}
+                              style={{ position: 'absolute', top: '4px', right: '4px', width: '20px', height: '20px', borderRadius: '50%', border: 'none', backgroundColor: 'rgba(0,0,0,0.75)', color: '#fff', cursor: 'pointer', fontSize: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                              ×
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  {/* Upload new photos */}
                   <label style={{
                     display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px',
                     padding: '28px', border: '1px dashed #1E1E1C', borderRadius: '8px', cursor: 'pointer',
@@ -852,7 +886,7 @@ export default function NouveauCompteRenduPage() {
                         <div key={i} style={{ position: 'relative', borderRadius: '6px', overflow: 'hidden', aspectRatio: '1' }}>
                           {/* eslint-disable-next-line @next/next/no-img-element */}
                           <img src={src} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                          <button type="button" onClick={() => removePhoto(i)}
+                          <button type="button" onClick={() => removeNewPhoto(i)}
                             style={{ position: 'absolute', top: '4px', right: '4px', width: '20px', height: '20px', borderRadius: '50%', border: 'none', backgroundColor: 'rgba(0,0,0,0.75)', color: '#fff', cursor: 'pointer', fontSize: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                             ×
                           </button>
@@ -931,9 +965,9 @@ export default function NouveauCompteRenduPage() {
           <div style={{ display: 'flex', gap: '12px' }}>
             <button type="submit" disabled={loading}
               style={{ flex: 1, padding: '12px', backgroundColor: loading ? '#9E8630' : '#F97316', color: '#0D0D0B', border: 'none', borderRadius: '8px', fontSize: '14px', fontWeight: 600, cursor: loading ? 'not-allowed' : 'pointer', fontFamily: 'var(--font-dm-sans), sans-serif' }}>
-              {loading ? 'Enregistrement…' : 'Enregistrer le compte rendu'}
+              {loading ? 'Enregistrement…' : 'Enregistrer les modifications'}
             </button>
-            <Link href="/dashboard/comptes-rendus"
+            <Link href={`/dashboard/comptes-rendus/${cr.id}`}
               style={{ padding: '12px 20px', backgroundColor: 'transparent', color: '#8A8880', border: '1px solid #1E1E1C', borderRadius: '8px', fontSize: '14px', fontWeight: 500, textDecoration: 'none', fontFamily: 'var(--font-dm-sans), sans-serif', display: 'flex', alignItems: 'center' }}>
               Annuler
             </Link>
@@ -967,8 +1001,8 @@ export default function NouveauCompteRenduPage() {
               </div>
               <div style={{ textAlign: 'right' }}>
                 <div style={{ fontWeight: 700, fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Compte Rendu de Visite</div>
-                <div style={{ fontSize: '10px', color: '#222', marginTop: '4px', fontWeight: 600 }}>{selectedChantier?.nom ?? '—'}</div>
-                {selectedChantier?.client && <div style={{ fontSize: '9px', color: '#555' }}>{selectedChantier.client}</div>}
+                <div style={{ fontSize: '10px', color: '#222', marginTop: '4px', fontWeight: 600 }}>{pdfChantier?.nom ?? '—'}</div>
+                {pdfChantier?.client && <div style={{ fontSize: '9px', color: '#555' }}>{pdfChantier.client}</div>}
                 <div style={{ fontSize: '9px', color: '#777', marginTop: '2px' }}>
                   Visite du {form.date_visite ? new Date(form.date_visite + 'T12:00:00').toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' }) : '—'}
                 </div>
@@ -1118,11 +1152,11 @@ export default function NouveauCompteRenduPage() {
             )}
 
             {/* PDF photos */}
-            {photoPreviews.length > 0 && (
+            {(existingPhotos.length > 0 || photoPreviews.length > 0) && (
               <div>
                 <div style={pdfSectionTitle}>Photos</div>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '4px' }}>
-                  {photoPreviews.map((src, i) => (
+                  {[...existingPhotos, ...photoPreviews].map((src, i) => (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img key={i} src={src} alt="" style={{ width: '100%', aspectRatio: '4/3', objectFit: 'cover', borderRadius: '2px', border: '1px solid #e0e0e0' }} />
                   ))}
@@ -1130,12 +1164,6 @@ export default function NouveauCompteRenduPage() {
               </div>
             )}
 
-            {/* Empty state */}
-            {!form.chantier_id && presences.length === 0 && reserves.length === 0 && lots.length === 0 && !form.observations && (
-              <p style={{ textAlign: 'center', color: '#bbb', fontSize: '9px', padding: '20px 0', margin: 0 }}>
-                Remplissez le formulaire pour voir l'aperçu
-              </p>
-            )}
           </div>
         </div>
       </div>

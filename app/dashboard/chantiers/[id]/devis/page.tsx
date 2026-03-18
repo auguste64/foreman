@@ -2,9 +2,15 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
-import { useParams } from 'next/navigation'
-import { calcTotaux, formatEur, type Devis, type LigneDevis } from '@/lib/supabase/devis'
+import { useParams, usePathname } from 'next/navigation'
+import { calcTotaux, type Devis, type LigneDevis } from '@/lib/supabase/devis'
 import { createClient } from '@/lib/supabase/client'
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function formatMontant(val: any) {
+  const n = parseFloat(val)
+  return isNaN(n) ? '—' : n.toLocaleString('fr-FR', { minimumFractionDigits: 2 }) + ' €'
+}
 
 const STATUT_COLORS: Record<string, { bg: string; text: string }> = {
   brouillon: { bg: '#1E1E1C', text: '#8A8880' },
@@ -23,6 +29,7 @@ const STATUT_LABELS: Record<string, string> = {
 type DevisRow = Devis & { devis_lignes: LigneDevis[] }
 
 function ChantierTabs({ chantierId }: { chantierId: string }) {
+  const pathname = usePathname()
   const tabs = [
     { label: 'Infos', href: `/dashboard/chantiers/${chantierId}` },
     { label: 'Devis', href: `/dashboard/chantiers/${chantierId}/devis` },
@@ -31,7 +38,7 @@ function ChantierTabs({ chantierId }: { chantierId: string }) {
   return (
     <div style={{ display: 'flex', gap: '4px', marginBottom: '32px', borderBottom: '1px solid #1E1E1C' }}>
       {tabs.map(tab => {
-        const active = typeof window !== 'undefined' && window.location.pathname === tab.href
+        const active = pathname === tab.href
         return (
           <Link
             key={tab.href}
@@ -75,9 +82,12 @@ export default function DevisListPage() {
     <div className="page-enter" style={{ flex: 1, padding: '40px', overflowY: 'auto', maxWidth: '800px' }}>
       <Link
         href="/dashboard/chantiers"
-        style={{ fontSize: '13px', color: '#8A8880', textDecoration: 'none', fontFamily: 'var(--font-dm-sans), sans-serif', display: 'inline-flex', alignItems: 'center', gap: '6px', marginBottom: '28px' }}
+        style={{ display: 'inline-flex', alignItems: 'center', gap: 8, backgroundColor: '#111110', border: '1px solid #1E1E1C', borderRadius: 8, padding: '8px 14px', color: '#F0EDE6', fontSize: 13, fontWeight: 500, cursor: 'pointer', textDecoration: 'none', transition: 'all 0.15s ease', fontFamily: 'var(--font-dm-sans), sans-serif', marginBottom: 28 }}
+        onMouseEnter={e => { e.currentTarget.style.background = '#1E1E1C'; e.currentTarget.style.borderColor = '#F97316'; e.currentTarget.style.color = '#F97316' }}
+        onMouseLeave={e => { e.currentTarget.style.background = '#111110'; e.currentTarget.style.borderColor = '#1E1E1C'; e.currentTarget.style.color = '#F0EDE6' }}
       >
-        ← Retour aux chantiers
+        <span style={{ color: '#F97316' }}>←</span>
+        Retour aux chantiers
       </Link>
 
       <div style={{ marginBottom: '24px' }}>
@@ -139,7 +149,7 @@ export default function DevisListPage() {
 
                 {/* Total TTC */}
                 <span style={{ fontSize: '14px', fontWeight: 600, color: '#F0EDE6', fontFamily: 'var(--font-dm-sans), sans-serif', flexShrink: 0 }}>
-                  {formatEur(totaux.ttc)}
+                  {formatMontant(totaux.ttc)}
                 </span>
 
                 {/* Statut */}
