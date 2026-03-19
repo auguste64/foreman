@@ -1,5 +1,5 @@
 import type { Metadata } from 'next'
-import { Syne, DM_Sans } from 'next/font/google'
+import { Syne, DM_Sans, Plus_Jakarta_Sans } from 'next/font/google'
 import './globals.css'
 import './aurora.css'
 import { Providers } from './providers'
@@ -8,6 +8,13 @@ const syne = Syne({
   variable: '--font-syne',
   subsets: ['latin'],
   weight: ['400', '500', '600', '700', '800'],
+  display: 'swap',
+})
+
+const plusJakarta = Plus_Jakarta_Sans({
+  variable: '--font-jakarta',
+  subsets: ['latin'],
+  weight: ['300', '400', '500', '600', '700', '800'],
   display: 'swap',
 })
 
@@ -29,7 +36,7 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="fr" className={`${syne.variable} ${dmSans.variable}`}>
+    <html lang="fr" className={`${syne.variable} ${dmSans.variable} ${plusJakarta.variable}`}>
       <body style={{ fontFamily: 'var(--font-dm-sans), DM Sans, sans-serif', background: '#0D0D0B', color: '#F0EDE6' }}>
         <div style={{ position: 'fixed', top: 0, left: 0, width: '240px', height: '100%', background: '#0D0D0B', zIndex: 1, pointerEvents: 'none' }} />
         <div style={{ position: 'fixed', top: 0, left: '240px', right: 0, bottom: 0, zIndex: 0, pointerEvents: 'none', overflow: 'hidden', background: 'transparent' }}>
