@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
+import UpgradeGate from '@/components/UpgradeGate'
+import { usePlan } from '@/lib/usePlan'
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
 } from 'recharts'
@@ -34,6 +36,7 @@ export default function StatsPage() {
   const [stats, setStats] = useState<Stats>({ crCeMois: 0, crTotal: 0, chantiersActifs: 0, artisans: 0 })
   const [chartData, setChartData] = useState<ChartPoint[]>([])
   const [loading, setLoading] = useState(true)
+  const { isComplet, loading: planLoading } = usePlan()
 
   useEffect(() => {
     async function load() {
@@ -81,6 +84,9 @@ export default function StatsPage() {
     { label: 'CHANTIERS ACTIFS', value: stats.chantiersActifs, color: '#4ade80' },
     { label: 'ARTISANS', value: stats.artisans, color: '#a78bfa' },
   ]
+
+  if (planLoading) return null
+  if (!isComplet) return <UpgradeGate feature="Analyse & statistiques" requiredPlan="complet" />
 
   return (
     <div className="page-enter" style={{ flex: 1, padding: '40px', overflowY: 'auto' }}>

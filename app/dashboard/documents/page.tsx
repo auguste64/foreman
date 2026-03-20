@@ -9,6 +9,7 @@ import type { DevisDoc, FactureDoc, AvoirDoc } from '@/lib/supabase/documents'
 import { useToast } from '@/components/ToastProvider'
 import CustomSelect from '@/components/CustomSelect'
 import SortPills from '@/components/SortPills'
+import UpgradeGate from '@/components/UpgradeGate'
 
 type Tab = 'devis' | 'factures' | 'avoirs' | 'acomptes'
 
@@ -190,6 +191,7 @@ export default function DocumentsPage() {
   }
 
   return (
+    <UpgradeGate requiredPlan="complet" feature="Comptabilité (devis & factures)">
     <div className="page-enter" style={{ flex: 1, display: 'flex', overflow: 'hidden' }}>
 
       {/* ── Left sidebar: chantiers ── */}
@@ -510,6 +512,7 @@ export default function DocumentsPage() {
         )}
       </div>
     </div>
+    </UpgradeGate>
   )
 }
 

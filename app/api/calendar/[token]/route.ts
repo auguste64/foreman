@@ -60,10 +60,10 @@ export async function GET(
   const lines: string[] = [
     'BEGIN:VCALENDAR',
     'VERSION:2.0',
-    'PRODID:-//Foreman//FR',
+    'PRODID:-//The Builder//FR',
     'CALSCALE:GREGORIAN',
     'METHOD:PUBLISH',
-    'X-WR-CALNAME:Foreman Planning',
+    'X-WR-CALNAME:The Builder Planning',
     'X-WR-TIMEZONE:Europe/Paris',
   ]
 

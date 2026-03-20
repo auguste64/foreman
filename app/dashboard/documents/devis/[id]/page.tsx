@@ -8,6 +8,8 @@ import { getDevisDoc, createFactureDoc, formatEurDoc, fmtDate, calcTotauxDoc } f
 import type { DevisDoc, DevisLigneDoc } from '@/lib/supabase/documents'
 import { useToast } from '@/components/ToastProvider'
 import CustomSelect from '@/components/CustomSelect'
+import UpgradeGate from '@/components/UpgradeGate'
+import { usePlan } from '@/lib/usePlan'
 
 const DEVIS_STATUT: Record<string, { label: string; bg: string; color: string }> = {
   brouillon: { label: 'Brouillon', bg: 'rgba(138,136,128,0.15)', color: '#8A8880' },
@@ -31,6 +33,7 @@ export default function DevisDetailPage() {
   const [showConfirmDelete, setShowConfirmDelete] = useState(false)
   const [emailForm, setEmailForm] = useState({ to: '', subject: '', body: '' })
   const [sending, setSending] = useState(false)
+  const { isComplet, loading: planLoading } = usePlan()
 
   useEffect(() => {
     getDevisDoc(id).then(d => {
@@ -129,6 +132,8 @@ export default function DevisDetailPage() {
   }
 
   if (loading) return <div style={{ flex: 1, padding: 40 }}><p style={{ color: '#8A8880', fontFamily: 'var(--font-dm-sans), sans-serif' }}>Chargement…</p></div>
+  if (planLoading) return null
+  if (!isComplet) return <UpgradeGate feature="Comptabilité (devis & factures)" requiredPlan="complet" />
   if (!devis) return <div style={{ flex: 1, padding: 40 }}><p style={{ color: '#E85447', fontFamily: 'var(--font-dm-sans), sans-serif' }}>Devis introuvable.</p></div>
 
   const statut = DEVIS_STATUT[devis.statut] ?? { label: devis.statut, bg: 'rgba(138,136,128,0.15)', color: '#8A8880' }

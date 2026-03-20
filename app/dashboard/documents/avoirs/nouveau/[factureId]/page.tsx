@@ -7,6 +7,8 @@ import { createClient } from '@/lib/supabase/client'
 import { getFactureDoc, createAvoirDoc, calcTotauxDoc, formatEurDoc } from '@/lib/supabase/documents'
 import type { FactureLigneDoc } from '@/lib/supabase/documents'
 import { useToast } from '@/components/ToastProvider'
+import UpgradeGate from '@/components/UpgradeGate'
+import { usePlan } from '@/lib/usePlan'
 
 const inputStyle: React.CSSProperties = {
   width: '100%', padding: '10px 14px', backgroundColor: '#0D0D0B',
@@ -42,6 +44,7 @@ export default function NouvelAvoirPage() {
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
+  const { isComplet, loading: planLoading } = usePlan()
 
   useEffect(() => {
     async function init() {
@@ -110,6 +113,8 @@ export default function NouvelAvoirPage() {
   }
 
   if (loading) return <div style={{ flex: 1, padding: 40 }}><p style={{ color: '#8A8880', fontFamily: 'var(--font-dm-sans), sans-serif' }}>Chargement…</p></div>
+  if (planLoading) return null
+  if (!isComplet) return <UpgradeGate feature="Comptabilité (devis & factures)" requiredPlan="complet" />
 
   return (
     <div className="page-enter" style={{ flex: 1, padding: '40px', overflowY: 'auto', maxWidth: 800 }}>

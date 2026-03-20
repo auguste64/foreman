@@ -18,8 +18,25 @@ export default function Sidebar({ email }: { email: string }) {
     <aside className="w-[240px] flex-shrink-0 flex flex-col h-full border-r border-[#1E1E1C] bg-[#0D0D0B]">
       {/* Logo */}
       <div className="p-6 border-b border-[#1E1E1C]">
-        <Link href="/dashboard" className="font-black text-xl tracking-widest hover:opacity-80 transition-opacity" style={{ fontFamily: 'var(--font-syne)', color: '#F0EDE6', textDecoration: 'none' }}>
-          FORE<span style={{ color: '#ea580c' }}>MAN</span>
+        <Link href="/dashboard" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '3px', flexShrink: 0 }}>
+            <div style={{ display: 'flex', gap: '3px' }}>
+              <div style={{ width: '18px', height: '8px', borderRadius: '2px', background: '#ea580c' }} />
+              <div style={{ width: '12px', height: '8px', borderRadius: '2px', background: '#ea580c', opacity: 0.6 }} />
+            </div>
+            <div style={{ display: 'flex', gap: '3px' }}>
+              <div style={{ width: '12px', height: '8px', borderRadius: '2px', background: '#ea580c', opacity: 0.6 }} />
+              <div style={{ width: '18px', height: '8px', borderRadius: '2px', background: '#ea580c' }} />
+            </div>
+            <div style={{ display: 'flex', gap: '3px' }}>
+              <div style={{ width: '18px', height: '8px', borderRadius: '2px', background: '#ea580c', opacity: 0.8 }} />
+              <div style={{ width: '12px', height: '8px', borderRadius: '2px', background: '#ea580c', opacity: 0.5 }} />
+            </div>
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', lineHeight: 1.1 }}>
+            <span style={{ fontFamily: 'var(--font-syne)', fontWeight: 400, fontSize: '0.6rem', letterSpacing: '0.2em', color: '#8A8880' }}>THE</span>
+            <span style={{ fontFamily: 'var(--font-syne)', fontWeight: 800, fontSize: '1rem', letterSpacing: '0.05em', color: '#F0EDE6' }}>BUILDER</span>
+          </div>
         </Link>
       </div>
 

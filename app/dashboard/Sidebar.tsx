@@ -5,6 +5,7 @@ import { usePathname } from 'next/navigation'
 import { Syne } from 'next/font/google'
 
 import { createClient } from '@/lib/supabase/client'
+import { usePlan } from '@/lib/usePlan'
 
 const syne = Syne({ subsets: ['latin'], weight: ['400', '500', '600', '700', '800'] })
 
@@ -27,14 +28,14 @@ function GearIconHoverable() {
   )
 }
 
-type NavItem = { href: string; label: string; icon?: React.ReactNode }
+type NavItem = { href: string; label: string; icon?: React.ReactNode; requiresComplet?: boolean }
 
 const navItems: NavItem[] = [
   { href: '/dashboard', label: 'Tableau de bord' },
   { href: '/dashboard/chantiers', label: 'Chantiers' },
   { href: '/dashboard/comptes-rendus', label: 'Comptes rendus' },
-  { href: '/dashboard/documents', label: 'Comptabilité' },
-  { href: '/dashboard/finances', label: 'Analyse' },
+  { href: '/dashboard/documents', label: 'Comptabilité', requiresComplet: true },
+  { href: '/dashboard/finances', label: 'Analyse', requiresComplet: true },
   { href: '/dashboard/artisans', label: 'Artisans' },
   { href: '/dashboard/clients', label: 'Clients' },
   { href: '/dashboard/planning', label: 'Planning' },
@@ -43,6 +44,7 @@ const navItems: NavItem[] = [
 
 export default function Sidebar({ email }: { email: string }) {
   const pathname = usePathname()
+  const { isComplet } = usePlan()
   const emailFallback = email?.split('@')[0] ?? ''
   const [displayName, setDisplayName] = useState(emailFallback)
   const [initial, setInitial] = useState(email?.[0]?.toUpperCase() ?? '?')
@@ -97,11 +99,25 @@ export default function Sidebar({ email }: { email: string }) {
   return (
     <aside className={syne.className} style={{ width: 240, flexShrink: 0, display: 'flex', flexDirection: 'column', height: '100vh', borderRight: '1px solid #1E1E1C', background: '#0D0D0B', position: 'relative', zIndex: 1 }}>
       <div style={{ padding: '24px', borderBottom: '1px solid #1E1E1C', background: '#0D0D0B' }}>
-        <Link href="/dashboard" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, textDecoration: 'none' }}>
-          <span style={{ width: 3, height: 18, backgroundColor: '#ea580c', borderRadius: 1, flexShrink: 0 }} />
-          <span style={{ fontFamily: 'var(--font-syne)', fontWeight: 800, fontSize: 20, letterSpacing: '-0.5px', color: '#F0EDE6' }}>
-            FORE<span style={{ color: '#ea580c' }}>MAN</span>
-          </span>
+        <Link href="/dashboard" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '3px', flexShrink: 0 }}>
+            <div style={{ display: 'flex', gap: '3px' }}>
+              <div style={{ width: '18px', height: '8px', borderRadius: '2px', background: '#ea580c' }} />
+              <div style={{ width: '12px', height: '8px', borderRadius: '2px', background: '#ea580c', opacity: 0.6 }} />
+            </div>
+            <div style={{ display: 'flex', gap: '3px' }}>
+              <div style={{ width: '12px', height: '8px', borderRadius: '2px', background: '#ea580c', opacity: 0.6 }} />
+              <div style={{ width: '18px', height: '8px', borderRadius: '2px', background: '#ea580c' }} />
+            </div>
+            <div style={{ display: 'flex', gap: '3px' }}>
+              <div style={{ width: '18px', height: '8px', borderRadius: '2px', background: '#ea580c', opacity: 0.8 }} />
+              <div style={{ width: '12px', height: '8px', borderRadius: '2px', background: '#ea580c', opacity: 0.5 }} />
+            </div>
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', lineHeight: 1.1 }}>
+            <span style={{ fontFamily: 'var(--font-syne)', fontWeight: 400, fontSize: '0.6rem', letterSpacing: '0.2em', color: '#8A8880' }}>THE</span>
+            <span style={{ fontFamily: 'var(--font-syne)', fontWeight: 800, fontSize: '1rem', letterSpacing: '0.05em', color: '#F0EDE6' }}>BUILDER</span>
+          </div>
         </Link>
       </div>
       <nav style={{ flex: 1, padding: 16, display: 'flex', flexDirection: 'column', gap: 4, background: '#0D0D0B' }}>
@@ -114,7 +130,10 @@ export default function Sidebar({ email }: { email: string }) {
               onMouseLeave={e => { if (!active) { e.currentTarget.style.color = '#F0EDE6'; e.currentTarget.style.background = 'transparent'; e.currentTarget.style.paddingLeft = '16px' } }}
             >
               {item.icon && <span style={{ opacity: active ? 1 : 0.5, flexShrink: 0 }}>{item.icon}</span>}
-              {item.label}
+              <span style={{ flex: 1 }}>{item.label}</span>
+              {item.requiresComplet && !isComplet && (
+                <span style={{ background: '#1E1E1C', color: '#ea580c', fontSize: '0.6rem', fontWeight: 600, padding: '2px 6px', borderRadius: '4px', flexShrink: 0 }}>Pro</span>
+              )}
             </Link>
           )
         })}

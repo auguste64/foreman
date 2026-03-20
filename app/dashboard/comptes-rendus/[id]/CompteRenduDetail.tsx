@@ -72,6 +72,95 @@ function fmt(d: string | null) {
   return new Date(d).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })
 }
 
+function CustomDropdown({
+  items,
+  value,
+  onChange,
+  placeholder,
+  style,
+}: {
+  items: { value: string; label: string }[]
+  value: string
+  onChange: (val: string) => void
+  placeholder: string
+  style?: React.CSSProperties
+}) {
+  const [open, setOpen] = useState(false)
+  const ref = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    function handleClick(e: MouseEvent) {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false)
+    }
+    document.addEventListener('mousedown', handleClick)
+    return () => document.removeEventListener('mousedown', handleClick)
+  }, [])
+
+  const selected = items.find((i) => i.value === value)
+
+  return (
+    <div ref={ref} style={{ position: 'relative', ...style }}>
+      <button
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        style={{
+          width: '100%',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          background: '#111110',
+          border: '1px solid #1E1E1C',
+          borderRadius: '8px',
+          padding: '10px 14px',
+          fontSize: '14px',
+          fontFamily: 'var(--font-dm-sans), sans-serif',
+          cursor: 'pointer',
+          textAlign: 'left',
+        }}
+      >
+        <span style={{ color: selected ? '#ea580c' : '#8A8880' }}>
+          {selected ? selected.label : placeholder}
+        </span>
+        <span style={{ transform: open ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.2s', color: '#8A8880', marginLeft: '8px' }}>▾</span>
+      </button>
+      {open && (
+        <div style={{
+          position: 'absolute',
+          top: 'calc(100% + 4px)',
+          left: 0,
+          width: '100%',
+          background: '#111110',
+          border: '1px solid #1E1E1C',
+          borderRadius: '8px',
+          boxShadow: '0 8px 24px rgba(0,0,0,0.4)',
+          zIndex: 50,
+          overflow: 'hidden',
+        }}>
+          {items.map((item) => (
+            <div
+              key={item.value}
+              onClick={() => { onChange(item.value); setOpen(false) }}
+              style={{
+                padding: '10px 14px',
+                color: item.value === value ? '#ea580c' : '#F0EDE6',
+                cursor: 'pointer',
+                fontSize: '14px',
+                fontFamily: 'var(--font-dm-sans), sans-serif',
+                background: 'transparent',
+                transition: 'background 0.15s',
+              }}
+              onMouseEnter={(e) => (e.currentTarget.style.background = '#1E1E1C')}
+              onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
+            >
+              {item.label}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
 export default function CompteRenduDetail({ compteRendu: initial }: { compteRendu: CompteRenduWithChantier }) {
   const router = useRouter()
   const { showToast } = useToast()
@@ -683,22 +772,15 @@ export default function CompteRenduDetail({ compteRendu: initial }: { compteRend
             {artisansList.length > 0 && (
               <div style={{ marginBottom: '12px' }}>
                 <label style={{ ...labelStyle, marginBottom: '6px' }}>Artisan</label>
-                <select
+                <CustomDropdown
+                  items={artisansList.map((a) => ({ value: a.email ?? '', label: a.nom + (a.email ? ` — ${a.email}` : '') }))}
                   value={artisanDropdownValue}
-                  onChange={(e) => {
-                    setArtisanDropdownValue(e.target.value)
-                    setEmailInput(e.target.value)
+                  onChange={(val) => {
+                    setArtisanDropdownValue(val)
+                    setEmailInput(val)
                   }}
-                  style={{ width: '100%', padding: '10px 14px', backgroundColor: '#111110', border: '1px solid #1E1E1C', borderRadius: '8px', color: artisanDropdownValue ? '#F0EDE6' : '#8A8880', fontSize: '14px', outline: 'none', fontFamily: 'var(--font-dm-sans), sans-serif', colorScheme: 'dark' } as React.CSSProperties}
-                  onFocus={focus} onBlur={blur}
-                >
-                  <option value="">— Sélectionner un artisan —</option>
-                  {artisansList.map((a) => (
-                    <option key={a.id} value={a.email ?? ''}>
-                      {a.nom}{a.email ? ` — ${a.email}` : ''}
-                    </option>
-                  ))}
-                </select>
+                  placeholder="— Sélectionner un artisan —"
+                />
               </div>
             )}
 

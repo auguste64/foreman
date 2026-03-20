@@ -6,6 +6,8 @@ import { useParams, useRouter } from 'next/navigation'
 import { getFacture, updateFactureStatut, deleteFacture, type Facture, type LigneFacture } from '@/lib/supabase/factures'
 import { calcTotaux } from '@/lib/supabase/devis'
 import { useToast } from '@/components/ToastProvider'
+import { usePlan } from '@/lib/usePlan'
+import UpgradeGate from '@/components/UpgradeGate'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function formatMontant(val: any) {
@@ -34,6 +36,7 @@ export default function FactureDetailPage() {
   const [confirmDelete, setConfirmDelete] = useState(false)
   const [deleting, setDeleting] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const { isComplet, loading: planLoading } = usePlan()
 
   useEffect(() => {
     getFacture(factureId)
@@ -75,6 +78,9 @@ export default function FactureDetailPage() {
   if (!facture) {
     return <div style={{ flex: 1, padding: '40px', color: '#E85447', fontSize: '14px', fontFamily: 'var(--font-dm-sans), sans-serif' }}>{error ?? 'Facture introuvable.'}</div>
   }
+
+  if (planLoading) return null
+  if (!isComplet) return <UpgradeGate feature="Comptabilité" requiredPlan="complet" />
 
   const sc = STATUT_COLORS[facture.statut] ?? STATUT_COLORS['En attente']
   const totaux = calcTotaux(facture.lignes, facture.tva_pct)

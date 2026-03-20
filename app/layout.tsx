@@ -26,7 +26,7 @@ const dmSans = DM_Sans({
 })
 
 export const metadata: Metadata = {
-  title: 'Foreman — Gestion de chantier',
+  title: 'The Builder — Gestion de chantier',
   description: 'SaaS de gestion de chantier pour architectes',
 }
 

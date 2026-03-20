@@ -5,6 +5,8 @@ import Link from 'next/link'
 import { useParams, useRouter } from 'next/navigation'
 import { getDevis, updateDevisStatut, deleteDevis, calcTotaux, type Devis, type LigneDevis } from '@/lib/supabase/devis'
 import { useToast } from '@/components/ToastProvider'
+import { usePlan } from '@/lib/usePlan'
+import UpgradeGate from '@/components/UpgradeGate'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function formatMontant(val: any) {
@@ -39,6 +41,7 @@ export default function DevisDetailPage() {
   const [confirmDelete, setConfirmDelete] = useState(false)
   const [deleting, setDeleting] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const { isComplet, loading: planLoading } = usePlan()
 
   useEffect(() => {
     getDevis(devisId)
@@ -79,6 +82,9 @@ export default function DevisDetailPage() {
   if (!devis) {
     return <div style={{ flex: 1, padding: '40px', color: '#E85447', fontSize: '14px', fontFamily: 'var(--font-dm-sans), sans-serif' }}>{error ?? 'Devis introuvable.'}</div>
   }
+
+  if (planLoading) return null
+  if (!isComplet) return <UpgradeGate feature="Comptabilité" requiredPlan="complet" />
 
   const sc = STATUT_COLORS[devis.statut] ?? STATUT_COLORS.brouillon
   const totaux = calcTotaux(devis.lignes, devis.tva_pct)

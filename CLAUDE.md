@@ -13,3 +13,9 @@ Le fond aurora (blobs orange/rouge/violet animés) est rendu via un div `positio
 ```
 
 Ne jamais essayer de corriger ce problème en changeant uniquement la couleur de fond. Le z-index est la seule solution.
+
+## Chrome / Navigateur
+
+- Ne JAMAIS utiliser `createIfEmpty: true` dans tabs_context_mcp — cela ouvre une nouvelle fenêtre Chrome.
+- Si aucun groupe MCP n'existe, demander à Auguste d'ouvrir l'extension Claude dans son Chrome existant.
+- Toujours appeler tabs_context_mcp SANS paramètres d'abord pour vérifier l'existant.

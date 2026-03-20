@@ -5,6 +5,8 @@ import Link from 'next/link'
 import { useParams, usePathname } from 'next/navigation'
 import { calcTotaux, type Devis, type LigneDevis } from '@/lib/supabase/devis'
 import { createClient } from '@/lib/supabase/client'
+import { usePlan } from '@/lib/usePlan'
+import UpgradeGate from '@/components/UpgradeGate'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function formatMontant(val: any) {
@@ -28,12 +30,12 @@ const STATUT_LABELS: Record<string, string> = {
 
 type DevisRow = Devis & { devis_lignes: LigneDevis[] }
 
-function ChantierTabs({ chantierId }: { chantierId: string }) {
+function ChantierTabs({ chantierId, isComplet }: { chantierId: string; isComplet: boolean }) {
   const pathname = usePathname()
   const tabs = [
-    { label: 'Infos', href: `/dashboard/chantiers/${chantierId}` },
-    { label: 'Devis', href: `/dashboard/chantiers/${chantierId}/devis` },
-    { label: 'Factures', href: `/dashboard/chantiers/${chantierId}/factures` },
+    { label: 'Infos', href: `/dashboard/chantiers/${chantierId}`, pro: false },
+    { label: 'Devis', href: `/dashboard/chantiers/${chantierId}/devis`, pro: true },
+    { label: 'Factures', href: `/dashboard/chantiers/${chantierId}/factures`, pro: true },
   ]
   return (
     <div style={{ display: 'flex', gap: '4px', marginBottom: '32px', borderBottom: '1px solid #1E1E1C' }}>
@@ -43,9 +45,12 @@ function ChantierTabs({ chantierId }: { chantierId: string }) {
           <Link
             key={tab.href}
             href={tab.href}
-            style={{ padding: '10px 20px', fontSize: '13px', fontWeight: 500, fontFamily: 'var(--font-dm-sans), sans-serif', textDecoration: 'none', color: active ? '#ea580c' : '#8A8880', borderBottom: active ? '2px solid #ea580c' : '2px solid transparent', marginBottom: '-1px', transition: 'color 0.15s' }}
+            style={{ padding: '10px 20px', fontSize: '13px', fontWeight: 500, fontFamily: 'var(--font-dm-sans), sans-serif', textDecoration: 'none', color: active ? '#ea580c' : '#8A8880', borderBottom: active ? '2px solid #ea580c' : '2px solid transparent', marginBottom: '-1px', transition: 'color 0.15s', display: 'inline-flex', alignItems: 'center', gap: 5 }}
           >
             {tab.label}
+            {tab.pro && !isComplet && (
+              <span style={{ background: '#1E1E1C', color: '#ea580c', fontSize: '9px', fontWeight: 600, padding: '2px 5px', borderRadius: '4px' }}>Pro</span>
+            )}
           </Link>
         )
       })}
@@ -54,6 +59,7 @@ function ChantierTabs({ chantierId }: { chantierId: string }) {
 }
 
 export default function DevisListPage() {
+  const { isComplet } = usePlan()
   const params = useParams()
   const chantierId = params.id as string
   const [devis, setDevis] = useState<DevisRow[]>([])
@@ -96,70 +102,69 @@ export default function DevisListPage() {
         </h1>
       </div>
 
-      <ChantierTabs chantierId={chantierId} />
+      <ChantierTabs chantierId={chantierId} isComplet={isComplet} />
 
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '24px' }}>
-        <h2 style={{ fontFamily: 'var(--font-syne), sans-serif', fontSize: '18px', fontWeight: 600, color: '#F0EDE6', margin: 0 }}>
-          Devis {!loading && <span style={{ color: '#8A8880', fontSize: '14px', fontWeight: 400 }}>({devis.length})</span>}
-        </h2>
-        <Link
-          href={`/dashboard/chantiers/${chantierId}/devis/nouveau`}
-          style={{ padding: '9px 18px', backgroundColor: '#ea580c', color: '#0D0D0B', borderRadius: '8px', fontSize: '13px', fontWeight: 600, textDecoration: 'none', fontFamily: 'var(--font-dm-sans), sans-serif' }}
-        >
-          + Nouveau devis
-        </Link>
-      </div>
+      {!isComplet ? (
+        <UpgradeGate feature="Comptabilité" requiredPlan="complet" />
+      ) : (
+        <>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '24px' }}>
+            <h2 style={{ fontFamily: 'var(--font-syne), sans-serif', fontSize: '18px', fontWeight: 600, color: '#F0EDE6', margin: 0 }}>
+              Devis {!loading && <span style={{ color: '#8A8880', fontSize: '14px', fontWeight: 400 }}>({devis.length})</span>}
+            </h2>
+            <Link
+              href={`/dashboard/chantiers/${chantierId}/devis/nouveau`}
+              style={{ padding: '9px 18px', backgroundColor: '#ea580c', color: '#0D0D0B', borderRadius: '8px', fontSize: '13px', fontWeight: 600, textDecoration: 'none', fontFamily: 'var(--font-dm-sans), sans-serif' }}
+            >
+              + Nouveau devis
+            </Link>
+          </div>
 
-      {loading && <p style={{ color: '#8A8880', fontSize: '14px', fontFamily: 'var(--font-dm-sans), sans-serif' }}>Chargement…</p>}
+          {loading && <p style={{ color: '#8A8880', fontSize: '14px', fontFamily: 'var(--font-dm-sans), sans-serif' }}>Chargement…</p>}
 
-      {!loading && devis.length === 0 && (
-        <div style={{ backgroundColor: '#111110', border: '1px dashed #1E1E1C', borderRadius: '12px', padding: '60px 24px', textAlign: 'center' }}>
-          <p style={{ color: '#8A8880', fontSize: '14px', fontFamily: 'var(--font-dm-sans), sans-serif', marginBottom: '16px' }}>Aucun devis pour ce chantier.</p>
-          <Link
-            href={`/dashboard/chantiers/${chantierId}/devis/nouveau`}
-            style={{ display: 'inline-block', padding: '10px 20px', backgroundColor: '#ea580c', color: '#0D0D0B', borderRadius: '8px', fontSize: '13px', fontWeight: 600, textDecoration: 'none', fontFamily: 'var(--font-dm-sans), sans-serif' }}
-          >
-            + Créer un devis
-          </Link>
-        </div>
-      )}
-
-      {!loading && devis.length > 0 && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-          {devis.map(d => {
-            const sc = STATUT_COLORS[d.statut] ?? STATUT_COLORS.brouillon
-            const totaux = calcTotaux(d.devis_lignes ?? [], d.tva_pct)
-            return (
+          {!loading && devis.length === 0 && (
+            <div style={{ backgroundColor: '#111110', border: '1px dashed #1E1E1C', borderRadius: '12px', padding: '60px 24px', textAlign: 'center' }}>
+              <p style={{ color: '#8A8880', fontSize: '14px', fontFamily: 'var(--font-dm-sans), sans-serif', marginBottom: '16px' }}>Aucun devis pour ce chantier.</p>
               <Link
-                key={d.id}
-                href={`/dashboard/chantiers/${chantierId}/devis/${d.id}`}
-                style={{ backgroundColor: '#111110', border: '1px solid #1E1E1C', borderRadius: '10px', padding: '16px 20px', display: 'flex', alignItems: 'center', gap: '14px', textDecoration: 'none', transition: 'all 0.15s ease' }}
-                onMouseEnter={e => { e.currentTarget.style.transform = 'translateX(4px)'; e.currentTarget.style.borderColor = 'rgba(249,115,22,0.2)' }}
-                onMouseLeave={e => { e.currentTarget.style.transform = 'translateX(0)'; e.currentTarget.style.borderColor = '#1E1E1C' }}
+                href={`/dashboard/chantiers/${chantierId}/devis/nouveau`}
+                style={{ display: 'inline-block', padding: '10px 20px', backgroundColor: '#ea580c', color: '#0D0D0B', borderRadius: '8px', fontSize: '13px', fontWeight: 600, textDecoration: 'none', fontFamily: 'var(--font-dm-sans), sans-serif' }}
               >
-                {/* Numéro */}
-                <span style={{ padding: '2px 8px', backgroundColor: 'rgba(249,115,22,0.08)', color: '#ea580c', borderRadius: '4px', fontSize: '11px', fontWeight: 600, fontFamily: 'var(--font-dm-sans), sans-serif', flexShrink: 0 }}>
-                  {d.numero}
-                </span>
-
-                {/* Client */}
-                <span style={{ flex: 1, fontSize: '14px', color: d.client_nom ? '#F0EDE6' : '#8A8880', fontFamily: 'var(--font-dm-sans), sans-serif', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontStyle: d.client_nom ? 'normal' : 'italic' }}>
-                  {d.client_nom || 'Sans client'}
-                </span>
-
-                {/* Total TTC */}
-                <span style={{ fontSize: '14px', fontWeight: 600, color: '#F0EDE6', fontFamily: 'var(--font-dm-sans), sans-serif', flexShrink: 0 }}>
-                  {formatMontant(totaux.ttc)}
-                </span>
-
-                {/* Statut */}
-                <span style={{ padding: '3px 10px', borderRadius: '20px', fontSize: '11px', fontWeight: 500, fontFamily: 'var(--font-dm-sans), sans-serif', backgroundColor: sc.bg, color: sc.text, flexShrink: 0 }}>
-                  {STATUT_LABELS[d.statut] ?? d.statut}
-                </span>
+                + Créer un devis
               </Link>
-            )
-          })}
-        </div>
+            </div>
+          )}
+
+          {!loading && devis.length > 0 && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              {devis.map(d => {
+                const sc = STATUT_COLORS[d.statut] ?? STATUT_COLORS.brouillon
+                const totaux = calcTotaux(d.devis_lignes ?? [], d.tva_pct)
+                return (
+                  <Link
+                    key={d.id}
+                    href={`/dashboard/chantiers/${chantierId}/devis/${d.id}`}
+                    style={{ backgroundColor: '#111110', border: '1px solid #1E1E1C', borderRadius: '10px', padding: '16px 20px', display: 'flex', alignItems: 'center', gap: '14px', textDecoration: 'none', transition: 'all 0.15s ease' }}
+                    onMouseEnter={e => { e.currentTarget.style.transform = 'translateX(4px)'; e.currentTarget.style.borderColor = 'rgba(249,115,22,0.2)' }}
+                    onMouseLeave={e => { e.currentTarget.style.transform = 'translateX(0)'; e.currentTarget.style.borderColor = '#1E1E1C' }}
+                  >
+                    <span style={{ padding: '2px 8px', backgroundColor: 'rgba(249,115,22,0.08)', color: '#ea580c', borderRadius: '4px', fontSize: '11px', fontWeight: 600, fontFamily: 'var(--font-dm-sans), sans-serif', flexShrink: 0 }}>
+                      {d.numero}
+                    </span>
+                    <span style={{ flex: 1, fontSize: '14px', color: d.client_nom ? '#F0EDE6' : '#8A8880', fontFamily: 'var(--font-dm-sans), sans-serif', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontStyle: d.client_nom ? 'normal' : 'italic' }}>
+                      {d.client_nom || 'Sans client'}
+                    </span>
+                    <span style={{ fontSize: '14px', fontWeight: 600, color: '#F0EDE6', fontFamily: 'var(--font-dm-sans), sans-serif', flexShrink: 0 }}>
+                      {formatMontant(totaux.ttc)}
+                    </span>
+                    <span style={{ padding: '3px 10px', borderRadius: '20px', fontSize: '11px', fontWeight: 500, fontFamily: 'var(--font-dm-sans), sans-serif', backgroundColor: sc.bg, color: sc.text, flexShrink: 0 }}>
+                      {STATUT_LABELS[d.statut] ?? d.statut}
+                    </span>
+                  </Link>
+                )
+              })}
+            </div>
+          )}
+        </>
       )}
     </div>
   )

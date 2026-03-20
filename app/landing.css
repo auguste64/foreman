@@ -30,16 +30,16 @@
 #bg-wrap {
   position: fixed; inset: 0; z-index: 0;
   pointer-events: none; overflow: hidden;
-  background: #080A14;
+  background: #0D0D0B;
 }
 .bg-blob { position: absolute; border-radius: 50%; will-change: transform; }
-.b1 { width: 900px; height: 900px; background: radial-gradient(circle, rgba(255,80,20,0.60) 0%, rgba(255,80,20,0) 70%); top: -200px; left: -150px; animation: move1 18s ease-in-out infinite; }
-.b2 { width: 800px; height: 800px; background: radial-gradient(circle, rgba(30,100,255,0.55) 0%, rgba(30,100,255,0) 70%); top: -100px; right: -200px; animation: move2 22s ease-in-out infinite; }
-.b3 { width: 700px; height: 700px; background: radial-gradient(circle, rgba(110,50,255,0.50) 0%, rgba(110,50,255,0) 70%); top: 50%; left: 50%; transform: translate(-50%,-50%); animation: move3 16s ease-in-out infinite; }
-.b4 { width: 750px; height: 750px; background: radial-gradient(circle, rgba(255,110,20,0.45) 0%, rgba(255,110,20,0) 70%); bottom: -150px; left: -100px; animation: move4 20s ease-in-out infinite; }
-.b5 { width: 650px; height: 650px; background: radial-gradient(circle, rgba(20,130,255,0.45) 0%, rgba(20,130,255,0) 70%); bottom: -100px; right: -100px; animation: move5 24s ease-in-out infinite; }
-.b6 { width: 700px; height: 700px; background: radial-gradient(circle, rgba(180,20,220,0.42) 0%, rgba(180,20,220,0) 70%); top: 30%; right: 15%; animation: move6 19s ease-in-out infinite; }
-.b7 { width: 580px; height: 580px; background: radial-gradient(circle, rgba(220,30,60,0.38) 0%, rgba(220,30,60,0) 70%); top: 55%; left: 20%; animation: move7 21s ease-in-out infinite; }
+.b1 { width: 900px; height: 900px; background: radial-gradient(circle, rgba(234,88,12,0.35) 0%, rgba(234,88,12,0) 70%); top: -200px; left: -150px; animation: move1 18s ease-in-out infinite; }
+.b2 { width: 800px; height: 800px; background: radial-gradient(circle, rgba(234,88,12,0.25) 0%, rgba(234,88,12,0) 70%); top: -100px; right: -200px; animation: move2 22s ease-in-out infinite; }
+.b3 { width: 700px; height: 700px; background: radial-gradient(circle, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0) 70%); top: 50%; left: 50%; transform: translate(-50%,-50%); animation: move3 16s ease-in-out infinite; }
+.b4 { width: 750px; height: 750px; background: radial-gradient(circle, rgba(234,88,12,0.30) 0%, rgba(234,88,12,0) 70%); bottom: -150px; left: -100px; animation: move4 20s ease-in-out infinite; }
+.b5 { width: 650px; height: 650px; background: radial-gradient(circle, rgba(234,88,12,0.15) 0%, rgba(234,88,12,0) 70%); bottom: -100px; right: -100px; animation: move5 24s ease-in-out infinite; }
+.b6 { width: 700px; height: 700px; background: radial-gradient(circle, rgba(234,88,12,0.22) 0%, rgba(234,88,12,0) 70%); top: 30%; right: 15%; animation: move6 19s ease-in-out infinite; }
+.b7 { width: 580px; height: 580px; background: radial-gradient(circle, rgba(234,88,12,0.18) 0%, rgba(234,88,12,0) 70%); top: 55%; left: 20%; animation: move7 21s ease-in-out infinite; }
 
 @keyframes move1 { 0%,100%{transform:translate(0,0) scale(1)} 25%{transform:translate(120px,80px) scale(1.12)} 50%{transform:translate(60px,160px) scale(0.95)} 75%{transform:translate(-80px,100px) scale(1.08)} }
 @keyframes move2 { 0%,100%{transform:translate(0,0) scale(1)} 33%{transform:translate(-140px,100px) scale(1.15)} 66%{transform:translate(-60px,180px) scale(0.92)} }

@@ -1,7 +1,142 @@
 'use client'
 
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import './landing.css'
+
+const CHECK_ICON_DEFAULT = (
+  <svg width="16" height="16" viewBox="0 0 16 16" style={{ flexShrink: 0 }}>
+    <circle cx="8" cy="8" r="7.5" fill="none" stroke="#333" />
+    <polyline points="4.5,8 7,10.5 11.5,5.5" fill="none" stroke="#ea580c" strokeWidth="1.5" strokeLinecap="round" />
+  </svg>
+)
+
+const CHECK_ICON_ACCENT = (
+  <svg width="16" height="16" viewBox="0 0 16 16" style={{ flexShrink: 0 }}>
+    <circle cx="8" cy="8" r="7.5" fill="none" stroke="#ea580c" opacity="0.4" />
+    <polyline points="4.5,8 7,10.5 11.5,5.5" fill="none" stroke="#ea580c" strokeWidth="1.5" strokeLinecap="round" />
+  </svg>
+)
+
+function PricingCards() {
+  const [hoverEssentiel, setHoverEssentiel] = useState(false)
+  const [hoverComplet, setHoverComplet] = useState(false)
+  const [hoverBtnEssentiel, setHoverBtnEssentiel] = useState(false)
+  const [hoverBtnComplet, setHoverBtnComplet] = useState(false)
+
+  const featuresEssentiel = ['Comptes rendus PDF + email', 'Répertoire artisans & clients', 'Planning / calendrier']
+  const featuresComplet = ['Comptes rendus PDF + email', 'Répertoire artisans & clients', 'Planning / calendrier', 'Comptabilité (devis & factures)', 'Analyse & statistiques', 'Toutes les futures fonctionnalités']
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'row', gap: '24px', maxWidth: '860px', margin: '40px auto 0', padding: '0 24px', justifyContent: 'center', flexWrap: 'wrap' }}>
+
+      {/* Plan Essentiel */}
+      <div
+        onMouseEnter={() => setHoverEssentiel(true)}
+        onMouseLeave={() => setHoverEssentiel(false)}
+        style={{
+          flex: '1 1 360px', maxWidth: '400px', padding: '36px 40px',
+          background: 'rgba(10,10,9,0.75)', backdropFilter: 'blur(24px)', WebkitBackdropFilter: 'blur(24px)',
+          border: '1px solid rgba(255,255,255,0.10)', borderRadius: '20px',
+          display: 'flex', flexDirection: 'column',
+          animation: 'halo-pulse-subtle 4s ease-in-out infinite',
+          transform: hoverEssentiel ? 'scale(1.02)' : 'scale(1)',
+          transition: 'transform 0.3s ease',
+        }}
+      >
+        <div style={{ fontSize: '11px', fontWeight: 500, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#8A8880', marginBottom: '8px' }}>Essentiel</div>
+        <div style={{ display: 'flex', alignItems: 'baseline', gap: '4px', marginBottom: '4px' }}>
+          <span style={{ fontSize: '48px', fontWeight: 500, lineHeight: 1, color: '#F0EDE6', fontFamily: 'var(--font-syne), sans-serif' }}>11,90€</span>
+          <span style={{ fontSize: '18px', color: '#8A8880' }}>/mois</span>
+        </div>
+        <div style={{ fontSize: '13px', color: '#8A8880', marginBottom: '24px' }}>Sans engagement · Résiliable à tout moment</div>
+        <hr style={{ border: 'none', borderTop: '1px solid #1E1E1C', margin: '0 0 24px 0' }} />
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '32px', flex: 1 }}>
+          {featuresEssentiel.map((f) => (
+            <div key={f} style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '13px', color: '#F0EDE6' }}>
+              {CHECK_ICON_DEFAULT}
+              {f}
+            </div>
+          ))}
+        </div>
+        <a
+          href="/dashboard"
+          onMouseEnter={() => setHoverBtnEssentiel(true)}
+          onMouseLeave={() => setHoverBtnEssentiel(false)}
+          style={{
+            display: 'block', textAlign: 'center', padding: '14px 32px',
+            background: 'transparent', color: '#ea580c',
+            border: '1px solid #ea580c', borderRadius: '10px',
+            fontSize: '15px', fontWeight: 700,
+            fontFamily: 'var(--font-syne), sans-serif', textDecoration: 'none',
+            cursor: 'pointer',
+            animation: 'btn-glow 3s ease-in-out infinite',
+            transform: hoverBtnEssentiel ? 'scale(1.05)' : 'scale(1)',
+            transition: 'transform 0.2s',
+          }}
+        >
+          Commencer →
+        </a>
+      </div>
+
+      {/* Plan Complet */}
+      <div
+        onMouseEnter={() => setHoverComplet(true)}
+        onMouseLeave={() => setHoverComplet(false)}
+        style={{
+          flex: '1 1 360px', maxWidth: '400px', padding: '36px 40px',
+          background: 'rgba(10,10,9,0.75)', backdropFilter: 'blur(24px)', WebkitBackdropFilter: 'blur(24px)',
+          border: '1px solid rgba(234,88,12,0.6)', borderRadius: '20px',
+          display: 'flex', flexDirection: 'column', position: 'relative',
+          animation: 'halo-pulse 3s ease-in-out infinite, float 6s ease-in-out infinite',
+          transform: hoverComplet ? 'scale(1.02)' : undefined,
+          transition: 'transform 0.3s ease',
+        }}
+      >
+        <div style={{
+          position: 'absolute', top: '20px', right: '20px',
+          background: '#ea580c', color: '#0D0D0B',
+          fontSize: '11px', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase',
+          padding: '4px 14px', borderRadius: '20px',
+          animation: 'badge-glow 2s ease-in-out infinite',
+        }}>Tout inclus</div>
+        <div style={{ fontSize: '11px', fontWeight: 500, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#ea580c', marginBottom: '8px' }}>Pro</div>
+        <div style={{ display: 'flex', alignItems: 'baseline', gap: '4px', marginBottom: '4px' }}>
+          <span style={{ fontSize: '48px', fontWeight: 500, lineHeight: 1, color: '#F0EDE6', fontFamily: 'var(--font-syne), sans-serif' }}>18,90€</span>
+          <span style={{ fontSize: '18px', color: '#8A8880' }}>/mois</span>
+        </div>
+        <div style={{ fontSize: '13px', color: '#8A8880', marginBottom: '24px' }}>Sans engagement · Résiliable à tout moment</div>
+        <hr style={{ border: 'none', borderTop: '1px solid #2a2a27', margin: '0 0 24px 0' }} />
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '32px', flex: 1 }}>
+          {featuresComplet.map((f) => (
+            <div key={f} style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '13px', color: '#F0EDE6' }}>
+              {CHECK_ICON_ACCENT}
+              {f}
+            </div>
+          ))}
+        </div>
+        <a
+          href="/dashboard"
+          onMouseEnter={() => setHoverBtnComplet(true)}
+          onMouseLeave={() => setHoverBtnComplet(false)}
+          style={{
+            display: 'block', textAlign: 'center', padding: '14px 32px',
+            background: '#ea580c', color: '#fff',
+            border: 'none', borderRadius: '10px',
+            fontSize: '15px', fontWeight: 700,
+            fontFamily: 'var(--font-syne), sans-serif', textDecoration: 'none',
+            cursor: 'pointer',
+            animation: 'btn-glow 2s ease-in-out infinite',
+            transform: hoverBtnComplet ? 'scale(1.05)' : 'scale(1)',
+            transition: 'transform 0.2s',
+          }}
+        >
+          Commencer →
+        </a>
+      </div>
+
+    </div>
+  )
+}
 
 export default function Home() {
   useEffect(() => {
@@ -54,21 +189,25 @@ export default function Home() {
       {/* NAV */}
       <nav style={{ position: 'fixed', top: 0, left: 0, right: 0, zIndex: 100, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 60px', height: '70px', background: 'transparent', border: 'none' }}>
         <a className="logo" href="#">
-          <div className="logo-mark">
-            <svg viewBox="0 0 38 38" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <rect width="38" height="38" rx="10" fill="url(#lg)" />
-              <path d="M10 28V12h8c2.2 0 3.9.5 5 1.5 1.2 1 1.8 2.3 1.8 4 0 1-.3 1.9-.8 2.6-.5.7-1.2 1.2-2 1.5 1 .2 1.8.7 2.4 1.5.6.8.9 1.8.9 3 0 1.8-.6 3.2-1.9 4.2-1.2 1-3 1.4-5.3 1.4H10zm3.5-9.5h4.2c1.1 0 2-.2 2.6-.7.6-.5.9-1.2.9-2.1 0-1-.3-1.7-.9-2.2-.6-.5-1.5-.7-2.8-.7h-4v5.7zm0 7.2h4.6c1.2 0 2.2-.3 2.8-.8.7-.5 1-1.3 1-2.3 0-1-.3-1.8-1-2.3-.6-.5-1.6-.8-2.9-.8h-4.5V25.7z" fill="white" />
-              <defs>
-                <linearGradient id="lg" x1="0" y1="0" x2="38" y2="38" gradientUnits="userSpaceOnUse">
-                  <stop stopColor="#FF6B35" />
-                  <stop offset="1" stopColor="#FF9A5C" />
-                </linearGradient>
-              </defs>
-            </svg>
-          </div>
-          <div className="logo-text">
-            <span className="logo-the">the</span>
-            <span className="logo-name">Builder</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '3px', flexShrink: 0 }}>
+              <div style={{ display: 'flex', gap: '3px' }}>
+                <div style={{ width: '18px', height: '8px', borderRadius: '2px', background: '#ea580c' }} />
+                <div style={{ width: '12px', height: '8px', borderRadius: '2px', background: '#ea580c', opacity: 0.6 }} />
+              </div>
+              <div style={{ display: 'flex', gap: '3px' }}>
+                <div style={{ width: '12px', height: '8px', borderRadius: '2px', background: '#ea580c', opacity: 0.6 }} />
+                <div style={{ width: '18px', height: '8px', borderRadius: '2px', background: '#ea580c' }} />
+              </div>
+              <div style={{ display: 'flex', gap: '3px' }}>
+                <div style={{ width: '18px', height: '8px', borderRadius: '2px', background: '#ea580c', opacity: 0.8 }} />
+                <div style={{ width: '12px', height: '8px', borderRadius: '2px', background: '#ea580c', opacity: 0.5 }} />
+              </div>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', lineHeight: 1.1 }}>
+              <span style={{ fontFamily: 'var(--font-syne)', fontWeight: 400, fontSize: '0.6rem', letterSpacing: '0.2em', color: '#8A8880' }}>THE</span>
+              <span style={{ fontFamily: 'var(--font-syne)', fontWeight: 800, fontSize: '1rem', letterSpacing: '0.05em', color: '#F0EDE6' }}>BUILDER</span>
+            </div>
           </div>
         </a>
         <div className="nav-right">
@@ -94,7 +233,7 @@ export default function Home() {
         </p>
 
         <div className="hero-price">
-          <span className="price-val">19€/mois</span>
+          <span className="price-val">dès 11,90€/mois</span>
         </div>
 
         <div className="hero-cta">
@@ -169,46 +308,36 @@ export default function Home() {
       </section>
 
       {/* PRICING */}
+      <style>{`
+        @keyframes halo-pulse {
+          0%, 100% { box-shadow: 0 0 30px rgba(234,88,12,0.3), 0 0 60px rgba(234,88,12,0.15); }
+          50%       { box-shadow: 0 0 50px rgba(234,88,12,0.5), 0 0 100px rgba(234,88,12,0.25); }
+        }
+        @keyframes halo-pulse-subtle {
+          0%, 100% { box-shadow: 0 0 20px rgba(255,255,255,0.04), 0 0 40px rgba(255,255,255,0.02); }
+          50%       { box-shadow: 0 0 30px rgba(255,255,255,0.08), 0 0 60px rgba(255,255,255,0.04); }
+        }
+        @keyframes btn-glow {
+          0%, 100% { box-shadow: 0 0 12px rgba(234,88,12,0.6), 0 4px 24px rgba(234,88,12,0.4); }
+          50%       { box-shadow: 0 0 24px rgba(234,88,12,0.9), 0 4px 40px rgba(234,88,12,0.6); }
+        }
+        @keyframes badge-glow {
+          0%, 100% { box-shadow: 0 0 8px rgba(234,88,12,0.5); }
+          50%       { box-shadow: 0 0 16px rgba(234,88,12,0.9); }
+        }
+        @keyframes float {
+          0%, 100% { transform: translateY(0px); }
+          50%       { transform: translateY(-6px); }
+        }
+      `}</style>
+
       <section id="tarifs" style={{ paddingTop: '80px', paddingBottom: '80px', position: 'relative', zIndex: 2 }}>
         <div className="section-header reveal">
           <div className="section-chip">Tarifs</div>
           <h2 className="section-title">Simple. Transparent. Honnête.</h2>
         </div>
-        <div style={{ maxWidth: '560px', margin: '32px auto 0', padding: '40px 48px', background: 'rgba(10, 10, 9, 0.75)', backdropFilter: 'blur(24px)', WebkitBackdropFilter: 'blur(24px)', border: '1px solid rgba(255,255,255,0.10)', borderRadius: '20px' }}>
 
-          {/* Label */}
-          <div style={{ fontSize: '11px', fontWeight: 500, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#8A8880', marginBottom: '24px' }}>Accès complet</div>
-
-          <hr style={{ border: 'none', borderTop: '1px solid #1E1E1C', margin: '0 0 24px 0' }} />
-
-          {/* Prix */}
-          <div style={{ display: 'flex', alignItems: 'baseline', gap: '4px' }}>
-            <span style={{ fontSize: '56px', fontWeight: 500, lineHeight: 1, color: '#F0EDE6', fontFamily: 'var(--font-syne), sans-serif' }}>19€</span>
-            <span style={{ fontSize: '20px', color: '#8A8880' }}>/mois</span>
-          </div>
-          <div style={{ fontSize: '13px', color: '#8A8880', marginTop: '6px', marginBottom: '24px' }}>Sans engagement · Résiliable à tout moment</div>
-
-          <hr style={{ border: 'none', borderTop: '1px solid #1E1E1C', margin: '0 0 24px 0' }} />
-
-          {/* Features */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px 16px', marginBottom: '32px' }}>
-            {['Chantiers illimités', 'CR PDF illimités', 'Comptabilité complète', 'Planning + sync calendrier', 'Import contacts Google', 'Support prioritaire'].map((f) => (
-              <div key={f} style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', color: '#F0EDE6' }}>
-                <svg width="16" height="16" viewBox="0 0 16 16" style={{ flexShrink: 0 }}>
-                  <circle cx="8" cy="8" r="7.5" fill="none" stroke="#333" />
-                  <polyline points="4.5,8 7,10.5 11.5,5.5" fill="none" stroke="#ea580c" strokeWidth="1.5" strokeLinecap="round" />
-                </svg>
-                {f}
-              </div>
-            ))}
-          </div>
-
-          {/* CTA */}
-          <a href="/login" style={{ display: 'block', textAlign: 'center', padding: '14px', background: '#F0EDE6', color: '#0D0D0B', borderRadius: '10px', fontSize: '15px', fontWeight: 600, fontFamily: 'var(--font-syne), sans-serif', textDecoration: 'none' }}>
-            Commencer maintenant →
-          </a>
-
-        </div>
+        <PricingCards />
       </section>
 
       {/* FEATURES */}
@@ -269,17 +398,26 @@ export default function Home() {
       {/* FOOTER */}
       <footer>
         <div className="footer-logo">
-          <svg viewBox="0 0 28 28" fill="none">
-            <rect width="28" height="28" rx="7" fill="url(#fl)" />
-            <path d="M7 21V9h6c1.6 0 2.9.4 3.7 1.1.9.7 1.3 1.7 1.3 2.9 0 .7-.2 1.4-.6 1.9-.4.5-.9.9-1.5 1.1.8.2 1.4.6 1.8 1.1.4.6.7 1.3.7 2.2 0 1.3-.5 2.4-1.4 3.1-.9.7-2.2 1-3.9 1H7zm2.6-7h3.1c.8 0 1.4-.2 1.9-.5.4-.4.7-.9.7-1.6 0-.7-.2-1.3-.7-1.6-.4-.3-1.1-.5-2-.5H9.6V14zm0 5.3h3.4c.9 0 1.6-.2 2.1-.6.5-.4.7-1 .7-1.7 0-.7-.2-1.3-.7-1.7-.5-.4-1.2-.6-2.2-.6H9.6v4.6z" fill="white" />
-            <defs>
-              <linearGradient id="fl" x1="0" y1="0" x2="28" y2="28" gradientUnits="userSpaceOnUse">
-                <stop stopColor="#FF6B35" />
-                <stop offset="1" stopColor="#FF9A5C" />
-              </linearGradient>
-            </defs>
-          </svg>
-          <span className="footer-name">The Builder</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '3px', flexShrink: 0 }}>
+              <div style={{ display: 'flex', gap: '3px' }}>
+                <div style={{ width: '18px', height: '8px', borderRadius: '2px', background: '#ea580c' }} />
+                <div style={{ width: '12px', height: '8px', borderRadius: '2px', background: '#ea580c', opacity: 0.6 }} />
+              </div>
+              <div style={{ display: 'flex', gap: '3px' }}>
+                <div style={{ width: '12px', height: '8px', borderRadius: '2px', background: '#ea580c', opacity: 0.6 }} />
+                <div style={{ width: '18px', height: '8px', borderRadius: '2px', background: '#ea580c' }} />
+              </div>
+              <div style={{ display: 'flex', gap: '3px' }}>
+                <div style={{ width: '18px', height: '8px', borderRadius: '2px', background: '#ea580c', opacity: 0.8 }} />
+                <div style={{ width: '12px', height: '8px', borderRadius: '2px', background: '#ea580c', opacity: 0.5 }} />
+              </div>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', lineHeight: 1.1 }}>
+              <span style={{ fontFamily: 'var(--font-syne)', fontWeight: 400, fontSize: '0.6rem', letterSpacing: '0.2em', color: '#8A8880' }}>THE</span>
+              <span style={{ fontFamily: 'var(--font-syne)', fontWeight: 800, fontSize: '1rem', letterSpacing: '0.05em', color: '#F0EDE6' }}>BUILDER</span>
+            </div>
+          </div>
         </div>
         <div className="footer-copy">© 2026 The Builder — Architectes &amp; MOEs</div>
       </footer>

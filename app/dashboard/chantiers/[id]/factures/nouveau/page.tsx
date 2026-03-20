@@ -7,6 +7,8 @@ import { createFacture } from '@/lib/supabase/factures'
 import { getDevis, calcTotaux, formatEur } from '@/lib/supabase/devis'
 import { createClient } from '@/lib/supabase/client'
 import { useToast } from '@/components/ToastProvider'
+import { usePlan } from '@/lib/usePlan'
+import UpgradeGate from '@/components/UpgradeGate'
 
 const inputStyle: React.CSSProperties = {
   width: '100%',
@@ -70,6 +72,7 @@ export default function NouvelleFacturePage() {
   const [loadingDevis, setLoadingDevis] = useState(!!devisId)
   const [statutOpen, setStatutOpen] = useState(false)
   const statutRef = useRef<HTMLDivElement>(null)
+  const { isComplet, loading: planLoading } = usePlan()
 
   useEffect(() => {
     function handleClick(e: MouseEvent) {
@@ -167,6 +170,9 @@ export default function NouvelleFacturePage() {
       </div>
     )
   }
+
+  if (planLoading) return null
+  if (!isComplet) return <UpgradeGate feature="Comptabilité" requiredPlan="complet" />
 
   return (
     <div className="page-enter" style={{ flex: 1, padding: '40px', overflowY: 'auto', maxWidth: '800px' }}>

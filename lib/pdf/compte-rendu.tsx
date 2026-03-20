@@ -205,13 +205,13 @@ export function CompteRenduPDF({
   return (
     <Document
       title={`Compte rendu — ${chantier.nom} — ${fmt(compteRendu.date_visite)}`}
-      author="Foreman"
+      author="The Builder"
     >
       <Page size="A4" style={styles.page}>
         {/* ── Header ── */}
         <View style={styles.header}>
           <View style={styles.headerLeft}>
-            <Text style={styles.logo}>FOREMAN</Text>
+            <Text style={styles.logo}>THE BUILDER</Text>
             <Text style={styles.headerSubtitle}>Compte rendu de visite de chantier</Text>
           </View>
           <View style={styles.headerRight}>
@@ -302,7 +302,7 @@ export function CompteRenduPDF({
 
         {/* ── Footer ── */}
         <View style={styles.footer} fixed>
-          <Text style={styles.footerAccent}>FOREMAN</Text>
+          <Text style={styles.footerAccent}>THE BUILDER</Text>
           <Text style={styles.footerText}>
             Généré le {new Date().toLocaleDateString('fr-FR')} · Confidentiel
           </Text>

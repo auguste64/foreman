@@ -10,6 +10,8 @@ import type { Client } from '@/lib/supabase/clients'
 import { useToast } from '@/components/ToastProvider'
 import DocumentPreview from '@/components/DocumentPreview'
 import CustomSelect from '@/components/CustomSelect'
+import UpgradeGate from '@/components/UpgradeGate'
+import { usePlan } from '@/lib/usePlan'
 
 const inputStyle: React.CSSProperties = {
   width: '100%', padding: '10px 14px', backgroundColor: '#0D0D0B',
@@ -131,6 +133,7 @@ export default function NouveauDevisPage() {
   const [selectedClientId, setSelectedClientId] = useState('')
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const { isComplet, loading: planLoading } = usePlan()
 
   useEffect(() => {
     async function init() {
@@ -199,6 +202,9 @@ export default function NouveauDevisPage() {
       setSaving(false)
     }
   }
+
+  if (planLoading) return null
+  if (!isComplet) return <UpgradeGate feature="Comptabilité (devis & factures)" requiredPlan="complet" />
 
   return (
     <div className="page-enter" style={{ flex: 1, padding: '40px', overflowY: 'auto' }}>

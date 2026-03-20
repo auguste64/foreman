@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import { useRouter, usePathname } from 'next/navigation'
 import { updateChantier, deleteChantier } from '@/lib/supabase/chantiers'
@@ -9,6 +9,7 @@ import { useToast } from '@/components/ToastProvider'
 import MiniCalendrier from './MiniCalendrier'
 import type { Chantier } from '@/lib/supabase/chantiers'
 import type { Artisan } from '@/lib/supabase/artisans'
+import { usePlan } from '@/lib/usePlan'
 
 const STATUTS = ['En cours', 'En pause', 'Terminé'] as const
 
@@ -40,6 +41,98 @@ const labelStyle: React.CSSProperties = {
   letterSpacing: '0.06em',
 }
 
+function ArtisanDropdown<T extends { id: string }>({
+  artisans,
+  value,
+  onChange,
+  placeholder,
+  labelFn,
+  style,
+}: {
+  artisans: T[]
+  value: string
+  onChange: (val: string) => void
+  placeholder: string
+  labelFn: (a: T) => string
+  style?: React.CSSProperties
+}) {
+  const [open, setOpen] = useState(false)
+  const ref = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    function handleClick(e: MouseEvent) {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false)
+    }
+    document.addEventListener('mousedown', handleClick)
+    return () => document.removeEventListener('mousedown', handleClick)
+  }, [])
+
+  const selected = artisans.find((a) => a.id === value)
+
+  return (
+    <div ref={ref} style={{ position: 'relative', ...style }}>
+      <button
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        style={{
+          width: '100%',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          background: '#111110',
+          border: '1px solid #1E1E1C',
+          borderRadius: '8px',
+          padding: '10px 14px',
+          color: selected ? '#ea580c' : '#F0EDE6',
+          fontSize: '14px',
+          fontFamily: 'var(--font-dm-sans), sans-serif',
+          cursor: 'pointer',
+          textAlign: 'left',
+        }}
+      >
+        <span style={{ color: selected ? '#ea580c' : '#8A8880' }}>
+          {selected ? labelFn(selected) : placeholder}
+        </span>
+        <span style={{ transform: open ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.2s', color: '#8A8880', marginLeft: '8px' }}>▾</span>
+      </button>
+      {open && (
+        <div style={{
+          position: 'absolute',
+          top: 'calc(100% + 4px)',
+          left: 0,
+          width: '100%',
+          background: '#111110',
+          border: '1px solid #1E1E1C',
+          borderRadius: '8px',
+          boxShadow: '0 8px 24px rgba(0,0,0,0.4)',
+          zIndex: 50,
+          overflow: 'hidden',
+        }}>
+          {artisans.map((a) => (
+            <div
+              key={a.id}
+              onClick={() => { onChange(a.id); setOpen(false) }}
+              style={{
+                padding: '10px 14px',
+                color: a.id === value ? '#ea580c' : '#F0EDE6',
+                cursor: 'pointer',
+                fontSize: '14px',
+                fontFamily: 'var(--font-dm-sans), sans-serif',
+                background: 'transparent',
+                transition: 'background 0.15s',
+              }}
+              onMouseEnter={(e) => (e.currentTarget.style.background = '#1E1E1C')}
+              onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
+            >
+              {labelFn(a)}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
 export default function ChantierDetail({ chantier }: { chantier: Chantier }) {
   const router = useRouter()
   const { showToast } = useToast()
@@ -60,7 +153,6 @@ export default function ChantierDetail({ chantier }: { chantier: Chantier }) {
   // Artisans
   const [artisans, setArtisans] = useState<Artisan[]>([])
   const [loadingArtisans, setLoadingArtisans] = useState(true)
-  const [showAjouterArtisan, setShowAjouterArtisan] = useState(false)
   const [tousArtisans, setTousArtisans] = useState<Artisan[]>([])
   const [selectedArtisan, setSelectedArtisan] = useState('')
   const [assigning, setAssigning] = useState(false)
@@ -73,6 +165,7 @@ export default function ChantierDetail({ chantier }: { chantier: Chantier }) {
 
   useEffect(() => {
     loadArtisans()
+    getArtisans().then(setTousArtisans).catch(() => {})
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
@@ -88,19 +181,6 @@ export default function ChantierDetail({ chantier }: { chantier: Chantier }) {
     }
   }
 
-  async function openAjouterArtisan() {
-    setShowAjouterArtisan(true)
-    setAssignError(null)
-    setSelectedArtisan('')
-    try {
-      const all = await getArtisans()
-      const assignedIds = new Set(artisans.map((a) => a.id))
-      setTousArtisans(all.filter((a) => !assignedIds.has(a.id)))
-    } catch {
-      setAssignError('Impossible de charger les artisans.')
-    }
-  }
-
   async function handleAssignerArtisan() {
     if (!selectedArtisan) return
     setAssigning(true)
@@ -108,7 +188,7 @@ export default function ChantierDetail({ chantier }: { chantier: Chantier }) {
     try {
       await assignerArtisan(chantier.id, selectedArtisan)
       await loadArtisans()
-      setShowAjouterArtisan(false)
+      setSelectedArtisan('')
       showToast('Artisan ajouté')
     } catch (err: unknown) {
       setAssignError(err instanceof Error ? err.message : "Erreur lors de l'assignation.")
@@ -155,13 +235,14 @@ export default function ChantierDetail({ chantier }: { chantier: Chantier }) {
   }
 
   const pathname = usePathname()
+  const { isComplet } = usePlan()
   const colors = STATUT_COLORS[chantier.statut] ?? STATUT_COLORS['En cours']
   const progression = chantier.statut === 'Terminé' ? 100 : chantier.statut === 'En pause' ? 30 : 65
 
   const tabItems = [
-    { label: 'Infos', href: `/dashboard/chantiers/${chantier.id}` },
-    { label: 'Devis', href: `/dashboard/chantiers/${chantier.id}/devis` },
-    { label: 'Factures', href: `/dashboard/chantiers/${chantier.id}/factures` },
+    { label: 'Infos', href: `/dashboard/chantiers/${chantier.id}`, pro: false },
+    { label: 'Devis', href: `/dashboard/chantiers/${chantier.id}/devis`, pro: true },
+    { label: 'Factures', href: `/dashboard/chantiers/${chantier.id}/factures`, pro: true },
   ]
 
   return (
@@ -222,6 +303,9 @@ export default function ChantierDetail({ chantier }: { chantier: Chantier }) {
               onMouseLeave={e => { if (!active) e.currentTarget.style.color = '#8A8880' }}
             >
               {tab.label}
+              {tab.pro && !isComplet && (
+                <span style={{ marginLeft: 5, background: '#1E1E1C', color: '#ea580c', fontSize: '9px', fontWeight: 600, padding: '2px 5px', borderRadius: '4px' }}>Pro</span>
+              )}
             </Link>
           )
         })}
@@ -453,36 +537,60 @@ export default function ChantierDetail({ chantier }: { chantier: Chantier }) {
           marginTop: '24px',
         }}
       >
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px' }}>
-          <h2
-            style={{
-              fontFamily: 'var(--font-syne), sans-serif',
-              fontSize: '16px',
-              fontWeight: 600,
-              color: '#F0EDE6',
-              margin: 0,
-            }}
-          >
-            Artisans assignés
-          </h2>
-          <button
-            onClick={openAjouterArtisan}
-            className="transition-all duration-200 hover:-translate-y-1 hover:shadow-[0_0_20px_rgba(249,115,22,0.4)] active:translate-y-0 active:shadow-none"
-            style={{
-              padding: '8px 14px',
-              backgroundColor: '#ea580c',
-              color: '#0D0D0B',
-              border: 'none',
-              borderRadius: '8px',
-              fontSize: '13px',
-              fontWeight: 600,
-              cursor: 'pointer',
-              fontFamily: 'var(--font-dm-sans), sans-serif',
-            }}
-          >
-            + Ajouter
-          </button>
-        </div>
+        <h2
+          style={{
+            fontFamily: 'var(--font-syne), sans-serif',
+            fontSize: '16px',
+            fontWeight: 600,
+            color: '#F0EDE6',
+            margin: '0 0 20px',
+          }}
+        >
+          Artisans assignés
+        </h2>
+
+        {(() => {
+          const availableArtisans = tousArtisans.filter((a) => !artisans.some((b) => b.id === a.id))
+          return availableArtisans.length > 0 ? (
+            <div style={{ display: 'flex', gap: '10px', alignItems: 'center', marginBottom: '20px' }}>
+              <div style={{ flex: 1 }}>
+                <ArtisanDropdown
+                  artisans={availableArtisans}
+                  value={selectedArtisan}
+                  onChange={setSelectedArtisan}
+                  placeholder="— Sélectionner un artisan —"
+                  labelFn={(a) => `${a.nom} · ${a.metier}`}
+                />
+              </div>
+              <button
+                onClick={handleAssignerArtisan}
+                disabled={assigning || !selectedArtisan}
+                className="transition-all duration-200 hover:-translate-y-1 hover:shadow-[0_0_20px_rgba(249,115,22,0.4)] active:translate-y-0 active:shadow-none"
+                style={{
+                  padding: '10px 16px',
+                  backgroundColor: !selectedArtisan ? '#2a2a27' : assigning ? '#9E8630' : '#ea580c',
+                  color: !selectedArtisan ? '#8A8880' : '#0D0D0B',
+                  border: 'none',
+                  borderRadius: '8px',
+                  fontSize: '13px',
+                  fontWeight: 600,
+                  cursor: assigning || !selectedArtisan ? 'not-allowed' : 'pointer',
+                  fontFamily: 'var(--font-dm-sans), sans-serif',
+                  whiteSpace: 'nowrap',
+                  flexShrink: 0,
+                }}
+              >
+                {assigning ? 'Ajout...' : '+ Ajouter'}
+              </button>
+            </div>
+          ) : null
+        })()}
+
+        {assignError && (
+          <p style={{ fontSize: '13px', color: '#E85447', marginBottom: '12px', fontFamily: 'var(--font-dm-sans), sans-serif' }}>
+            {assignError}
+          </p>
+        )}
 
         {loadingArtisans && (
           <p style={{ color: '#8A8880', fontSize: '13px', fontFamily: 'var(--font-dm-sans), sans-serif' }}>
@@ -553,90 +661,6 @@ export default function ChantierDetail({ chantier }: { chantier: Chantier }) {
           </div>
         )}
       </div>
-
-      {/* Modal: Ajouter un artisan */}
-      {showAjouterArtisan && (
-        <div
-          style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 50 }}
-          onClick={() => setShowAjouterArtisan(false)}
-        >
-          <div
-            style={{ backgroundColor: '#111110', border: '1px solid #1E1E1C', borderRadius: '12px', padding: '32px', maxWidth: '440px', width: '100%', margin: '0 24px' }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <h2 style={{ fontFamily: 'var(--font-syne), sans-serif', fontSize: '18px', fontWeight: 600, color: '#F0EDE6', marginBottom: '20px' }}>
-              Ajouter un artisan
-            </h2>
-
-            {tousArtisans.length > 0 ? (
-              <select
-                value={selectedArtisan}
-                onChange={(e) => setSelectedArtisan(e.target.value)}
-                style={{ ...inputStyle, cursor: 'pointer', marginBottom: '20px' }}
-                onFocus={(e) => (e.target.style.borderColor = '#ea580c')}
-                onBlur={(e) => (e.target.style.borderColor = '#1E1E1C')}
-              >
-                <option value="">— Sélectionner un artisan —</option>
-                {tousArtisans.map((a) => (
-                  <option key={a.id} value={a.id} style={{ backgroundColor: '#111110' }}>
-                    {a.nom} · {a.metier}
-                  </option>
-                ))}
-              </select>
-            ) : (
-              <p style={{ fontSize: '13px', color: '#8A8880', fontFamily: 'var(--font-dm-sans), sans-serif', marginBottom: '20px' }}>
-                Tous les artisans sont déjà assignés.
-              </p>
-            )}
-
-            {assignError && (
-              <p style={{ fontSize: '13px', color: '#E85447', marginBottom: '16px', fontFamily: 'var(--font-dm-sans), sans-serif' }}>
-                {assignError}
-              </p>
-            )}
-
-            <div style={{ display: 'flex', gap: '10px' }}>
-              <button
-                onClick={handleAssignerArtisan}
-                disabled={assigning || !selectedArtisan}
-                className="transition-all duration-200 hover:-translate-y-1 hover:shadow-[0_0_20px_rgba(249,115,22,0.4)] active:translate-y-0 active:shadow-none"
-                style={{
-                  flex: 1,
-                  padding: '10px',
-                  backgroundColor: !selectedArtisan ? '#5a5030' : assigning ? '#9E8630' : '#ea580c',
-                  color: '#0D0D0B',
-                  border: 'none',
-                  borderRadius: '8px',
-                  fontSize: '13px',
-                  fontWeight: 600,
-                  cursor: assigning || !selectedArtisan ? 'not-allowed' : 'pointer',
-                  fontFamily: 'var(--font-dm-sans), sans-serif',
-                }}
-              >
-                {assigning ? 'Ajout...' : 'Ajouter'}
-              </button>
-              <button
-                onClick={() => setShowAjouterArtisan(false)}
-                className="transition-all duration-200 hover:-translate-y-1 hover:shadow-[0_0_20px_rgba(249,115,22,0.4)] active:translate-y-0 active:shadow-none"
-                style={{
-                  flex: 1,
-                  padding: '10px',
-                  backgroundColor: 'transparent',
-                  color: '#8A8880',
-                  border: '1px solid #1E1E1C',
-                  borderRadius: '8px',
-                  fontSize: '13px',
-                  fontWeight: 500,
-                  cursor: 'pointer',
-                  fontFamily: 'var(--font-dm-sans), sans-serif',
-                }}
-              >
-                Annuler
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Planning */}
       <div

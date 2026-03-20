@@ -3,6 +3,7 @@
 import { useEffect, useState, useMemo } from 'react'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
+import UpgradeGate from '@/components/UpgradeGate'
 import {
   AreaChart, Area, BarChart, Bar, PieChart, Pie, Cell,
   XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend,
@@ -336,6 +337,7 @@ export default function FinancesPage() {
   }
 
   return (
+    <UpgradeGate requiredPlan="complet" feature="Analyse & statistiques">
     <div className="page-enter" style={{ flex: 1, padding: '40px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 32 }}>
 
       {/* Header */}
@@ -798,5 +800,6 @@ export default function FinancesPage() {
       </div>
 
     </div>
+    </UpgradeGate>
   )
 }

@@ -62,7 +62,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Type invalide' }, { status: 400 })
   }
 
-  const senderName = entreprise?.raison_sociale || 'Foreman'
+  const senderName = entreprise?.raison_sociale || 'The Builder'
 
   const { error: sendError } = await resend.emails.send({
     from: `${senderName} <onboarding@resend.dev>`,
@@ -71,7 +71,7 @@ export async function POST(req: NextRequest) {
     html: `
       <div style="font-family: sans-serif; max-width: 520px; margin: 0 auto; color: #2D2D2B;">
         <div style="background: #0D0D0B; padding: 24px 32px; border-radius: 8px 8px 0 0;">
-          <span style="font-size: 20px; font-weight: 800; letter-spacing: 3px; color: #ea580c;">FOREMAN</span>
+          <span style="font-size: 20px; font-weight: 800; letter-spacing: 3px; color: #ea580c;">THE BUILDER</span>
         </div>
         <div style="background: #f9f8f5; padding: 32px; border: 1px solid #e8e4dd; border-top: none; border-radius: 0 0 8px 8px;">
           <p style="margin: 0 0 16px; white-space: pre-wrap;">${body || `Veuillez trouver en pièce jointe le document ${docLabel}.`}</p>

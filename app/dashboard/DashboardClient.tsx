@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { useEffect, useState } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
+import { usePlan } from '@/lib/usePlan'
 import type { User } from '@supabase/supabase-js'
 
 const NAV_ITEMS: { id: string; label: string; icon: string; href: string; separator?: boolean }[] = [
@@ -156,6 +157,7 @@ export default function DashboardClient({
   prochainsEvenements: Evenement[]
 }) {
   const router = useRouter()
+  const { isComplet } = usePlan()
   const [greeting, setGreeting] = useState('')
   const [dateStr, setDateStr] = useState('')
   const [hoveredCard, setHoveredCard] = useState<number | null>(null)
@@ -304,22 +306,26 @@ export default function DashboardClient({
         >
           + Nouveau compte rendu
         </Link>
-        <Link
-          href="/dashboard/documents/devis/nouveau"
-          onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-3px)'; e.currentTarget.style.boxShadow = '0 0 28px rgba(249,115,22,0.55)'; }}
-          onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = 'none'; }}
-          style={{ display: 'inline-block', padding: '8px 14px', backgroundColor: 'transparent', color: '#F0EDE6', border: '1px solid #1E1E1C', borderRadius: '8px', fontSize: '13px', fontWeight: 500, textDecoration: 'none', fontFamily: 'var(--font-dm-sans), sans-serif', letterSpacing: '0.01em', transition: 'all 0.2s ease', whiteSpace: 'nowrap' }}
-        >
-          + Nouveau devis
-        </Link>
-        <Link
-          href="/dashboard/documents/factures/nouveau"
-          onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-3px)'; e.currentTarget.style.boxShadow = '0 0 28px rgba(249,115,22,0.55)'; }}
-          onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = 'none'; }}
-          style={{ display: 'inline-block', padding: '8px 14px', backgroundColor: 'transparent', color: '#F0EDE6', border: '1px solid #1E1E1C', borderRadius: '8px', fontSize: '13px', fontWeight: 500, textDecoration: 'none', fontFamily: 'var(--font-dm-sans), sans-serif', letterSpacing: '0.01em', transition: 'all 0.2s ease', whiteSpace: 'nowrap' }}
-        >
-          + Nouvelle facture
-        </Link>
+        {isComplet && (
+          <Link
+            href="/dashboard/documents/devis/nouveau"
+            onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-3px)'; e.currentTarget.style.boxShadow = '0 0 28px rgba(249,115,22,0.55)'; }}
+            onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = 'none'; }}
+            style={{ display: 'inline-block', padding: '8px 14px', backgroundColor: 'transparent', color: '#F0EDE6', border: '1px solid #1E1E1C', borderRadius: '8px', fontSize: '13px', fontWeight: 500, textDecoration: 'none', fontFamily: 'var(--font-dm-sans), sans-serif', letterSpacing: '0.01em', transition: 'all 0.2s ease', whiteSpace: 'nowrap' }}
+          >
+            + Nouveau devis
+          </Link>
+        )}
+        {isComplet && (
+          <Link
+            href="/dashboard/documents/factures/nouveau"
+            onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-3px)'; e.currentTarget.style.boxShadow = '0 0 28px rgba(249,115,22,0.55)'; }}
+            onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = 'none'; }}
+            style={{ display: 'inline-block', padding: '8px 14px', backgroundColor: 'transparent', color: '#F0EDE6', border: '1px solid #1E1E1C', borderRadius: '8px', fontSize: '13px', fontWeight: 500, textDecoration: 'none', fontFamily: 'var(--font-dm-sans), sans-serif', letterSpacing: '0.01em', transition: 'all 0.2s ease', whiteSpace: 'nowrap' }}
+          >
+            + Nouvelle facture
+          </Link>
+        )}
         <Link
           href="/dashboard/artisans/nouveau"
           onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-3px)'; e.currentTarget.style.boxShadow = '0 0 28px rgba(249,115,22,0.55)'; }}

@@ -5,6 +5,8 @@ import Link from 'next/link'
 import { useParams, useRouter } from 'next/navigation'
 import { getDevis, updateDevis, calcTotaux, formatEur } from '@/lib/supabase/devis'
 import { useToast } from '@/components/ToastProvider'
+import { usePlan } from '@/lib/usePlan'
+import UpgradeGate from '@/components/UpgradeGate'
 
 const inputStyle: React.CSSProperties = {
   width: '100%',
@@ -71,6 +73,7 @@ export default function ModifierDevisPage() {
   const [error, setError] = useState<string | null>(null)
   const [statutOpen, setStatutOpen] = useState(false)
   const statutRef = useRef<HTMLDivElement>(null)
+  const { isComplet, loading: planLoading } = usePlan()
 
   useEffect(() => {
     function handleClick(e: MouseEvent) {
@@ -156,6 +159,9 @@ export default function ModifierDevisPage() {
   if (loading) {
     return <div style={{ flex: 1, padding: '40px', color: '#8A8880', fontSize: '14px', fontFamily: 'var(--font-dm-sans), sans-serif' }}>Chargement…</div>
   }
+
+  if (planLoading) return null
+  if (!isComplet) return <UpgradeGate feature="Comptabilité" requiredPlan="complet" />
 
   return (
     <div className="page-enter" style={{ flex: 1, padding: '40px', overflowY: 'auto', maxWidth: '800px' }}>
