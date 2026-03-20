@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { updateCompteRendu, deleteCompteRendu } from '@/lib/supabase/comptes-rendus'
-import { useToast } from '@/components/ToastProvider'
+import { toast } from '@/components/Toast'
 import type { CompteRenduWithChantier, ObservationsData } from '@/lib/supabase/comptes-rendus'
 import MetierSelect from '@/components/MetierSelect'
 
@@ -163,7 +163,6 @@ function CustomDropdown({
 
 export default function CompteRenduDetail({ compteRendu: initial }: { compteRendu: CompteRenduWithChantier }) {
   const router = useRouter()
-  const { showToast } = useToast()
   const [cr, setCr] = useState(initial)
   const [editing, setEditing] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(false)
@@ -239,7 +238,7 @@ export default function CompteRenduDetail({ compteRendu: initial }: { compteRend
       setField('artisans_presents', [...form.artisans_presents, created.nom])
       setNewArtisan({ nom: '', email: '', telephone: '', metier: '' })
       setShowNewArtisan(false)
-      showToast('Artisan ajouté')
+      toast.success('Artisan ajouté')
     } finally {
       setCreatingArtisan(false)
     }
@@ -262,7 +261,7 @@ export default function CompteRenduDetail({ compteRendu: initial }: { compteRend
         travaux_a_faire: form.travaux_a_faire || null,
       })
       setCr({ ...updated, chantiers: cr.chantiers })
-      showToast('Compte rendu sauvegardé')
+      toast.success('Compte rendu sauvegardé')
       setEditing(false)
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Erreur lors de la sauvegarde.')
@@ -306,7 +305,7 @@ export default function CompteRenduDetail({ compteRendu: initial }: { compteRend
         throw new Error(data.error ?? 'Erreur envoi email')
       }
       setEmailSuccess(true)
-      showToast('Email envoyé')
+      toast.success('Email envoyé')
       setTimeout(() => { setShowEmailModal(false); setEmailSuccess(false); setEmailEmails([]); setEmailInput(''); setArtisanDropdownValue('') }, 2000)
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Erreur lors de l\'envoi.')

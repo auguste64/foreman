@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useParams, useRouter } from 'next/navigation'
 import { getDevis, updateDevisStatut, deleteDevis, calcTotaux, type Devis, type LigneDevis } from '@/lib/supabase/devis'
-import { useToast } from '@/components/ToastProvider'
+import { toast } from '@/components/Toast'
 import { usePlan } from '@/lib/usePlan'
 import UpgradeGate from '@/components/UpgradeGate'
 
@@ -33,7 +33,6 @@ export default function DevisDetailPage() {
   const chantierId = params.id as string
   const devisId = params.devisId as string
   const router = useRouter()
-  const { showToast } = useToast()
 
   const [devis, setDevis] = useState<(Devis & { lignes: LigneDevis[] }) | null>(null)
   const [loading, setLoading] = useState(true)
@@ -55,7 +54,7 @@ export default function DevisDetailPage() {
     try {
       await updateDevisStatut(devisId, statut)
       setDevis(p => p ? { ...p, statut: statut as Devis['statut'] } : p)
-      showToast('Statut mis à jour')
+      toast.success('Statut mis à jour')
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Erreur')
     } finally {
@@ -67,7 +66,7 @@ export default function DevisDetailPage() {
     setDeleting(true)
     try {
       await deleteDevis(devisId)
-      showToast('Devis supprimé')
+      toast.success('Devis supprimé')
       router.push(`/dashboard/chantiers/${chantierId}/devis`)
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Erreur')

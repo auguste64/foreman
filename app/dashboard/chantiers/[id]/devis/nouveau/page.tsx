@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { useParams, useRouter } from 'next/navigation'
 import { createDevis, calcTotaux, formatEur } from '@/lib/supabase/devis'
 import { createClient } from '@/lib/supabase/client'
-import { useToast } from '@/components/ToastProvider'
+import { toast } from '@/components/Toast'
 import { usePlan } from '@/lib/usePlan'
 import UpgradeGate from '@/components/UpgradeGate'
 
@@ -56,7 +56,6 @@ export default function NouveauDevisPage() {
   const params = useParams()
   const chantierId = params.id as string
   const router = useRouter()
-  const { showToast } = useToast()
 
   const today = new Date().toISOString().split('T')[0]
   const in30 = new Date(Date.now() + 30 * 86400000).toISOString().split('T')[0]
@@ -139,7 +138,7 @@ export default function NouveauDevisPage() {
         notes: form.notes,
         lignes: parsedLignes,
       })
-      showToast('Devis créé')
+      toast.success('Devis créé')
       router.push(`/dashboard/chantiers/${chantierId}/devis/${id}`)
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Erreur')

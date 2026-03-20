@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState, useMemo } from 'react'
-import { useToast } from '@/components/ToastProvider'
+import { toast } from '@/components/Toast'
 import type { GoogleContact } from '@/app/api/contacts/google/route'
 
 const lbl: React.CSSProperties = {
@@ -13,7 +13,6 @@ export default function GoogleContactsModal({ onClose, onImported }: {
   onClose: () => void
   onImported?: () => void
 }) {
-  const { showToast } = useToast()
   const [contacts, setContacts] = useState<GoogleContact[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -68,11 +67,11 @@ export default function GoogleContactsModal({ onClose, onImported }: {
       })
       if (!res.ok) throw new Error('Erreur lors de l\'import')
       const { created } = await res.json()
-      showToast(`${created} ${type === 'client' ? 'client' : 'artisan'}${created !== 1 ? 's' : ''} créé${created !== 1 ? 's' : ''}`)
+      toast.success(`${created} ${type === 'client' ? 'client' : 'artisan'}${created !== 1 ? 's' : ''} créé${created !== 1 ? 's' : ''}`)
       onImported?.()
       onClose()
     } catch (err: unknown) {
-      showToast(err instanceof Error ? err.message : 'Erreur')
+      toast.error(err instanceof Error ? err.message : 'Erreur')
     } finally {
       setImporting(false)
     }

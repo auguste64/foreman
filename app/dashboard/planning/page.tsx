@@ -4,7 +4,7 @@ import { useEffect, useState, useCallback, useRef, Children } from 'react'
 import type { ReactNode } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
-import { useToast } from '@/components/ToastProvider'
+import { toast } from '@/components/Toast'
 import {
   createEvenement, updateEvenement, deleteEvenement,
   TYPE_COLORS, TYPE_LABELS, TYPES,
@@ -12,6 +12,7 @@ import {
 import type { Evenement, TypeEvenement, CreateEvenementInput } from '@/lib/supabase/planning'
 import type { Chantier } from '@/lib/supabase/chantiers'
 import type { Artisan } from '@/lib/supabase/artisans'
+import { DateTimePicker } from '@/components/DateTimePicker'
 
 // ─── StyledSelect ──────────────────────────────────────────────────────────
 
@@ -442,7 +443,6 @@ function WeekView({
 // ─── Main component ────────────────────────────────────────────────────────
 
 export default function PlanningPage() {
-  const { showToast } = useToast()
   const searchParams = useSearchParams()
   const [view, setView]       = useState<'month' | 'week'>('month')
   const [anchor, setAnchor]   = useState(() => { const d = new Date(); d.setHours(0,0,0,0); return d })
@@ -455,6 +455,9 @@ export default function PlanningPage() {
   const [icalToken, setIcalToken]       = useState<string | null>(null)
   const [googleConnected, setGoogleConnected] = useState(false)
   const [syncing, setSyncing]           = useState(false)
+
+  // DateTimePicker modal
+  const [showDatePicker, setShowDatePicker] = useState(false)
 
   // Create modal
   const [showCreate, setShowCreate]   = useState(false)
@@ -496,9 +499,9 @@ export default function PlanningPage() {
   useEffect(() => {
     if (searchParams.get('google') === 'connected') {
       setGoogleConnected(true)
-      showToast('Google Calendar connecté')
+      toast.success('Google Calendar connecté')
     }
-  }, [searchParams, showToast])
+  }, [searchParams])
 
   // ── Load events
   const loadEvents = useCallback(async () => {
@@ -580,7 +583,7 @@ export default function PlanningPage() {
       setEvenements(prev => [...prev, ev].sort((a,b) => a.date_debut.localeCompare(b.date_debut)))
       setShowCreate(false)
       setCreateForm(emptyForm())
-      showToast('Événement créé')
+      toast.success('Événement créé')
     } catch (err: unknown) {
       setCreateError(err instanceof Error ? err.message : 'Erreur')
     } finally {
@@ -627,9 +630,9 @@ export default function PlanningPage() {
       const res = await fetch('/api/calendar/google/sync', { method: 'POST' })
       if (!res.ok) throw new Error('Erreur lors de la synchronisation')
       const { synced } = await res.json()
-      showToast(`${synced} événement${synced !== 1 ? 's' : ''} synchronisé${synced !== 1 ? 's' : ''}`)
+      toast.success(`${synced} événement${synced !== 1 ? 's' : ''} synchronisé${synced !== 1 ? 's' : ''}`)
     } catch {
-      showToast('Erreur de synchronisation')
+      toast.error('Erreur de synchronisation')
     } finally {
       setSyncing(false)
     }
@@ -675,7 +678,7 @@ export default function PlanningPage() {
             <button onClick={() => navigate(1)} style={{ padding: '4px 10px', backgroundColor: 'transparent', border: 'none', color: '#8A8880', cursor: 'pointer', fontSize: '16px', borderRadius: '4px' }}>→</button>
           </div>
           <button
-            onClick={() => { setCreateForm(emptyForm()); setCreateError(null); setShowCreate(true) }}
+            onClick={() => { setCreateError(null); setShowDatePicker(true) }}
             style={{ padding: '8px 16px', backgroundColor: '#ea580c', color: '#0D0D0B', border: 'none', borderRadius: '8px', fontSize: '13px', fontWeight: 600, cursor: 'pointer', fontFamily: 'var(--font-dm-sans), sans-serif', transition: 'all 0.2s ease' }}
             onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 0 24px rgba(249,115,22,0.5)'; }}
             onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = 'none'; }}
@@ -705,6 +708,29 @@ export default function PlanningPage() {
         <MonthView anchor={anchor} evenements={evenements} onOpenDetail={handleOpenDetail} onDayClick={handleDayClick} />
       ) : (
         <WeekView anchor={anchor} evenements={evenements} onOpenDetail={handleOpenDetail} onDayClick={handleDayClick} />
+      )}
+
+      {/* ── DateTimePicker modal ─────────────────────────────────────────── */}
+      {showDatePicker && (
+        <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 50 }}
+          onClick={() => setShowDatePicker(false)}>
+          <div onClick={e => e.stopPropagation()}>
+            <DateTimePicker
+              label="Nouvel événement"
+              onCancel={() => setShowDatePicker(false)}
+              onConfirm={(date, heureDebut, heureFin) => {
+                const y = date.getFullYear()
+                const m = String(date.getMonth() + 1).padStart(2, '0')
+                const d = String(date.getDate()).padStart(2, '0')
+                const dtLocal = `${y}-${m}-${d}T${heureDebut}`
+                const dtFin = `${y}-${m}-${d}T${heureFin}`
+                setCreateForm({ ...emptyForm(), date_debut_local: dtLocal, date_fin_local: dtFin })
+                setShowDatePicker(false)
+                setShowCreate(true)
+              }}
+            />
+          </div>
+        </div>
       )}
 
       {/* ── Create modal ─────────────────────────────────────────────────── */}
@@ -842,7 +868,7 @@ export default function PlanningPage() {
                 onClick={() => {
                   if (!icalToken) return
                   const url = `${window.location.origin}/api/calendar/${icalToken}`
-                  navigator.clipboard.writeText(url).then(() => showToast('URL copiée'))
+                  navigator.clipboard.writeText(url).then(() => toast.success('URL copiée'))
                 }}
                 disabled={!icalToken}
                 style={{ padding: '8px 16px', backgroundColor: icalToken ? 'rgba(249,115,22,0.12)' : 'transparent', color: icalToken ? '#ea580c' : '#8A8880', border: `1px solid ${icalToken ? '#ea580c' : '#1E1E1C'}`, borderRadius: '8px', fontSize: '12px', fontWeight: 600, cursor: icalToken ? 'pointer' : 'not-allowed', fontFamily: 'var(--font-dm-sans), sans-serif', whiteSpace: 'nowrap', transition: 'all 0.2s' }}
@@ -881,7 +907,7 @@ export default function PlanningPage() {
                     <button
                       onClick={async () => {
                         const res = await fetch('/api/calendar/google/disconnect', { method: 'POST' })
-                        if (res.ok) { setGoogleConnected(false); showToast('Google Calendar déconnecté') }
+                        if (res.ok) { setGoogleConnected(false); toast.success('Google Calendar déconnecté') }
                       }}
                       disabled={syncing}
                       style={{ padding: '8px 16px', backgroundColor: 'rgba(239,68,68,0.12)', color: '#EF4444', border: '1px solid #EF4444', borderRadius: '8px', fontSize: '12px', fontWeight: 600, cursor: syncing ? 'not-allowed' : 'pointer', fontFamily: 'var(--font-dm-sans), sans-serif', whiteSpace: 'nowrap', transition: 'all 0.2s' }}

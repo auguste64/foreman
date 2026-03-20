@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { getProfile, upsertProfile } from '@/lib/supabase/profiles'
-import { useToast } from '@/components/ToastProvider'
+import { toast } from '@/components/Toast'
 
 const inputStyle: React.CSSProperties = {
   width: '100%',
@@ -39,7 +39,6 @@ const blur = (e: React.FocusEvent<HTMLInputElement>) => {
 }
 
 export default function ParametresPage() {
-  const { showToast } = useToast()
   const [userId, setUserId] = useState<string | null>(null)
   const [email, setEmail] = useState('')
   const [loading, setLoading] = useState(true)
@@ -127,7 +126,7 @@ export default function ParametresPage() {
         )
       }
       await Promise.all(ops)
-      showToast('Profil sauvegardé')
+      toast.success('Profil sauvegardé')
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : String(err)
       setSaveError(msg)
@@ -151,7 +150,7 @@ export default function ParametresPage() {
       const supabase = createClient()
       const { error } = await supabase.auth.updateUser({ password: pwForm.password })
       if (error) throw error
-      showToast('Mot de passe modifié')
+      toast.success('Mot de passe modifié')
       setPwForm({ password: '', confirm: '' })
     } catch (err: unknown) {
       setPwError(err instanceof Error ? err.message : 'Erreur')

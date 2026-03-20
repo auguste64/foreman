@@ -7,7 +7,8 @@ import { createClient } from '@/lib/supabase/client'
 import { createFactureDoc, calcTotauxDoc, formatEurDoc } from '@/lib/supabase/documents'
 import { clientDisplayName, clientDisplayEmail, clientDisplayAdresse } from '@/lib/supabase/clients'
 import type { Client } from '@/lib/supabase/clients'
-import { useToast } from '@/components/ToastProvider'
+import { toast } from '@/components/Toast'
+import { DatePickerOverlay, formatDateDisplay, dateToStr } from '@/components/DatePicker'
 import DocumentPreview from '@/components/DocumentPreview'
 import CustomSelect from '@/components/CustomSelect'
 import UpgradeGate from '@/components/UpgradeGate'
@@ -116,7 +117,6 @@ function LigneCard({ ligne, canDelete, onChange, onDelete }: {
 
 export default function NouvelleFacturePage() {
   const router = useRouter()
-  const { showToast } = useToast()
 
   const today = new Date().toISOString().split('T')[0]
   const in30 = new Date(Date.now() + 30 * 86400000).toISOString().split('T')[0]
@@ -133,6 +133,7 @@ export default function NouvelleFacturePage() {
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const { isComplet, loading: planLoading } = usePlan()
+  const [datePickerField, setDatePickerField] = useState<'date_emission' | 'date_echeance' | null>(null)
 
   useEffect(() => {
     async function init() {
@@ -196,7 +197,7 @@ export default function NouvelleFacturePage() {
         envoye_at: null,
         lignes: parsedLignes,
       })
-      showToast('Facture créée')
+      toast.success('Facture créée')
       router.push(`/dashboard/documents/factures/${id}`)
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Erreur')
@@ -245,11 +246,21 @@ export default function NouvelleFacturePage() {
               </div>
               <div>
                 <label style={labelStyle}>Date d&apos;émission</label>
-                <input type="date" value={form.date_emission} onChange={set('date_emission')} onFocus={focus} onBlur={blur} style={{ ...inputStyle, colorScheme: 'dark' }} />
+                <button type="button" onClick={() => setDatePickerField('date_emission')}
+                  style={{ ...inputStyle, textAlign: 'left', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'space-between' } as React.CSSProperties}
+                  onMouseEnter={e => e.currentTarget.style.borderColor = '#ea580c'} onMouseLeave={e => e.currentTarget.style.borderColor = '#1E1E1C'}>
+                  <span style={{ color: form.date_emission ? '#F0EDE6' : '#8A8880' }}>{form.date_emission ? formatDateDisplay(form.date_emission) : 'Choisir…'}</span>
+                  <span style={{ color: '#ea580c', fontSize: '12px' }}>▼</span>
+                </button>
               </div>
               <div>
                 <label style={labelStyle}>Date d&apos;échéance</label>
-                <input type="date" value={form.date_echeance} onChange={set('date_echeance')} onFocus={focus} onBlur={blur} style={{ ...inputStyle, colorScheme: 'dark' }} />
+                <button type="button" onClick={() => setDatePickerField('date_echeance')}
+                  style={{ ...inputStyle, textAlign: 'left', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'space-between' } as React.CSSProperties}
+                  onMouseEnter={e => e.currentTarget.style.borderColor = '#ea580c'} onMouseLeave={e => e.currentTarget.style.borderColor = '#1E1E1C'}>
+                  <span style={{ color: form.date_echeance ? '#F0EDE6' : '#8A8880' }}>{form.date_echeance ? formatDateDisplay(form.date_echeance) : 'Choisir…'}</span>
+                  <span style={{ color: '#ea580c', fontSize: '12px' }}>▼</span>
+                </button>
               </div>
             </div>
           </Card>
@@ -380,6 +391,14 @@ export default function NouvelleFacturePage() {
           />
         </div>
       </div>
+      {datePickerField && (
+        <DatePickerOverlay
+          label={datePickerField === 'date_emission' ? "Date d'émission" : "Date d'échéance"}
+          initialDate={form[datePickerField] ? new Date(form[datePickerField] + 'T12:00:00') : undefined}
+          onCancel={() => setDatePickerField(null)}
+          onConfirm={(date) => { setForm(prev => ({ ...prev, [datePickerField!]: dateToStr(date) })); setDatePickerField(null) }}
+        />
+      )}
     </div>
   )
 }

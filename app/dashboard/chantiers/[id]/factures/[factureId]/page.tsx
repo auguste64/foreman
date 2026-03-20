@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { useParams, useRouter } from 'next/navigation'
 import { getFacture, updateFactureStatut, deleteFacture, type Facture, type LigneFacture } from '@/lib/supabase/factures'
 import { calcTotaux } from '@/lib/supabase/devis'
-import { useToast } from '@/components/ToastProvider'
+import { toast } from '@/components/Toast'
 import { usePlan } from '@/lib/usePlan'
 import UpgradeGate from '@/components/UpgradeGate'
 
@@ -28,7 +28,6 @@ export default function FactureDetailPage() {
   const chantierId = params.id as string
   const factureId = params.factureId as string
   const router = useRouter()
-  const { showToast } = useToast()
 
   const [facture, setFacture] = useState<(Facture & { lignes: LigneFacture[] }) | null>(null)
   const [loading, setLoading] = useState(true)
@@ -50,7 +49,7 @@ export default function FactureDetailPage() {
     try {
       await updateFactureStatut(factureId, statut)
       setFacture(p => p ? { ...p, statut: statut as Facture['statut'] } : p)
-      showToast('Statut mis à jour')
+      toast.success('Statut mis à jour')
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Erreur')
     } finally {
@@ -62,7 +61,7 @@ export default function FactureDetailPage() {
     setDeleting(true)
     try {
       await deleteFacture(factureId)
-      showToast('Facture supprimée')
+      toast.success('Facture supprimée')
       router.push(`/dashboard/chantiers/${chantierId}/factures`)
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Erreur')

@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import { useParams, useRouter } from 'next/navigation'
 import { getDevis, updateDevis, calcTotaux, formatEur } from '@/lib/supabase/devis'
-import { useToast } from '@/components/ToastProvider'
+import { toast } from '@/components/Toast'
 import { usePlan } from '@/lib/usePlan'
 import UpgradeGate from '@/components/UpgradeGate'
 
@@ -56,7 +56,6 @@ export default function ModifierDevisPage() {
   const chantierId = params.id as string
   const devisId = params.devisId as string
   const router = useRouter()
-  const { showToast } = useToast()
 
   const [form, setForm] = useState({
     numero: '',
@@ -147,7 +146,7 @@ export default function ModifierDevisPage() {
         notes: form.notes,
         lignes: parsedLignes,
       })
-      showToast('Devis mis à jour')
+      toast.success('Devis mis à jour')
       router.push(`/dashboard/chantiers/${chantierId}/devis/${devisId}`)
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Erreur')

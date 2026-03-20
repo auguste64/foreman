@@ -12,6 +12,12 @@ const STATUT_COLORS: Record<string, { bg: string; text: string }> = {
   'En pause': { bg: 'rgba(251,191,36,0.1)', text: '#fbbf24' },
 }
 
+const AVANCEMENT: Record<string, number> = {
+  'En cours': 60,
+  'Terminé': 100,
+  'En pause': 30,
+}
+
 type SortChantier = 'date_desc' | 'date_asc' | 'nom_asc' | 'nom_desc' | 'statut'
 
 export default function ChantiersPage() {
@@ -103,8 +109,9 @@ export default function ChantiersPage() {
 
       {!loading && chantiers.length > 0 && (
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '24px' }}>
-          {sorted.map((c) => {
+          {sorted.map((c, index) => {
             const colors = STATUT_COLORS[c.statut] ?? STATUT_COLORS['En cours']
+            const avancement = AVANCEMENT[c.statut] ?? 20
             return (
               <Link
                 key={c.id}
@@ -136,9 +143,16 @@ export default function ChantiersPage() {
                   <p style={{ fontSize: '13px', color: '#7A7870', fontFamily: 'var(--font-dm-sans), sans-serif', margin: '0 0 4px' }}>
                     {c.adresse}
                   </p>
-                  <p style={{ fontSize: '13px', color: '#8A8880', fontFamily: 'var(--font-dm-sans), sans-serif', margin: '0 0 20px' }}>
+                  <p style={{ fontSize: '13px', color: '#8A8880', fontFamily: 'var(--font-dm-sans), sans-serif', margin: '0 0 12px' }}>
                     {new Date(c.date_debut).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}
                   </p>
+
+                  <div style={{ background: '#1E1E1C', borderRadius: '4px', height: '4px', overflow: 'hidden' }}>
+                    <div
+                      style={{ height: '100%', background: '#ea580c', borderRadius: '4px', width: '0%', transition: 'width 1s cubic-bezier(0.4, 0, 0.2, 1)' }}
+                      ref={(el) => { if (el) setTimeout(() => { el.style.width = avancement + '%' }, 100 + index * 80) }}
+                    />
+                  </div>
 
                 </div>
               </Link>

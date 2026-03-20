@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { createEvenement, deleteEvenement, TYPE_COLORS, TYPE_LABELS, TYPES } from '@/lib/supabase/planning'
-import { useToast } from '@/components/ToastProvider'
+import { toast } from '@/components/Toast'
 import type { Evenement, TypeEvenement, CreateEvenementInput } from '@/lib/supabase/planning'
 import type { Artisan } from '@/lib/supabase/artisans'
 
@@ -58,7 +58,6 @@ const b = (e: React.FocusEvent<HTMLElement>) => { (e.target as HTMLElement).styl
 interface Props { chantierId: string }
 
 export default function MiniCalendrier({ chantierId }: Props) {
-  const { showToast } = useToast()
   const today = new Date()
   const [year,  setYear]  = useState(today.getFullYear())
   const [month, setMonth] = useState(today.getMonth())
@@ -136,7 +135,7 @@ export default function MiniCalendrier({ chantierId }: Props) {
       })
       setEvenements(prev => [...prev, ev].sort((a,b) => a.date_debut.localeCompare(b.date_debut)))
       setShowCreate(false)
-      showToast('Événement créé')
+      toast.success('Événement créé')
     } catch (err: unknown) {
       setCreateError(err instanceof Error ? err.message : 'Erreur')
     } finally {

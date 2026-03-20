@@ -6,7 +6,7 @@ import { useParams, useRouter, useSearchParams } from 'next/navigation'
 import { createFacture } from '@/lib/supabase/factures'
 import { getDevis, calcTotaux, formatEur } from '@/lib/supabase/devis'
 import { createClient } from '@/lib/supabase/client'
-import { useToast } from '@/components/ToastProvider'
+import { toast } from '@/components/Toast'
 import { usePlan } from '@/lib/usePlan'
 import UpgradeGate from '@/components/UpgradeGate'
 
@@ -52,7 +52,6 @@ export default function NouvelleFacturePage() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const devisId = searchParams.get('devis_id')
-  const { showToast } = useToast()
 
   const today = new Date().toISOString().split('T')[0]
   const in30 = new Date(Date.now() + 30 * 86400000).toISOString().split('T')[0]
@@ -154,7 +153,7 @@ export default function NouvelleFacturePage() {
         notes: form.notes,
         lignes: parsedLignes,
       })
-      showToast('Facture créée')
+      toast.success('Facture créée')
       router.push(`/dashboard/chantiers/${chantierId}/factures/${id}`)
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Erreur')

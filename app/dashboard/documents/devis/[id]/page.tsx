@@ -6,7 +6,7 @@ import { useParams, useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { getDevisDoc, createFactureDoc, formatEurDoc, fmtDate, calcTotauxDoc } from '@/lib/supabase/documents'
 import type { DevisDoc, DevisLigneDoc } from '@/lib/supabase/documents'
-import { useToast } from '@/components/ToastProvider'
+import { toast } from '@/components/Toast'
 import CustomSelect from '@/components/CustomSelect'
 import UpgradeGate from '@/components/UpgradeGate'
 import { usePlan } from '@/lib/usePlan'
@@ -23,7 +23,6 @@ export default function DevisDetailPage() {
   const params = useParams()
   const id = params.id as string
   const router = useRouter()
-  const { showToast } = useToast()
 
   const [devis, setDevis] = useState<DevisDoc | null>(null)
   const [lignes, setLignes] = useState<DevisLigneDoc[]>([])
@@ -85,10 +84,10 @@ export default function DevisDetailPage() {
         lignes: lignes.map(l => ({ libelle: l.libelle, quantite: l.quantite, unite: l.unite, prix_unitaire: l.prix_unitaire, tva_taux: l.tva_taux })),
       })
       await supabase.from('devis').update({ statut: 'accepte' }).eq('id', devis.id)
-      showToast('Facture créée')
+      toast.success('Facture créée')
       router.push(`/dashboard/documents/factures/${fid}`)
     } catch (err: unknown) {
-      showToast(err instanceof Error ? err.message : 'Erreur')
+      toast.error(err instanceof Error ? err.message : 'Erreur')
       setConverting(false)
     }
   }
@@ -98,13 +97,13 @@ export default function DevisDetailPage() {
     const supabase = createClient()
     await supabase.from('devis').update({ statut }).eq('id', devis.id)
     setDevis(p => p ? { ...p, statut: statut as DevisDoc['statut'] } : p)
-    showToast('Statut mis à jour')
+    toast.success('Statut mis à jour')
   }
 
   async function handleDelete() {
     const supabase = createClient()
     await supabase.from('devis').delete().eq('id', id)
-    showToast('Devis supprimé')
+    toast.success('Devis supprimé')
     router.push('/dashboard/documents')
   }
 
@@ -119,13 +118,13 @@ export default function DevisDetailPage() {
       })
       const data = await res.json()
       if (!res.ok) throw new Error(data.error)
-      showToast('Email envoyé')
+      toast.success('Email envoyé')
       setShowEmail(false)
       if (devis?.statut === 'brouillon') {
         setDevis(p => p ? { ...p, statut: 'envoye', envoye_at: new Date().toISOString() } : p)
       }
     } catch (err: unknown) {
-      showToast(err instanceof Error ? err.message : 'Erreur envoi')
+      toast.error(err instanceof Error ? err.message : 'Erreur envoi')
     } finally {
       setSending(false)
     }

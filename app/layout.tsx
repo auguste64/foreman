@@ -3,6 +3,7 @@ import { Syne, DM_Sans, Plus_Jakarta_Sans } from 'next/font/google'
 import './globals.css'
 import './aurora.css'
 import { Providers } from './providers'
+import { ToastProvider } from '@/components/Toast'
 
 const syne = Syne({
   variable: '--font-syne',
@@ -27,7 +28,12 @@ const dmSans = DM_Sans({
 
 export const metadata: Metadata = {
   title: 'The Builder — Gestion de chantier',
-  description: 'SaaS de gestion de chantier pour architectes',
+  description: 'SaaS de gestion de chantier pour architectes et maîtres d\'œuvre',
+  icons: {
+    icon: '/favicon.svg',
+    shortcut: '/favicon.svg',
+    apple: '/favicon.svg',
+  },
 }
 
 export default function RootLayout({
@@ -47,6 +53,7 @@ export default function RootLayout({
         <div style={{ position: 'relative', zIndex: 1 }}>
           <Providers>{children}</Providers>
         </div>
+        <ToastProvider />
       </body>
     </html>
   )

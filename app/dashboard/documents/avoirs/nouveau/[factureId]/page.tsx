@@ -6,7 +6,7 @@ import { useParams, useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { getFactureDoc, createAvoirDoc, calcTotauxDoc, formatEurDoc } from '@/lib/supabase/documents'
 import type { FactureLigneDoc } from '@/lib/supabase/documents'
-import { useToast } from '@/components/ToastProvider'
+import { toast } from '@/components/Toast'
 import UpgradeGate from '@/components/UpgradeGate'
 import { usePlan } from '@/lib/usePlan'
 
@@ -34,7 +34,6 @@ export default function NouvelAvoirPage() {
   const params = useParams()
   const factureId = params.factureId as string
   const router = useRouter()
-  const { showToast } = useToast()
 
   const today = new Date().toISOString().split('T')[0]
 
@@ -103,7 +102,7 @@ export default function NouvelAvoirPage() {
         total_ttc: sousTotal,
         lignes: parsedLignes,
       })
-      showToast('Avoir créé')
+      toast.success('Avoir créé')
       router.push(`/dashboard/documents/factures/${factureId}`)
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Erreur')

@@ -6,7 +6,7 @@ import { Settings } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { formatEurDoc } from '@/lib/supabase/documents'
 import type { DevisDoc, FactureDoc, AvoirDoc } from '@/lib/supabase/documents'
-import { useToast } from '@/components/ToastProvider'
+import { toast } from '@/components/Toast'
 import CustomSelect from '@/components/CustomSelect'
 import SortPills from '@/components/SortPills'
 import UpgradeGate from '@/components/UpgradeGate'
@@ -71,7 +71,6 @@ function fmtDate(iso: string | null) {
 }
 
 export default function DocumentsPage() {
-  const { showToast } = useToast()
   const [tab, setTab] = useState<Tab>('devis')
   const [devis, setDevis] = useState<DevisDoc[]>([])
   const [factures, setFactures] = useState<FactureDoc[]>([])
@@ -157,14 +156,14 @@ export default function DocumentsPage() {
     const supabase = createClient()
     await supabase.from('devis').update({ statut }).eq('id', id)
     setDevis(prev => prev.map(d => d.id === id ? { ...d, statut: statut as DevisDoc['statut'] } : d))
-    showToast('Statut mis à jour')
+    toast.success('Statut mis à jour')
   }
 
   async function handleStatutFacture(id: string, statut: string) {
     const supabase = createClient()
     await supabase.from('factures').update({ statut }).eq('id', id)
     setFactures(prev => prev.map(f => f.id === id ? { ...f, statut: statut as FactureDoc['statut'] } : f))
-    showToast('Statut mis à jour')
+    toast.success('Statut mis à jour')
   }
 
   const thStyle: React.CSSProperties = {

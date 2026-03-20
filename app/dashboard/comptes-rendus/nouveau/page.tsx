@@ -5,9 +5,11 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import { createCompteRendu } from '@/lib/supabase/comptes-rendus'
-import { useToast } from '@/components/ToastProvider'
+import { toast } from '@/components/Toast'
 import type { Chantier } from '@/lib/supabase/chantiers'
 import PhotoAnnotator from '@/components/PhotoAnnotator'
+import { DateTimePicker } from '@/components/DateTimePicker'
+import { DatePickerOverlay, formatDateDisplay, dateToStr } from '@/components/DatePicker'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -105,7 +107,6 @@ const emptyProfile = (): Profile => ({ nom: '', societe: '', adresse: '', teleph
 
 export default function NouveauCompteRenduPage() {
   const router = useRouter()
-  const { showToast } = useToast()
   const [tab, setTab] = useState<Tab>('general')
   const [chantiers, setChantiers] = useState<Chantier[]>([])
   const [loading, setLoading] = useState(false)
@@ -122,6 +123,12 @@ export default function NouveauCompteRenduPage() {
   const [addArtisanOpen, setAddArtisanOpen] = useState(false)
   const addArtisanBtnRef = useRef<HTMLButtonElement>(null)
   const addArtisanDropdownRef = useRef<HTMLDivElement>(null)
+
+  const [showDatePickerCR, setShowDatePickerCR] = useState(false)
+  const [showDatePickerProchaine, setShowDatePickerProchaine] = useState(false)
+  const [heureVisite, setHeureVisite] = useState(9)
+  const [decisionDatePicker, setDecisionDatePicker] = useState<number | null>(null)
+  const [lotDatePicker, setLotDatePicker] = useState<{ index: number; field: 'debut' | 'fin' } | null>(null)
 
   const [form, setForm] = useState({
     chantier_id: '',
@@ -374,7 +381,7 @@ export default function NouveauCompteRenduPage() {
       if (user) {
         const nomChantier = selectedChantier?.nom ?? 'Chantier'
         const visitDate = new Date(form.date_visite)
-        visitDate.setHours(9, 0, 0, 0)
+        visitDate.setHours(heureVisite, 0, 0, 0)
         void Promise.resolve(supabase.from('evenements').insert({
           user_id: user.id, chantier_id: form.chantier_id,
           titre: `Visite — ${nomChantier}`, type: 'visite_architecte',
@@ -391,7 +398,7 @@ export default function NouveauCompteRenduPage() {
           })).catch(() => {})
         }
       }
-      showToast('Compte rendu créé')
+      toast.success('Compte rendu créé')
       router.push(`/dashboard/comptes-rendus/${cr.id}`)
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Une erreur est survenue.')
@@ -403,9 +410,9 @@ export default function NouveauCompteRenduPage() {
   const TABS: { id: Tab; label: string }[] = [
     { id: 'general',   label: 'Général' },
     { id: 'presences', label: 'Présences' },
+    { id: 'lots',      label: 'Lots' },
     { id: 'reserves',  label: reserves.length  ? `Réserves (${reserves.length})`   : 'Réserves'  },
     { id: 'decisions', label: decisions.length ? `Décisions (${decisions.length})` : 'Décisions' },
-    { id: 'lots',      label: 'Lots' },
     { id: 'photos',    label: photoPreviews.length ? `Photos (${photoPreviews.length})` : 'Photos' },
     { id: 'profil',    label: 'Profil' },
   ]
@@ -476,13 +483,34 @@ export default function NouveauCompteRenduPage() {
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
                     <div>
                       <label style={labelStyle}>Date de visite *</label>
-                      <input type="date" value={form.date_visite} onChange={(e) => setField('date_visite', e.target.value)} required
-                        style={{ ...inputStyle, colorScheme: 'dark' } as React.CSSProperties} onFocus={focus} onBlur={blur} />
+                      <button
+                        type="button"
+                        onClick={() => setShowDatePickerCR(true)}
+                        style={{ ...inputStyle, textAlign: 'left', cursor: 'pointer', background: '#0D0D0B', display: 'flex', alignItems: 'center', justifyContent: 'space-between' } as React.CSSProperties}
+                        onFocus={focus} onBlur={blur}
+                      >
+                        <span style={{ color: form.date_visite ? '#F0EDE6' : '#8A8880' }}>
+                          {form.date_visite
+                            ? `${new Date(form.date_visite + 'T12:00:00').toLocaleDateString('fr-FR', { weekday: 'short', day: 'numeric', month: 'short' })} — ${heureVisite}:00`
+                            : 'Choisir date & heure…'}
+                        </span>
+                        <span style={{ color: '#ea580c', fontSize: '12px' }}>📅</span>
+                      </button>
                     </div>
                     <div>
                       <label style={labelStyle}>Prochaine visite</label>
-                      <input type="date" value={form.date_prochaine_visite} onChange={(e) => setField('date_prochaine_visite', e.target.value)}
-                        style={{ ...inputStyle, colorScheme: 'dark' } as React.CSSProperties} onFocus={focus} onBlur={blur} />
+                      <button
+                        type="button"
+                        onClick={() => setShowDatePickerProchaine(true)}
+                        style={{ ...inputStyle, textAlign: 'left', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'space-between' } as React.CSSProperties}
+                        onMouseEnter={(e) => (e.currentTarget.style.borderColor = '#ea580c')}
+                        onMouseLeave={(e) => (e.currentTarget.style.borderColor = '#1E1E1C')}
+                      >
+                        <span style={{ color: form.date_prochaine_visite ? '#F0EDE6' : '#8A8880' }}>
+                          {form.date_prochaine_visite ? formatDateDisplay(form.date_prochaine_visite) : 'Choisir une date…'}
+                        </span>
+                        <span style={{ color: '#ea580c', fontSize: '12px' }}>▼</span>
+                      </button>
                     </div>
                   </div>
                   <div>
@@ -672,8 +700,15 @@ export default function NouveauCompteRenduPage() {
                         </div>
                         <div>
                           <label style={labelStyle}>Responsable</label>
-                          <input value={r.responsable} onChange={(e) => updateReserve(r.id, 'responsable', e.target.value)}
-                            placeholder="Entreprise / Artisan" style={{ ...inputStyle, fontSize: '13px' }} onFocus={focus} onBlur={blur} />
+                          <div style={{ position: 'relative' }}>
+                            <select value={r.responsable} onChange={(e) => updateReserve(r.id, 'responsable', e.target.value)}
+                              style={{ background: '#111110', border: '1px solid #1E1E1C', borderRadius: '8px', padding: '8px 32px 8px 12px', color: r.responsable ? '#F0EDE6' : '#8A8880', fontSize: '13px', width: '100%', appearance: 'none', WebkitAppearance: 'none', cursor: 'pointer', outline: 'none', fontFamily: 'var(--font-dm-sans), sans-serif' } as React.CSSProperties}
+                              onFocus={focus} onBlur={blur}>
+                              <option value="">— Sélectionner —</option>
+                              {allArtisans.map(a => <option key={a.id} value={a.nom} style={{ backgroundColor: '#111110' }}>{a.nom}{a.metier ? ` · ${a.metier}` : ''}</option>)}
+                            </select>
+                            <svg style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} width="12" height="8" viewBox="0 0 12 8" fill="none"><path d="M1 1l5 5 5-5" stroke="#8A8880" strokeWidth="1.5" strokeLinecap="round" /></svg>
+                          </div>
                         </div>
                       </div>
                       {/* Reserve photos */}
@@ -737,13 +772,24 @@ export default function NouveauCompteRenduPage() {
                       </div>
                       <div>
                         <label style={labelStyle}>Responsable</label>
-                        <input value={d.responsable} onChange={(e) => updateDecision(d.id, 'responsable', e.target.value)}
-                          placeholder="Nom / Société" style={{ ...inputStyle, fontSize: '13px' }} onFocus={focus} onBlur={blur} />
+                        <div style={{ position: 'relative' }}>
+                          <select value={d.responsable} onChange={(e) => updateDecision(d.id, 'responsable', e.target.value)}
+                            style={{ background: '#111110', border: '1px solid #1E1E1C', borderRadius: '8px', padding: '8px 32px 8px 12px', color: d.responsable ? '#F0EDE6' : '#8A8880', fontSize: '13px', width: '100%', appearance: 'none', WebkitAppearance: 'none', cursor: 'pointer', outline: 'none', fontFamily: 'var(--font-dm-sans), sans-serif' } as React.CSSProperties}
+                            onFocus={focus} onBlur={blur}>
+                            <option value="">— Sélectionner —</option>
+                            {allArtisans.map(a => <option key={a.id} value={a.nom} style={{ backgroundColor: '#111110' }}>{a.nom}{a.metier ? ` · ${a.metier}` : ''}</option>)}
+                          </select>
+                          <svg style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} width="12" height="8" viewBox="0 0 12 8" fill="none"><path d="M1 1l5 5 5-5" stroke="#8A8880" strokeWidth="1.5" strokeLinecap="round" /></svg>
+                        </div>
                       </div>
                       <div>
                         <label style={labelStyle}>Échéance</label>
-                        <input type="date" value={d.echeance} onChange={(e) => updateDecision(d.id, 'echeance', e.target.value)}
-                          style={{ ...inputStyle, colorScheme: 'dark', fontSize: '13px' } as React.CSSProperties} onFocus={focus} onBlur={blur} />
+                        <button type="button" onClick={() => setDecisionDatePicker(idx)}
+                          style={{ background: '#111110', border: '1px solid #1E1E1C', borderRadius: '8px', padding: '8px 12px', color: d.echeance ? '#F0EDE6' : '#8A8880', fontSize: '13px', cursor: 'pointer', textAlign: 'left', width: '100%', fontFamily: 'var(--font-dm-sans), sans-serif', display: 'flex', alignItems: 'center', justifyContent: 'space-between' } as React.CSSProperties}
+                          onMouseEnter={e => e.currentTarget.style.borderColor = '#ea580c'} onMouseLeave={e => e.currentTarget.style.borderColor = '#1E1E1C'}>
+                          <span>{d.echeance ? formatDateDisplay(d.echeance) : 'jj/mm/aaaa'}</span>
+                          <span style={{ color: '#ea580c', fontSize: '11px' }}>▼</span>
+                        </button>
                       </div>
                       <button type="button" onClick={() => deleteDecision(d.id)}
                         style={{ background: 'none', border: 'none', color: '#8A8880', cursor: 'pointer', fontSize: '18px', paddingBottom: '10px' }}>
@@ -786,22 +832,32 @@ export default function NouveauCompteRenduPage() {
                                 onBlur={(e) => { e.target.style.borderColor = 'transparent'; e.target.style.backgroundColor = 'transparent' }} />
                             </td>
                             <td style={{ padding: '6px 8px' }}>
-                              <input value={l.intervenant} onChange={(e) => updateLot(l.id, 'intervenant', e.target.value)} placeholder="Entreprise"
-                                style={cellInput}
-                                onFocus={(e) => { e.target.style.borderColor = '#ea580c'; e.target.style.backgroundColor = '#0D0D0B' }}
-                                onBlur={(e) => { e.target.style.borderColor = 'transparent'; e.target.style.backgroundColor = 'transparent' }} />
+                              <div style={{ position: 'relative' }}>
+                                <select value={l.intervenant} onChange={(e) => updateLot(l.id, 'intervenant', e.target.value)}
+                                  style={{ background: 'transparent', border: '1px solid #1E1E1C', borderRadius: '6px', padding: '4px 24px 4px 8px', color: l.intervenant ? '#F0EDE6' : '#8A8880', fontSize: '12px', width: '100%', appearance: 'none', WebkitAppearance: 'none', cursor: 'pointer', outline: 'none', fontFamily: 'var(--font-dm-sans), sans-serif' } as React.CSSProperties}
+                                  onFocus={(e) => { e.currentTarget.style.borderColor = '#ea580c'; e.currentTarget.style.background = '#0D0D0B' }}
+                                  onBlur={(e) => { e.currentTarget.style.borderColor = '#1E1E1C'; e.currentTarget.style.background = 'transparent' }}>
+                                  <option value="">— Artisan —</option>
+                                  {allArtisans.map(a => <option key={a.id} value={a.nom} style={{ backgroundColor: '#111110' }}>{a.nom}{a.metier ? ` · ${a.metier}` : ''}</option>)}
+                                </select>
+                                <svg style={{ position: 'absolute', right: 6, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} width="10" height="6" viewBox="0 0 12 8" fill="none"><path d="M1 1l5 5 5-5" stroke="#8A8880" strokeWidth="1.5" strokeLinecap="round" /></svg>
+                              </div>
                             </td>
                             <td style={{ padding: '6px 8px' }}>
-                              <input type="date" value={l.dateDemarrage} onChange={(e) => updateLot(l.id, 'dateDemarrage', e.target.value)}
-                                style={{ ...cellInput, colorScheme: 'dark' } as React.CSSProperties}
-                                onFocus={(e) => { e.target.style.borderColor = '#ea580c'; e.target.style.backgroundColor = '#0D0D0B' }}
-                                onBlur={(e) => { e.target.style.borderColor = 'transparent'; e.target.style.backgroundColor = 'transparent' }} />
+                              <button type="button" onClick={() => setLotDatePicker({ index: i, field: 'debut' })}
+                                style={{ background: 'transparent', border: '1px solid #1E1E1C', borderRadius: '6px', padding: '4px 8px', color: l.dateDemarrage ? '#F0EDE6' : '#8A8880', fontSize: '12px', cursor: 'pointer', whiteSpace: 'nowrap', fontFamily: 'var(--font-dm-sans), sans-serif', width: '100%', textAlign: 'left' }}
+                                onMouseEnter={e => { e.currentTarget.style.borderColor = '#ea580c'; e.currentTarget.style.background = '#0D0D0B' }}
+                                onMouseLeave={e => { e.currentTarget.style.borderColor = '#1E1E1C'; e.currentTarget.style.background = 'transparent' }}>
+                                {l.dateDemarrage ? formatDateDisplay(l.dateDemarrage) : 'jj/mm/aa'}
+                              </button>
                             </td>
                             <td style={{ padding: '6px 8px' }}>
-                              <input type="date" value={l.dateFin} onChange={(e) => updateLot(l.id, 'dateFin', e.target.value)}
-                                style={{ ...cellInput, colorScheme: 'dark' } as React.CSSProperties}
-                                onFocus={(e) => { e.target.style.borderColor = '#ea580c'; e.target.style.backgroundColor = '#0D0D0B' }}
-                                onBlur={(e) => { e.target.style.borderColor = 'transparent'; e.target.style.backgroundColor = 'transparent' }} />
+                              <button type="button" onClick={() => setLotDatePicker({ index: i, field: 'fin' })}
+                                style={{ background: 'transparent', border: '1px solid #1E1E1C', borderRadius: '6px', padding: '4px 8px', color: l.dateFin ? '#F0EDE6' : '#8A8880', fontSize: '12px', cursor: 'pointer', whiteSpace: 'nowrap', fontFamily: 'var(--font-dm-sans), sans-serif', width: '100%', textAlign: 'left' }}
+                                onMouseEnter={e => { e.currentTarget.style.borderColor = '#ea580c'; e.currentTarget.style.background = '#0D0D0B' }}
+                                onMouseLeave={e => { e.currentTarget.style.borderColor = '#1E1E1C'; e.currentTarget.style.background = 'transparent' }}>
+                                {l.dateFin ? formatDateDisplay(l.dateFin) : 'jj/mm/aa'}
+                              </button>
                             </td>
                             <td style={{ padding: '6px 8px', minWidth: '130px' }}>
                               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -1154,6 +1210,69 @@ export default function NouveauCompteRenduPage() {
           onSave={handleAnnotated}
           onClose={() => setAnnotatorState(null)}
         />
+      )}
+
+      {decisionDatePicker !== null && (
+        <DatePickerOverlay
+          label="Échéance de la décision"
+          initialDate={decisions[decisionDatePicker]?.echeance ? new Date(decisions[decisionDatePicker].echeance + 'T12:00:00') : undefined}
+          onCancel={() => setDecisionDatePicker(null)}
+          onConfirm={(date) => {
+            updateDecision(decisions[decisionDatePicker!].id, 'echeance', dateToStr(date))
+            setDecisionDatePicker(null)
+          }}
+        />
+      )}
+
+      {lotDatePicker !== null && (
+        <DatePickerOverlay
+          label={lotDatePicker.field === 'debut' ? 'Date de démarrage' : 'Date de fin'}
+          initialDate={(() => {
+            const lot = lots[lotDatePicker.index]
+            const val = lotDatePicker.field === 'debut' ? lot?.dateDemarrage : lot?.dateFin
+            return val ? new Date(val + 'T12:00:00') : undefined
+          })()}
+          onCancel={() => setLotDatePicker(null)}
+          onConfirm={(date) => {
+            const lot = lots[lotDatePicker!.index]
+            updateLot(lot.id, lotDatePicker!.field === 'debut' ? 'dateDemarrage' : 'dateFin', dateToStr(date))
+            setLotDatePicker(null)
+          }}
+        />
+      )}
+
+      {showDatePickerProchaine && (
+        <DatePickerOverlay
+          label="Prochaine visite"
+          initialDate={form.date_prochaine_visite ? new Date(form.date_prochaine_visite + 'T12:00:00') : undefined}
+          onCancel={() => setShowDatePickerProchaine(false)}
+          onConfirm={(date) => {
+            setField('date_prochaine_visite', dateToStr(date))
+            setShowDatePickerProchaine(false)
+          }}
+        />
+      )}
+
+      {/* ── DateTimePicker modal ───────────────────────────────────────── */}
+      {showDatePickerCR && (
+        <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9000 }}
+          onClick={() => setShowDatePickerCR(false)}>
+          <div onClick={e => e.stopPropagation()}>
+            <DateTimePicker
+              label="Date de visite"
+              initialDate={form.date_visite ? new Date(form.date_visite + 'T12:00:00') : undefined}
+              onCancel={() => setShowDatePickerCR(false)}
+              onConfirm={(date, heureDebut) => {
+                const y = date.getFullYear()
+                const m = String(date.getMonth() + 1).padStart(2, '0')
+                const d = String(date.getDate()).padStart(2, '0')
+                setField('date_visite', `${y}-${m}-${d}`)
+                setHeureVisite(parseInt(heureDebut.split(':')[0]))
+                setShowDatePickerCR(false)
+              }}
+            />
+          </div>
+        </div>
       )}
     </div>
   )

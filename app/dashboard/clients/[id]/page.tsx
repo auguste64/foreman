@@ -7,7 +7,7 @@ import { getClient, updateClient, deleteClient, clientDisplayName } from '@/lib/
 import type { Client } from '@/lib/supabase/clients'
 import { createClient as supabaseClient } from '@/lib/supabase/client'
 import { formatEurDoc } from '@/lib/supabase/documents'
-import { useToast } from '@/components/ToastProvider'
+import { toast } from '@/components/Toast'
 
 const inputStyle: React.CSSProperties = {
   width: '100%', padding: '10px 14px', backgroundColor: '#0D0D0B',
@@ -136,7 +136,6 @@ function initials(c: Client): string {
 export default function ClientDetailPage() {
   const params = useParams<{ id: string }>()
   const router = useRouter()
-  const { showToast } = useToast()
 
   const [client, setClient] = useState<Client | null>(null)
   const [editing, setEditing] = useState(false)
@@ -184,9 +183,9 @@ export default function ClientDetailPage() {
       const updated = await updateClient(client.id, form as Partial<Client>)
       setClient(updated)
       setEditing(false)
-      showToast('Client mis à jour')
+      toast.success('Client mis à jour')
     } catch (err: unknown) {
-      showToast(err instanceof Error ? err.message : 'Erreur')
+      toast.error(err instanceof Error ? err.message : 'Erreur')
     } finally {
       setSaving(false)
     }
@@ -196,10 +195,10 @@ export default function ClientDetailPage() {
     if (!client) return
     try {
       await deleteClient(client.id)
-      showToast('Client supprimé')
+      toast.success('Client supprimé')
       router.push('/dashboard/clients')
     } catch (err: unknown) {
-      showToast(err instanceof Error ? err.message : 'Erreur')
+      toast.error(err instanceof Error ? err.message : 'Erreur')
     }
   }
 

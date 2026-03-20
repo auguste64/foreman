@@ -5,11 +5,12 @@ import Link from 'next/link'
 import { useRouter, usePathname } from 'next/navigation'
 import { updateChantier, deleteChantier } from '@/lib/supabase/chantiers'
 import { getArtisansChantier, getArtisans, assignerArtisan, retirerArtisan } from '@/lib/supabase/artisans'
-import { useToast } from '@/components/ToastProvider'
+import { toast } from '@/components/Toast'
 import MiniCalendrier from './MiniCalendrier'
 import type { Chantier } from '@/lib/supabase/chantiers'
 import type { Artisan } from '@/lib/supabase/artisans'
 import { usePlan } from '@/lib/usePlan'
+import { DatePickerOverlay, formatDateDisplay, dateToStr } from '@/components/DatePicker'
 
 const STATUTS = ['En cours', 'En pause', 'Terminé'] as const
 
@@ -135,7 +136,6 @@ function ArtisanDropdown<T extends { id: string }>({
 
 export default function ChantierDetail({ chantier }: { chantier: Chantier }) {
   const router = useRouter()
-  const { showToast } = useToast()
   const [editing, setEditing] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(false)
   const [saving, setSaving] = useState(false)
@@ -157,6 +157,8 @@ export default function ChantierDetail({ chantier }: { chantier: Chantier }) {
   const [selectedArtisan, setSelectedArtisan] = useState('')
   const [assigning, setAssigning] = useState(false)
   const [assignError, setAssignError] = useState<string | null>(null)
+
+  const [showDatePickerEdit, setShowDatePickerEdit] = useState(false)
 
   function set(field: keyof typeof form) {
     return (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) =>
@@ -189,7 +191,7 @@ export default function ChantierDetail({ chantier }: { chantier: Chantier }) {
       await assignerArtisan(chantier.id, selectedArtisan)
       await loadArtisans()
       setSelectedArtisan('')
-      showToast('Artisan ajouté')
+      toast.success('Artisan ajouté')
     } catch (err: unknown) {
       setAssignError(err instanceof Error ? err.message : "Erreur lors de l'assignation.")
     } finally {
@@ -211,7 +213,7 @@ export default function ChantierDetail({ chantier }: { chantier: Chantier }) {
     setSaving(true)
     try {
       await updateChantier(chantier.id, form)
-      showToast('Chantier sauvegardé')
+      toast.success('Chantier sauvegardé')
       router.refresh()
       setEditing(false)
     } catch (err: unknown) {
@@ -225,10 +227,13 @@ export default function ChantierDetail({ chantier }: { chantier: Chantier }) {
     setDeleting(true)
     try {
       await deleteChantier(chantier.id)
-      router.push('/dashboard/chantiers')
-      router.refresh()
+      toast.success('Chantier supprimé')
+      setTimeout(() => {
+        router.push('/dashboard/chantiers')
+        router.refresh()
+      }, 1200)
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : 'Erreur lors de la suppression.')
+      toast.error(err instanceof Error ? err.message : 'Erreur lors de la suppression.')
       setDeleting(false)
       setConfirmDelete(false)
     }
@@ -429,14 +434,18 @@ export default function ChantierDetail({ chantier }: { chantier: Chantier }) {
             </div>
             <div>
               <label style={labelStyle}>Date de début</label>
-              <input
-                type="date"
-                value={form.date_debut}
-                onChange={set('date_debut')}
-                style={{ ...inputStyle, colorScheme: 'dark' }}
-                onFocus={(e) => (e.target.style.borderColor = '#ea580c')}
-                onBlur={(e) => (e.target.style.borderColor = '#1E1E1C')}
-              />
+              <button
+                type="button"
+                onClick={() => setShowDatePickerEdit(true)}
+                style={{ ...inputStyle, textAlign: 'left', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'space-between' } as React.CSSProperties}
+                onMouseEnter={(e) => (e.currentTarget.style.borderColor = '#ea580c')}
+                onMouseLeave={(e) => (e.currentTarget.style.borderColor = '#1E1E1C')}
+              >
+                <span style={{ color: form.date_debut ? '#F0EDE6' : '#8A8880' }}>
+                  {form.date_debut ? formatDateDisplay(form.date_debut) : 'Choisir une date…'}
+                </span>
+                <span style={{ color: '#ea580c', fontSize: '12px' }}>▼</span>
+              </button>
             </div>
             <div style={{ gridColumn: '1 / -1' }}>
               <label style={labelStyle}>Adresse</label>
@@ -776,6 +785,14 @@ export default function ChantierDetail({ chantier }: { chantier: Chantier }) {
             </div>
           </div>
         </div>
+      )}
+      {showDatePickerEdit && (
+        <DatePickerOverlay
+          label="Date de début"
+          initialDate={form.date_debut ? new Date(form.date_debut + 'T12:00:00') : undefined}
+          onCancel={() => setShowDatePickerEdit(false)}
+          onConfirm={(date) => { setForm(prev => ({ ...prev, date_debut: dateToStr(date) })); setShowDatePickerEdit(false) }}
+        />
       )}
     </div>
   )

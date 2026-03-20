@@ -4,7 +4,7 @@ import { useEffect, useRef, useState, useCallback } from 'react'
 import Link from 'next/link'
 import { getEntrepriseInfo, upsertEntrepriseInfo } from '@/lib/supabase/documents'
 import type { EntrepriseInfo } from '@/lib/supabase/documents'
-import { useToast } from '@/components/ToastProvider'
+import { toast } from '@/components/Toast'
 
 const inputStyle: React.CSSProperties = {
   width: '100%',
@@ -67,7 +67,6 @@ const emptyForm: FormState = {
 }
 
 export default function ParametresPage() {
-  const { showToast } = useToast()
   const [form, setForm] = useState<FormState>(emptyForm)
   const [saving, setSaving] = useState(false)
   const [loaded, setLoaded] = useState(false)
@@ -125,9 +124,9 @@ export default function ParametresPage() {
     setSaving(true)
     try {
       await upsertEntrepriseInfo(form)
-      showToast('Informations sauvegardées')
+      toast.success('Informations sauvegardées')
     } catch (err: unknown) {
-      showToast(err instanceof Error ? err.message : 'Erreur lors de la sauvegarde')
+      toast.error(err instanceof Error ? err.message : 'Erreur lors de la sauvegarde')
     } finally {
       setSaving(false)
     }

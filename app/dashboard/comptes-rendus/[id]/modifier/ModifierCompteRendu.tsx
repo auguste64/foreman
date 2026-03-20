@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import { updateCompteRendu } from '@/lib/supabase/comptes-rendus'
-import { useToast } from '@/components/ToastProvider'
+import { toast } from '@/components/Toast'
 import type { CompteRenduWithChantier } from '@/lib/supabase/comptes-rendus'
 import type { Chantier } from '@/lib/supabase/chantiers'
 import PhotoAnnotator from '@/components/PhotoAnnotator'
@@ -162,7 +162,6 @@ function parseObservations(raw: string | null) {
 
 export default function ModifierCompteRendu({ compteRendu: cr }: { compteRendu: CompteRenduWithChantier }) {
   const router = useRouter()
-  const { showToast } = useToast()
 
   const initialData = parseObservations(cr.observations)
 
@@ -430,7 +429,7 @@ export default function ModifierCompteRendu({ compteRendu: cr }: { compteRendu: 
         photos: allPhotos,
       })
 
-      showToast('Compte rendu mis à jour')
+      toast.success('Compte rendu mis à jour')
       router.push(`/dashboard/comptes-rendus/${cr.id}`)
       router.refresh()
     } catch (err: unknown) {

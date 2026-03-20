@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { useEffect, useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { usePlan } from '@/lib/usePlan'
@@ -17,6 +17,34 @@ const NAV_ITEMS: { id: string; label: string; icon: string; href: string; separa
   { id: 'finances',       label: 'Finances',           icon: '\u{1F4B0}',         href: '/dashboard/finances' },
   { id: 'parametres',     label: 'Paramètres',        icon: '\u2699\uFE0F',      href: '/dashboard/parametres', separator: true },
 ]
+
+function useCountUp(target: number, duration = 1200) {
+  const [val, setVal] = useState(0)
+  useEffect(() => {
+    if (target === 0) { setVal(0); return }
+    let start = 0
+    const step = target / (duration / 16)
+    const timer = setInterval(() => {
+      start += step
+      if (start >= target) { setVal(target); clearInterval(timer) }
+      else setVal(Math.floor(start))
+    }, 16)
+    return () => clearInterval(timer)
+  }, [target, duration])
+  return val
+}
+
+function addRipple(e: React.MouseEvent) {
+  const btn = e.currentTarget as HTMLElement
+  const r = document.createElement('span')
+  const rect = btn.getBoundingClientRect()
+  const size = Math.max(btn.offsetWidth, btn.offsetHeight)
+  r.style.cssText = `position:absolute;width:${size}px;height:${size}px;border-radius:50%;background:rgba(255,255,255,0.2);top:${e.clientY - rect.top - size / 2}px;left:${e.clientX - rect.left - size / 2}px;transform:scale(0);animation:ripple-anim 0.6s ease-out forwards;pointer-events:none`
+  btn.style.position = 'relative'
+  btn.style.overflow = 'hidden'
+  btn.appendChild(r)
+  setTimeout(() => r.remove(), 600)
+}
 
 type Stats = { total: number; actifs: number }
 
@@ -169,17 +197,20 @@ export default function DashboardClient({
       const supabase = createClient()
       const [devisRes, facturesRes] = await Promise.all([
         supabase.from('devis').select('total_ttc').eq('statut', 'accepte'),
-        supabase.from('factures').select('total_ttc, montant_paye').in('statut', ['envoyee', 'partiellement_payee']),
+        supabase.from('factures').select('total_ttc, montant_paye, statut'),
       ])
       const devisData = devisRes.data ?? []
       setDevisAcceptes({
         count: devisData.length,
         montant: devisData.reduce((s, d) => s + (d.total_ttc ?? 0), 0),
       })
-      const facturesData = facturesRes.data ?? []
+      const allFactures = facturesRes.data ?? []
+      const facturesImpayes = allFactures.filter(
+        f => f.statut !== 'payee' && f.statut !== 'annulee'
+      )
       setImpayes({
-        count: facturesData.length,
-        montant: facturesData.reduce((s, f) => s + Math.max(0, (f.total_ttc ?? 0) - (f.montant_paye ?? 0)), 0),
+        count: facturesImpayes.length,
+        montant: facturesImpayes.reduce((s, f) => s + Math.max(0, (f.total_ttc ?? 0) - (f.montant_paye ?? 0)), 0),
       })
     }
     loadFinances()
@@ -197,12 +228,17 @@ export default function DashboardClient({
 
   const fmtEur = (n: number) => new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(n)
 
+  const countActifs = useCountUp(stats.actifs)
+  const countTotal = useCountUp(stats.total)
+  const countDevisMontant = useCountUp(Math.round(devisAcceptes.montant))
+  const countImpayes = useCountUp(Math.round(impayes.montant))
+
   const statCards = [
-    { label: 'CHANTIERS ACTIFS', value: String(stats.actifs), color: '#ea580c', desc: 'en cours actuellement', hint: stats.actifs > 0 ? { text: '● Actif', color: '#ea580c' } : null, href: null },
-    { label: 'TOTAL CHANTIERS',  value: String(stats.total),  color: '#3B82F6', desc: 'depuis le début',       hint: null, href: null },
+    { label: 'CHANTIERS ACTIFS', value: String(countActifs), color: '#ea580c', desc: 'en cours actuellement', hint: stats.actifs > 0 ? { text: '● Actif', color: '#ea580c' } : null, href: null },
+    { label: 'TOTAL CHANTIERS',  value: String(countTotal),  color: '#3B82F6', desc: 'depuis le début',       hint: null, href: null },
     {
       label: 'DEVIS ACCEPTÉS',
-      value: fmtEur(devisAcceptes.montant),
+      value: fmtEur(countDevisMontant),
       color: '#10B981',
       desc: `${devisAcceptes.count} devis accepté${devisAcceptes.count !== 1 ? 's' : ''}`,
       hint: null,
@@ -210,7 +246,7 @@ export default function DashboardClient({
     },
     {
       label: 'IMPAYÉS',
-      value: fmtEur(impayes.montant),
+      value: fmtEur(countImpayes),
       color: '#EF4444',
       desc: `${impayes.count} facture${impayes.count !== 1 ? 's' : ''} en attente`,
       hint: null,
@@ -292,26 +328,29 @@ export default function DashboardClient({
       <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', marginBottom: '40px' }}>
         <Link
           href="/dashboard/chantiers/nouveau"
+          onClick={addRipple}
           onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-3px)'; e.currentTarget.style.boxShadow = '0 0 28px rgba(249,115,22,0.55)'; }}
           onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = 'none'; }}
-          style={{ display: 'inline-block', padding: '8px 14px', backgroundColor: '#ea580c', color: '#0D0D0B', borderRadius: '8px', fontSize: '13px', fontWeight: 600, textDecoration: 'none', fontFamily: 'var(--font-dm-sans), sans-serif', letterSpacing: '0.01em', transition: 'all 0.2s ease', whiteSpace: 'nowrap' }}
+          style={{ display: 'inline-block', position: 'relative', overflow: 'hidden', padding: '8px 14px', backgroundColor: '#ea580c', color: '#0D0D0B', borderRadius: '8px', fontSize: '13px', fontWeight: 600, textDecoration: 'none', fontFamily: 'var(--font-dm-sans), sans-serif', letterSpacing: '0.01em', transition: 'all 0.2s ease', whiteSpace: 'nowrap' }}
         >
           + Nouveau chantier
         </Link>
         <Link
           href="/dashboard/comptes-rendus/nouveau"
+          onClick={addRipple}
           onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-3px)'; e.currentTarget.style.boxShadow = '0 0 28px rgba(249,115,22,0.55)'; }}
           onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = 'none'; }}
-          style={{ display: 'inline-block', padding: '8px 14px', backgroundColor: 'transparent', color: '#F0EDE6', border: '1px solid #1E1E1C', borderRadius: '8px', fontSize: '13px', fontWeight: 500, textDecoration: 'none', fontFamily: 'var(--font-dm-sans), sans-serif', letterSpacing: '0.01em', transition: 'all 0.2s ease', whiteSpace: 'nowrap' }}
+          style={{ display: 'inline-block', position: 'relative', overflow: 'hidden', padding: '8px 14px', backgroundColor: 'transparent', color: '#F0EDE6', border: '1px solid #1E1E1C', borderRadius: '8px', fontSize: '13px', fontWeight: 500, textDecoration: 'none', fontFamily: 'var(--font-dm-sans), sans-serif', letterSpacing: '0.01em', transition: 'all 0.2s ease', whiteSpace: 'nowrap' }}
         >
           + Nouveau compte rendu
         </Link>
         {isComplet && (
           <Link
             href="/dashboard/documents/devis/nouveau"
+            onClick={addRipple}
             onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-3px)'; e.currentTarget.style.boxShadow = '0 0 28px rgba(249,115,22,0.55)'; }}
             onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = 'none'; }}
-            style={{ display: 'inline-block', padding: '8px 14px', backgroundColor: 'transparent', color: '#F0EDE6', border: '1px solid #1E1E1C', borderRadius: '8px', fontSize: '13px', fontWeight: 500, textDecoration: 'none', fontFamily: 'var(--font-dm-sans), sans-serif', letterSpacing: '0.01em', transition: 'all 0.2s ease', whiteSpace: 'nowrap' }}
+            style={{ display: 'inline-block', position: 'relative', overflow: 'hidden', padding: '8px 14px', backgroundColor: 'transparent', color: '#F0EDE6', border: '1px solid #1E1E1C', borderRadius: '8px', fontSize: '13px', fontWeight: 500, textDecoration: 'none', fontFamily: 'var(--font-dm-sans), sans-serif', letterSpacing: '0.01em', transition: 'all 0.2s ease', whiteSpace: 'nowrap' }}
           >
             + Nouveau devis
           </Link>
@@ -319,26 +358,29 @@ export default function DashboardClient({
         {isComplet && (
           <Link
             href="/dashboard/documents/factures/nouveau"
+            onClick={addRipple}
             onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-3px)'; e.currentTarget.style.boxShadow = '0 0 28px rgba(249,115,22,0.55)'; }}
             onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = 'none'; }}
-            style={{ display: 'inline-block', padding: '8px 14px', backgroundColor: 'transparent', color: '#F0EDE6', border: '1px solid #1E1E1C', borderRadius: '8px', fontSize: '13px', fontWeight: 500, textDecoration: 'none', fontFamily: 'var(--font-dm-sans), sans-serif', letterSpacing: '0.01em', transition: 'all 0.2s ease', whiteSpace: 'nowrap' }}
+            style={{ display: 'inline-block', position: 'relative', overflow: 'hidden', padding: '8px 14px', backgroundColor: 'transparent', color: '#F0EDE6', border: '1px solid #1E1E1C', borderRadius: '8px', fontSize: '13px', fontWeight: 500, textDecoration: 'none', fontFamily: 'var(--font-dm-sans), sans-serif', letterSpacing: '0.01em', transition: 'all 0.2s ease', whiteSpace: 'nowrap' }}
           >
             + Nouvelle facture
           </Link>
         )}
         <Link
           href="/dashboard/artisans/nouveau"
+          onClick={addRipple}
           onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-3px)'; e.currentTarget.style.boxShadow = '0 0 28px rgba(249,115,22,0.55)'; }}
           onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = 'none'; }}
-          style={{ display: 'inline-block', padding: '8px 14px', backgroundColor: 'transparent', color: '#F0EDE6', border: '1px solid #1E1E1C', borderRadius: '8px', fontSize: '13px', fontWeight: 500, textDecoration: 'none', fontFamily: 'var(--font-dm-sans), sans-serif', letterSpacing: '0.01em', transition: 'all 0.2s ease', whiteSpace: 'nowrap' }}
+          style={{ display: 'inline-block', position: 'relative', overflow: 'hidden', padding: '8px 14px', backgroundColor: 'transparent', color: '#F0EDE6', border: '1px solid #1E1E1C', borderRadius: '8px', fontSize: '13px', fontWeight: 500, textDecoration: 'none', fontFamily: 'var(--font-dm-sans), sans-serif', letterSpacing: '0.01em', transition: 'all 0.2s ease', whiteSpace: 'nowrap' }}
         >
           + Ajouter un artisan
         </Link>
         <Link
           href="/dashboard/clients/nouveau"
+          onClick={addRipple}
           onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-3px)'; e.currentTarget.style.boxShadow = '0 0 28px rgba(249,115,22,0.55)'; }}
           onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = 'none'; }}
-          style={{ display: 'inline-block', padding: '8px 14px', backgroundColor: 'transparent', color: '#F0EDE6', border: '1px solid #1E1E1C', borderRadius: '8px', fontSize: '13px', fontWeight: 500, textDecoration: 'none', fontFamily: 'var(--font-dm-sans), sans-serif', letterSpacing: '0.01em', transition: 'all 0.2s ease', whiteSpace: 'nowrap' }}
+          style={{ display: 'inline-block', position: 'relative', overflow: 'hidden', padding: '8px 14px', backgroundColor: 'transparent', color: '#F0EDE6', border: '1px solid #1E1E1C', borderRadius: '8px', fontSize: '13px', fontWeight: 500, textDecoration: 'none', fontFamily: 'var(--font-dm-sans), sans-serif', letterSpacing: '0.01em', transition: 'all 0.2s ease', whiteSpace: 'nowrap' }}
         >
           + Ajouter un client
         </Link>

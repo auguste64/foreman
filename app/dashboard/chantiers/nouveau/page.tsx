@@ -4,7 +4,8 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { createChantier } from '@/lib/supabase/chantiers'
-import { useToast } from '@/components/ToastProvider'
+import { toast } from '@/components/Toast'
+import { DatePickerOverlay, formatDateDisplay, dateToStr } from '@/components/DatePicker'
 
 const inputStyle: React.CSSProperties = {
   width: '100%',
@@ -29,9 +30,9 @@ const labelStyle: React.CSSProperties = {
 
 export default function NouveauChantierPage() {
   const router = useRouter()
-  const { showToast } = useToast()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [showDatePicker, setShowDatePicker] = useState(false)
 
   const [form, setForm] = useState({
     nom: '',
@@ -52,7 +53,7 @@ export default function NouveauChantierPage() {
     setLoading(true)
     try {
       await createChantier(form)
-      showToast('Chantier créé')
+      toast.success('Chantier créé')
       router.push('/dashboard/chantiers')
       router.refresh()
     } catch (err: unknown) {
@@ -142,18 +143,18 @@ export default function NouveauChantierPage() {
 
           <div>
             <label style={labelStyle}>Date de début *</label>
-            <input
-              type="date"
-              value={form.date_debut}
-              onChange={set('date_debut')}
-              required
-              style={{
-                ...inputStyle,
-                colorScheme: 'dark',
-              }}
-              onFocus={(e) => (e.target.style.borderColor = '#ea580c')}
-              onBlur={(e) => (e.target.style.borderColor = '#1E1E1C')}
-            />
+            <button
+              type="button"
+              onClick={() => setShowDatePicker(true)}
+              style={{ ...inputStyle, textAlign: 'left', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'space-between' } as React.CSSProperties}
+              onMouseEnter={(e) => (e.currentTarget.style.borderColor = '#ea580c')}
+              onMouseLeave={(e) => (e.currentTarget.style.borderColor = '#1E1E1C')}
+            >
+              <span style={{ color: form.date_debut ? '#F0EDE6' : '#8A8880' }}>
+                {form.date_debut ? formatDateDisplay(form.date_debut) : 'Choisir une date…'}
+              </span>
+              <span style={{ color: '#ea580c', fontSize: '12px' }}>▼</span>
+            </button>
           </div>
 
           {error && (
@@ -204,6 +205,14 @@ export default function NouveauChantierPage() {
           </div>
         </form>
       </div>
+      {showDatePicker && (
+        <DatePickerOverlay
+          label="Date de début"
+          initialDate={form.date_debut ? new Date(form.date_debut + 'T12:00:00') : undefined}
+          onCancel={() => setShowDatePicker(false)}
+          onConfirm={(date) => { setForm(prev => ({ ...prev, date_debut: dateToStr(date) })); setShowDatePicker(false) }}
+        />
+      )}
     </div>
   )
 }

@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect } from 'react'
 import './landing.css'
 
 const CHECK_ICON_DEFAULT = (
@@ -18,11 +18,6 @@ const CHECK_ICON_ACCENT = (
 )
 
 function PricingCards() {
-  const [hoverEssentiel, setHoverEssentiel] = useState(false)
-  const [hoverComplet, setHoverComplet] = useState(false)
-  const [hoverBtnEssentiel, setHoverBtnEssentiel] = useState(false)
-  const [hoverBtnComplet, setHoverBtnComplet] = useState(false)
-
   const featuresEssentiel = ['Comptes rendus PDF + email', 'Répertoire artisans & clients', 'Planning / calendrier']
   const featuresComplet = ['Comptes rendus PDF + email', 'Répertoire artisans & clients', 'Planning / calendrier', 'Comptabilité (devis & factures)', 'Analyse & statistiques', 'Toutes les futures fonctionnalités']
 
@@ -31,16 +26,13 @@ function PricingCards() {
 
       {/* Plan Essentiel */}
       <div
-        onMouseEnter={() => setHoverEssentiel(true)}
-        onMouseLeave={() => setHoverEssentiel(false)}
+        className="anim d1"
         style={{
           flex: '1 1 360px', maxWidth: '400px', padding: '36px 40px',
           background: 'rgba(10,10,9,0.75)', backdropFilter: 'blur(24px)', WebkitBackdropFilter: 'blur(24px)',
           border: '1px solid rgba(255,255,255,0.10)', borderRadius: '20px',
           display: 'flex', flexDirection: 'column',
           animation: 'halo-pulse-subtle 4s ease-in-out infinite',
-          transform: hoverEssentiel ? 'scale(1.02)' : 'scale(1)',
-          transition: 'transform 0.3s ease',
         }}
       >
         <div style={{ fontSize: '11px', fontWeight: 500, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#8A8880', marginBottom: '8px' }}>Essentiel</div>
@@ -60,8 +52,6 @@ function PricingCards() {
         </div>
         <a
           href="/dashboard"
-          onMouseEnter={() => setHoverBtnEssentiel(true)}
-          onMouseLeave={() => setHoverBtnEssentiel(false)}
           style={{
             display: 'block', textAlign: 'center', padding: '14px 32px',
             background: 'transparent', color: '#ea580c',
@@ -70,26 +60,21 @@ function PricingCards() {
             fontFamily: 'var(--font-syne), sans-serif', textDecoration: 'none',
             cursor: 'pointer',
             animation: 'btn-glow 3s ease-in-out infinite',
-            transform: hoverBtnEssentiel ? 'scale(1.05)' : 'scale(1)',
-            transition: 'transform 0.2s',
           }}
         >
           Commencer →
         </a>
       </div>
 
-      {/* Plan Complet */}
+      {/* Plan Pro */}
       <div
-        onMouseEnter={() => setHoverComplet(true)}
-        onMouseLeave={() => setHoverComplet(false)}
+        className="anim d2"
         style={{
           flex: '1 1 360px', maxWidth: '400px', padding: '36px 40px',
           background: 'rgba(10,10,9,0.75)', backdropFilter: 'blur(24px)', WebkitBackdropFilter: 'blur(24px)',
           border: '1px solid rgba(234,88,12,0.6)', borderRadius: '20px',
           display: 'flex', flexDirection: 'column', position: 'relative',
-          animation: 'halo-pulse 3s ease-in-out infinite, float 6s ease-in-out infinite',
-          transform: hoverComplet ? 'scale(1.02)' : undefined,
-          transition: 'transform 0.3s ease',
+          animation: 'halo-pulse 3s ease-in-out infinite',
         }}
       >
         <div style={{
@@ -116,8 +101,6 @@ function PricingCards() {
         </div>
         <a
           href="/dashboard"
-          onMouseEnter={() => setHoverBtnComplet(true)}
-          onMouseLeave={() => setHoverBtnComplet(false)}
           style={{
             display: 'block', textAlign: 'center', padding: '14px 32px',
             background: '#ea580c', color: '#fff',
@@ -126,8 +109,6 @@ function PricingCards() {
             fontFamily: 'var(--font-syne), sans-serif', textDecoration: 'none',
             cursor: 'pointer',
             animation: 'btn-glow 2s ease-in-out infinite',
-            transform: hoverBtnComplet ? 'scale(1.05)' : 'scale(1)',
-            transition: 'transform 0.2s',
           }}
         >
           Commencer →
@@ -142,12 +123,18 @@ export default function Home() {
   useEffect(() => {
     const wrapper = document.querySelector('.lp-wrapper') as Element
 
-    // ── Scroll reveal
+    // ── Scroll reveal (.reveal)
     const obs = new IntersectionObserver(
       (entries) => entries.forEach((e) => { if (e.isIntersecting) e.target.classList.add('on') }),
       { threshold: 0.1, root: wrapper }
     )
     document.querySelectorAll('.reveal').forEach((el) => obs.observe(el))
+
+    // ── CSS animations (.anim)
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible') })
+    }, { threshold: 0.1 })
+    document.querySelectorAll('.anim').forEach(el => observer.observe(el))
 
     // ── Button ripple
     const handlers: Array<{ el: Element; fn: (e: Event) => void }> = []
@@ -168,6 +155,7 @@ export default function Home() {
 
     return () => {
       obs.disconnect()
+      observer.disconnect()
       handlers.forEach(({ el, fn }) => el.removeEventListener('click', fn))
     }
   }, [])
@@ -184,7 +172,6 @@ export default function Home() {
         <div className="bg-blob b6"></div>
         <div className="bg-blob b7"></div>
       </div>
-
 
       {/* NAV */}
       <nav style={{ position: 'fixed', top: 0, left: 0, right: 0, zIndex: 100, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 60px', height: '70px', background: 'transparent', border: 'none' }}>
@@ -218,29 +205,29 @@ export default function Home() {
 
       {/* HERO */}
       <section className="hero" style={{ paddingBottom: '48px' }}>
-        <div className="hero-badge">
+        <div className="hero-badge anim">
           <span className="badge-dot"></span>
           Gestion de chantier · Architectes &amp; MOEs
         </div>
 
-        <h1 className="hero-title">
+        <h1 className="hero-title anim d1">
           Pilotez vos chantiers<br />
           avec <span className="grad-text">10× plus d&apos;efficacité.</span>
         </h1>
 
-        <p className="hero-sub">
+        <p className="hero-sub anim d2">
           Comptes rendus, artisans, comptabilité, planning synchronisé. Tout en un. Conçu pour les professionnels du bâtiment.
         </p>
 
-        <div className="hero-price">
+        <div className="hero-price anim d3">
           <span className="price-val">dès 11,90€/mois</span>
         </div>
 
-        <div className="hero-cta">
+        <div className="hero-cta anim d4">
           <a href="/login" className="btn btn-primary btn-md">Commencer gratuitement →</a>
         </div>
 
-        <div className="hero-mockup">
+        <div className="hero-mockup anim d5">
           <div className="mockup-glow"></div>
           <div className="mockup-window">
             <div className="mockup-bar">
@@ -325,10 +312,6 @@ export default function Home() {
           0%, 100% { box-shadow: 0 0 8px rgba(234,88,12,0.5); }
           50%       { box-shadow: 0 0 16px rgba(234,88,12,0.9); }
         }
-        @keyframes float {
-          0%, 100% { transform: translateY(0px); }
-          50%       { transform: translateY(-6px); }
-        }
       `}</style>
 
       <section id="tarifs" style={{ paddingTop: '80px', paddingBottom: '80px', position: 'relative', zIndex: 2 }}>
@@ -347,56 +330,35 @@ export default function Home() {
           <h2 className="section-title">Tout ce dont vous avez besoin,<br />rien de superflu.</h2>
         </div>
         <div className="feat-grid">
-          <div className="feat-card reveal d1">
-            <img src="/screenshots/comptes-rendus.png" alt="Comptes rendus PDF" style={{ width: '100%', height: '180px', objectFit: 'cover', objectPosition: 'top left', borderRadius: '8px', marginBottom: '20px', display: 'block', background: '#1E1E1C' }} />
-            <div className="feat-icon">📋</div>
-            <h3 className="feat-title">Comptes rendus PDF</h3>
-            <p className="feat-desc">Générez des CR professionnels en minutes. Envoi automatique aux artisans par email.</p>
-          </div>
-          <div className="feat-card reveal d2">
-            <img src="/screenshots/artisans.png" alt="Gestion artisans" style={{ width: '100%', height: '180px', objectFit: 'cover', objectPosition: 'top left', borderRadius: '8px', marginBottom: '20px', display: 'block', background: '#1E1E1C' }} />
-            <div className="feat-icon">👷</div>
-            <h3 className="feat-title">Gestion artisans</h3>
-            <p className="feat-desc">Magic link, convocations, présences. Interface dédiée pour vos artisans — gratuite.</p>
-          </div>
-          <div className="feat-card reveal d3">
-            <img src="/screenshots/comptabilite.png" alt="Comptabilité intégrée" style={{ width: '100%', height: '180px', objectFit: 'cover', objectPosition: 'top left', borderRadius: '8px', marginBottom: '20px', display: 'block', background: '#1E1E1C' }} />
-            <div className="feat-icon">💶</div>
-            <h3 className="feat-title">Comptabilité intégrée</h3>
-            <p className="feat-desc">Devis, factures, avoirs, acomptes. Aperçu PDF live et envoi en un clic.</p>
-          </div>
-          <div className="feat-card reveal d4">
-            <img src="/screenshots/planning.png" alt="Planning synchronisé" style={{ width: '100%', height: '180px', objectFit: 'cover', objectPosition: 'top left', borderRadius: '8px', marginBottom: '20px', display: 'block', background: '#1E1E1C' }} />
-            <div className="feat-icon">📅</div>
-            <h3 className="feat-title">Planning synchronisé</h3>
-            <p className="feat-desc">Google Calendar, Apple Calendar, Outlook. Tout synchronisé en temps réel.</p>
-          </div>
-          <div className="feat-card reveal d5">
-            <img src="/screenshots/clients.png" alt="Clients &amp; contacts" style={{ width: '100%', height: '180px', objectFit: 'cover', objectPosition: 'top left', borderRadius: '8px', marginBottom: '20px', display: 'block', background: '#1E1E1C' }} />
-            <div className="feat-icon">👥</div>
-            <h3 className="feat-title">Clients &amp; contacts</h3>
-            <p className="feat-desc">Import Google Contacts. Fiches liées automatiquement à vos chantiers.</p>
-          </div>
-          <div className="feat-card reveal d6">
-            <img src="/screenshots/analyse.png" alt="Analyse &amp; statistiques" style={{ width: '100%', height: '180px', objectFit: 'cover', objectPosition: 'top left', borderRadius: '8px', marginBottom: '20px', display: 'block', background: '#1E1E1C' }} />
-            <div className="feat-icon">📊</div>
-            <h3 className="feat-title">Analyse &amp; statistiques</h3>
-            <p className="feat-desc">CA, pipeline, projections, impayés. Pilotez votre activité avec précision.</p>
-          </div>
+          {[
+            { img: '/screenshots/comptes-rendus.png', alt: 'Comptes rendus PDF', icon: '📋', title: 'Comptes rendus PDF', desc: 'Générez des CR professionnels en minutes. Envoi automatique aux artisans par email.', delay: 'd1' },
+            { img: '/screenshots/artisans.png', alt: 'Gestion artisans', icon: '👷', title: 'Gestion artisans', desc: 'Magic link, convocations, présences. Interface dédiée pour vos artisans — gratuite.', delay: 'd2' },
+            { img: '/screenshots/comptabilite.png', alt: 'Comptabilité intégrée', icon: '💶', title: 'Comptabilité intégrée', desc: 'Devis, factures, avoirs, acomptes. Aperçu PDF live et envoi en un clic.', delay: 'd3' },
+            { img: '/screenshots/planning.png', alt: 'Planning synchronisé', icon: '📅', title: 'Planning synchronisé', desc: 'Google Calendar, Apple Calendar, Outlook. Tout synchronisé en temps réel.', delay: 'd4' },
+            { img: '/screenshots/clients.png', alt: 'Clients & contacts', icon: '👥', title: 'Clients & contacts', desc: 'Import Google Contacts. Fiches liées automatiquement à vos chantiers.', delay: 'd5' },
+            { img: '/screenshots/analyse.png', alt: 'Analyse & statistiques', icon: '📊', title: 'Analyse & statistiques', desc: 'CA, pipeline, projections, impayés. Pilotez votre activité avec précision.', delay: 'd6' },
+          ].map((card) => (
+            <div key={card.title} className={`feat-card reveal anim ${card.delay}`}>
+              <img src={card.img} alt={card.alt} style={{ width: '100%', height: '180px', objectFit: 'cover', objectPosition: 'top left', borderRadius: '8px', marginBottom: '20px', display: 'block', background: '#1E1E1C' }} />
+              <div className="feat-icon">{card.icon}</div>
+              <h3 className="feat-title">{card.title}</h3>
+              <p className="feat-desc">{card.desc}</p>
+            </div>
+          ))}
         </div>
       </section>
 
       {/* CLOSER */}
       <section className="closer">
-        <h2 className="closer-title reveal">Prêt à transformer votre façon de gérer vos chantiers ?</h2>
-        <p className="closer-sub reveal d1">
+        <h2 className="closer-title reveal anim">Prêt à transformer votre façon de gérer vos chantiers ?</h2>
+        <p className="closer-sub reveal anim d1">
           Rejoignez les architectes et MOEs qui ont adopté The Builder. Commencez en moins de 2 minutes.
         </p>
-        <a href="/login" className="btn btn-primary btn-lg reveal d2">Essayer gratuitement →</a>
+        <a href="/login" className="btn btn-primary btn-lg reveal anim d2">Essayer gratuitement →</a>
       </section>
 
       {/* FOOTER */}
-      <footer>
+      <footer className="anim">
         <div className="footer-logo">
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '3px', flexShrink: 0 }}>

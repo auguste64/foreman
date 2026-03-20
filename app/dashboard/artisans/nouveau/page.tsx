@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { createArtisan } from '@/lib/supabase/artisans'
-import { useToast } from '@/components/ToastProvider'
+import { toast } from '@/components/Toast'
 import MetierSelect from '@/components/MetierSelect'
 
 const inputStyle: React.CSSProperties = {
@@ -30,7 +30,6 @@ const labelStyle: React.CSSProperties = {
 
 export default function NouvelArtisanPage() {
   const router = useRouter()
-  const { showToast } = useToast()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -52,7 +51,7 @@ export default function NouvelArtisanPage() {
     setLoading(true)
     try {
       await createArtisan(form)
-      showToast('Artisan ajouté')
+      toast.success('Artisan ajouté')
       router.push('/dashboard/artisans')
       router.refresh()
     } catch (err: unknown) {

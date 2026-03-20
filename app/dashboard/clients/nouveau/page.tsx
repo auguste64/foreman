@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { createClientRecord } from '@/lib/supabase/clients'
-import { useToast } from '@/components/ToastProvider'
+import { toast } from '@/components/Toast'
 
 const inputStyle: React.CSSProperties = {
   width: '100%', padding: '10px 14px', backgroundColor: '#0D0D0B',
@@ -135,7 +135,6 @@ const empty = {
 
 export default function NouveauClientPage() {
   const router = useRouter()
-  const { showToast } = useToast()
   const [form, setForm] = useState(empty)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -174,7 +173,7 @@ export default function NouveauClientPage() {
         pays: form.pays.trim() || null,
         notes: form.notes.trim() || null,
       })
-      showToast('Client créé')
+      toast.success('Client créé')
       router.push(`/dashboard/clients/${client.id}`)
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Erreur')

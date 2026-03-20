@@ -6,7 +6,7 @@ import { useParams, useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { getFactureDoc, formatEurDoc, fmtDate } from '@/lib/supabase/documents'
 import type { FactureDoc, FactureLigneDoc } from '@/lib/supabase/documents'
-import { useToast } from '@/components/ToastProvider'
+import { toast } from '@/components/Toast'
 import CustomSelect from '@/components/CustomSelect'
 import UpgradeGate from '@/components/UpgradeGate'
 import { usePlan } from '@/lib/usePlan'
@@ -25,7 +25,6 @@ export default function FactureDetailPage() {
   const params = useParams()
   const id = params.id as string
   const router = useRouter()
-  const { showToast } = useToast()
 
   const [facture, setFacture] = useState<FactureDoc | null>(null)
   const [lignes, setLignes] = useState<FactureLigneDoc[]>([])
@@ -58,13 +57,13 @@ export default function FactureDetailPage() {
     const supabase = createClient()
     await supabase.from('factures').update({ statut }).eq('id', id)
     setFacture(p => p ? { ...p, statut: statut as FactureDoc['statut'] } : p)
-    showToast('Statut mis à jour')
+    toast.success('Statut mis à jour')
   }
 
   async function handleDelete() {
     const supabase = createClient()
     await supabase.from('factures').delete().eq('id', id)
-    showToast('Facture supprimée')
+    toast.success('Facture supprimée')
     router.push('/dashboard/documents')
   }
 
@@ -79,13 +78,13 @@ export default function FactureDetailPage() {
       })
       const data = await res.json()
       if (!res.ok) throw new Error(data.error)
-      showToast('Email envoyé')
+      toast.success('Email envoyé')
       setShowEmail(false)
       if (facture?.statut === 'brouillon') {
         setFacture(p => p ? { ...p, statut: 'envoyee', envoye_at: new Date().toISOString() } : p)
       }
     } catch (err: unknown) {
-      showToast(err instanceof Error ? err.message : 'Erreur envoi')
+      toast.error(err instanceof Error ? err.message : 'Erreur envoi')
     } finally {
       setSending(false)
     }
@@ -94,7 +93,7 @@ export default function FactureDetailPage() {
   async function handlePointerPaiement() {
     if (!facture) return
     const montant = parseFloat(paiementForm.montant) || 0
-    if (montant <= 0) { showToast('Montant invalide'); return }
+    if (montant <= 0) { toast.error('Montant invalide'); return }
     setSavingPaiement(true)
     try {
       const supabase = createClient()
@@ -107,10 +106,10 @@ export default function FactureDetailPage() {
         mode_paiement: paiementForm.mode_paiement,
       }).eq('id', id)
       setFacture(p => p ? { ...p, montant_paye: newMontantPaye, statut: newStatut as FactureDoc['statut'], date_paiement: paiementForm.date_paiement, mode_paiement: paiementForm.mode_paiement } : p)
-      showToast('Paiement enregistré')
+      toast.success('Paiement enregistré')
       setShowPaiement(false)
     } catch (err: unknown) {
-      showToast(err instanceof Error ? err.message : 'Erreur')
+      toast.error(err instanceof Error ? err.message : 'Erreur')
     } finally {
       setSavingPaiement(false)
     }
