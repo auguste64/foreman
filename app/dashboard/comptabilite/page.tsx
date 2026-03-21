@@ -271,7 +271,7 @@ export default function DocumentsPage() {
 
         {/* Bottom: settings link pinned */}
         <Link
-          href="/dashboard/documents/parametres"
+          href="/dashboard/comptabilite/parametres"
           style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 16px', fontSize: 14, color: '#F0EDE6', textDecoration: 'none', fontFamily: 'var(--font-dm-sans), sans-serif', backgroundColor: 'transparent', borderTop: '1px solid #1E1E1C', flexShrink: 0, borderBottomLeftRadius: 12, borderBottomRightRadius: 12 }}
           onMouseEnter={e => { (e.currentTarget as HTMLElement).style.backgroundColor = 'rgba(255,255,255,0.04)' }}
           onMouseLeave={e => { (e.currentTarget as HTMLElement).style.backgroundColor = 'transparent' }}
@@ -297,13 +297,13 @@ export default function DocumentsPage() {
           </div>
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
             <Link
-              href="/dashboard/documents/devis/nouveau"
+              href="/dashboard/comptabilite/devis/nouveau"
               style={{ padding: '9px 16px', backgroundColor: 'transparent', color: '#ea580c', border: '1px solid #ea580c', borderRadius: 8, fontSize: 12, fontWeight: 600, textDecoration: 'none', fontFamily: 'var(--font-dm-sans), sans-serif' }}
             >
               + Devis
             </Link>
             <Link
-              href="/dashboard/documents/factures/nouveau"
+              href="/dashboard/comptabilite/factures/nouveau"
               style={{ padding: '9px 16px', backgroundColor: '#ea580c', color: '#0D0D0B', border: 'none', borderRadius: 8, fontSize: 12, fontWeight: 600, textDecoration: 'none', fontFamily: 'var(--font-dm-sans), sans-serif' }}
             >
               + Facture
@@ -317,7 +317,7 @@ export default function DocumentsPage() {
             <p style={{ fontSize: 13, color: '#ea580c', fontFamily: 'var(--font-dm-sans), sans-serif', margin: 0 }}>
               ⚠️ Vos informations légales sont incomplètes — elles apparaîtront sur vos documents.
             </p>
-            <Link href="/dashboard/documents/parametres" style={{ fontSize: 12, color: '#ea580c', fontWeight: 600, textDecoration: 'underline', fontFamily: 'var(--font-dm-sans), sans-serif' }}>
+            <Link href="/dashboard/comptabilite/parametres" style={{ fontSize: 12, color: '#ea580c', fontWeight: 600, textDecoration: 'underline', fontFamily: 'var(--font-dm-sans), sans-serif' }}>
               Compléter
             </Link>
           </div>
@@ -371,7 +371,7 @@ export default function DocumentsPage() {
             {/* DEVIS */}
             {tab === 'devis' && (
               filteredDevis.length === 0 ? (
-                <EmptyState message="Aucun devis." cta="Créer le premier" href="/dashboard/documents/devis/nouveau" />
+                <EmptyState message="Aucun devis." cta="Créer le premier" href="/dashboard/comptabilite/devis/nouveau" />
               ) : (
                 <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                   <thead><tr>
@@ -393,7 +393,7 @@ export default function DocumentsPage() {
                         <td style={{ ...tdStyle, color: '#8A8880' }}>{fmtDate(d.date_emission)}</td>
                         <td style={tdStyle}>
                           <div style={{ display: 'flex', gap: 6 }}>
-                            <Link href={`/dashboard/documents/devis/${d.id}`} style={actionLink('#ea580c')}>Consulter</Link>
+                            <Link href={`/dashboard/comptabilite/devis/${d.id}`} style={actionLink('#ea580c')}>Consulter</Link>
                             <a href={`/api/documents-pdf?type=devis&id=${d.id}`} target="_blank" rel="noreferrer" style={actionLink('#8A8880')}>PDF</a>
                             <StatutSelect options={Object.entries(DEVIS_STATUT).map(([v, s]) => ({ value: v, label: s.label }))} value={d.statut} onChange={v => handleStatutDevis(d.id, v)} />
                           </div>
@@ -408,7 +408,7 @@ export default function DocumentsPage() {
             {/* FACTURES */}
             {tab === 'factures' && (
               filteredFactures.length === 0 ? (
-                <EmptyState message="Aucune facture." cta="Créer la première" href="/dashboard/documents/factures/nouveau" />
+                <EmptyState message="Aucune facture." cta="Créer la première" href="/dashboard/comptabilite/factures/nouveau" />
               ) : (
                 <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                   <thead><tr>
@@ -430,7 +430,7 @@ export default function DocumentsPage() {
                         <td style={{ ...tdStyle, color: '#8A8880' }}>{fmtDate(f.date_echeance)}</td>
                         <td style={tdStyle}>
                           <div style={{ display: 'flex', gap: 6 }}>
-                            <Link href={`/dashboard/documents/factures/${f.id}`} style={actionLink('#ea580c')}>Consulter</Link>
+                            <Link href={`/dashboard/comptabilite/factures/${f.id}`} style={actionLink('#ea580c')}>Consulter</Link>
                             <a href={`/api/documents-pdf?type=facture&id=${f.id}`} target="_blank" rel="noreferrer" style={actionLink('#8A8880')}>PDF</a>
                             <StatutSelect options={Object.entries(FACTURE_STATUT).map(([v, s]) => ({ value: v, label: s.label }))} value={f.statut} onChange={v => handleStatutFacture(f.id, v)} />
                           </div>
@@ -465,7 +465,7 @@ export default function DocumentsPage() {
                         <td style={tdStyle}><Badge map={AVOIR_STATUT} statut={a.statut} /></td>
                         <td style={{ ...tdStyle, color: '#8A8880' }}>{fmtDate(a.date_emission)}</td>
                         <td style={tdStyle}>
-                          <Link href={`/dashboard/documents/factures/${a.facture_id}`} style={actionLink('#60a5fa')}>Facture liée</Link>
+                          <Link href={`/dashboard/comptabilite/factures/${a.facture_id}`} style={actionLink('#60a5fa')}>Facture liée</Link>
                         </td>
                       </tr>
                     ))}
@@ -477,7 +477,7 @@ export default function DocumentsPage() {
             {/* ACOMPTES */}
             {tab === 'acomptes' && (
               filteredAcomptes.length === 0 ? (
-                <EmptyState message="Aucun acompte." cta="Créer le premier" href="/dashboard/documents/acomptes/nouveau" />
+                <EmptyState message="Aucun acompte." cta="Créer le premier" href="/dashboard/comptabilite/acomptes/nouveau" />
               ) : (
                 <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                   <thead><tr>
@@ -498,7 +498,7 @@ export default function DocumentsPage() {
                         <td style={tdStyle}><Badge map={ACOMPTE_STATUT} statut={a.statut} /></td>
                         <td style={{ ...tdStyle, color: '#8A8880' }}>{fmtDate(a.date_emission)}</td>
                         <td style={tdStyle}>
-                          <Link href={`/dashboard/documents/acomptes/${a.id}`} style={actionLink('#60a5fa')}>Consulter</Link>
+                          <Link href={`/dashboard/comptabilite/acomptes/${a.id}`} style={actionLink('#60a5fa')}>Consulter</Link>
                         </td>
                       </tr>
                     ))}

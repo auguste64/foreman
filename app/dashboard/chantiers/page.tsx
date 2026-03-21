@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import type { Chantier } from '@/lib/supabase/chantiers'
 import SortPills from '@/components/SortPills'
+import { useIsMobile } from '@/lib/useIsMobile'
 
 const STATUT_COLORS: Record<string, { bg: string; text: string }> = {
   'En cours': { bg: 'rgba(74,222,128,0.1)', text: '#4ade80' },
@@ -21,9 +22,11 @@ const AVANCEMENT: Record<string, number> = {
 type SortChantier = 'date_desc' | 'date_asc' | 'nom_asc' | 'nom_desc' | 'statut'
 
 export default function ChantiersPage() {
+  const isMobile = useIsMobile()
   const [chantiers, setChantiers] = useState<Chantier[]>([])
   const [loading, setLoading] = useState(true)
   const [sort, setSort] = useState<SortChantier>('date_desc')
+  const [search, setSearch] = useState('')
 
   useEffect(() => {
     const supabase = createClient()
@@ -37,7 +40,11 @@ export default function ChantiersPage() {
       })
   }, [])
 
-  const sorted = [...chantiers].sort((a, b) => {
+  const filtered = search.trim()
+    ? chantiers.filter(c => c.nom.toLowerCase().includes(search.toLowerCase()))
+    : chantiers
+
+  const sorted = [...filtered].sort((a, b) => {
     if (sort === 'nom_asc')  return a.nom.localeCompare(b.nom, 'fr')
     if (sort === 'nom_desc') return b.nom.localeCompare(a.nom, 'fr')
     if (sort === 'date_asc') return a.created_at.localeCompare(b.created_at)
@@ -46,9 +53,9 @@ export default function ChantiersPage() {
   })
 
   return (
-    <div className="page-enter" style={{ flex: 1, padding: '40px', overflowY: 'auto' }}>
+    <div className="page-enter" style={{ flex: 1, padding: isMobile ? '16px' : '40px', overflowY: 'auto' }}>
       {/* Header */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '40px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '24px' }}>
         <div>
           <h1 style={{ fontFamily: 'var(--font-syne), sans-serif', fontSize: '24px', fontWeight: 700, color: '#F0EDE6', margin: 0 }}>
             Chantiers
@@ -78,8 +85,33 @@ export default function ChantiersPage() {
         </div>
       </div>
 
+      {/* Search bar */}
+      <div style={{ position: 'relative', marginBottom: '32px' }}>
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }}>
+          <circle cx="7" cy="7" r="4.5" stroke="#8A8880" strokeWidth="1.5"/>
+          <path d="M11 11l3 3" stroke="#8A8880" strokeWidth="1.5" strokeLinecap="round"/>
+        </svg>
+        <input
+          type="text"
+          value={search}
+          onChange={e => setSearch(e.target.value)}
+          placeholder="Rechercher un chantier…"
+          style={{ width: '100%', padding: '10px 14px 10px 38px', backgroundColor: '#111110', border: '1px solid #1E1E1C', borderRadius: '8px', color: '#F0EDE6', fontSize: '14px', outline: 'none', fontFamily: 'var(--font-dm-sans), sans-serif', boxSizing: 'border-box' }}
+          onFocus={e => { e.target.style.borderColor = '#ea580c'; e.target.style.boxShadow = '0 0 0 2px rgba(234,88,12,0.12)' }}
+          onBlur={e => { e.target.style.borderColor = '#1E1E1C'; e.target.style.boxShadow = 'none' }}
+        />
+      </div>
+
       {loading && (
         <p style={{ color: '#8A8880', fontSize: '14px', fontFamily: 'var(--font-dm-sans), sans-serif' }}>Chargement…</p>
+      )}
+
+      {!loading && chantiers.length > 0 && search.trim() && sorted.length === 0 && (
+        <div style={{ backgroundColor: '#111110', border: '1px dashed #1E1E1C', borderRadius: '12px', padding: '60px 24px', textAlign: 'center' }}>
+          <p style={{ color: '#8A8880', fontSize: '14px', fontFamily: 'var(--font-dm-sans), sans-serif', margin: 0 }}>
+            Aucun chantier ne correspond à &quot;{search}&quot;.
+          </p>
+        </div>
       )}
 
       {!loading && chantiers.length === 0 && (
@@ -108,7 +140,7 @@ export default function ChantiersPage() {
       )}
 
       {!loading && chantiers.length > 0 && (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '24px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(2, 1fr)', gap: isMobile ? '12px' : '24px' }}>
           {sorted.map((c, index) => {
             const colors = STATUT_COLORS[c.statut] ?? STATUT_COLORS['En cours']
             const avancement = AVANCEMENT[c.statut] ?? 20

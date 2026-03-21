@@ -1,5 +1,5 @@
 import React from 'react'
-import { Document, Page, Text, View, StyleSheet, renderToBuffer } from '@react-pdf/renderer'
+import { Document, Page, Text, View, StyleSheet, Image, renderToBuffer } from '@react-pdf/renderer'
 import type { CompteRendu } from '@/lib/supabase/comptes-rendus'
 import type { Chantier } from '@/lib/supabase/chantiers'
 
@@ -182,6 +182,21 @@ const styles = StyleSheet.create({
     backgroundColor: '#E8E4DD',
     marginVertical: 16,
   },
+  // ── Photos ──────────────────────────────────────────────────────────
+  photosGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  photoWrapper: {
+    width: '48%',
+  },
+  photoImage: {
+    width: '100%',
+    height: 180,
+    objectFit: 'cover',
+    borderRadius: 4,
+  },
 })
 
 function fmt(dateStr: string | null) {
@@ -297,6 +312,22 @@ export function CompteRenduPDF({
               {compteRendu.travaux_a_faire ?? 'Aucun travaux spécifiés.'}
             </Text>
           </View>
+
+          {/* Photos */}
+          {compteRendu.photos?.length > 0 && (
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>
+                Photos ({compteRendu.photos.length})
+              </Text>
+              <View style={styles.photosGrid}>
+                {compteRendu.photos.map((url, i) => (
+                  <View key={i} style={styles.photoWrapper}>
+                    <Image src={url} style={styles.photoImage} />
+                  </View>
+                ))}
+              </View>
+            </View>
+          )}
 
         </View>
 

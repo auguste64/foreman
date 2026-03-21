@@ -621,7 +621,7 @@ export default function FinancesPage() {
                     <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                       <span style={{ fontSize: 13, fontWeight: 700, color: COLORS.red, fontFamily: 'var(--font-syne), sans-serif' }}>{fmtEur(restant)}</span>
                       <Link
-                        href={`/dashboard/documents/factures/${f.id}`}
+                        href={`/dashboard/comptabilite/factures/${f.id}`}
                         style={{ fontSize: 11, color: '#8A8880', textDecoration: 'none', padding: '4px 8px', border: '1px solid #2E2E2C', borderRadius: 4, fontFamily: 'var(--font-dm-sans), sans-serif', whiteSpace: 'nowrap' }}
                       >
                         Relancer →
@@ -699,7 +699,7 @@ export default function FinancesPage() {
                     <td style={{ ...tdStyle, color: '#8A8880' }}>{fmtDate(d.accepte_at)}</td>
                     <td style={tdStyle}>
                       <Link
-                        href={`/dashboard/documents/factures/nouveau?from_devis=${d.id}`}
+                        href={`/dashboard/comptabilite/factures/nouveau?from_devis=${d.id}`}
                         style={{ padding: '6px 14px', backgroundColor: 'rgba(249,115,22,0.1)', color: COLORS.orange, border: '1px solid rgba(249,115,22,0.25)', borderRadius: 6, fontSize: 12, fontWeight: 600, textDecoration: 'none', fontFamily: 'var(--font-dm-sans), sans-serif', whiteSpace: 'nowrap' }}
                         onMouseEnter={e => { (e.currentTarget as HTMLElement).style.backgroundColor = 'rgba(249,115,22,0.2)' }}
                         onMouseLeave={e => { (e.currentTarget as HTMLElement).style.backgroundColor = 'rgba(249,115,22,0.1)' }}

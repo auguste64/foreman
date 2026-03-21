@@ -5,6 +5,8 @@ import React, { useEffect, useState } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { usePlan } from '@/lib/usePlan'
+import { useIsMobile } from '@/lib/useIsMobile'
+import OnboardingModal from '@/components/OnboardingModal'
 import type { User } from '@supabase/supabase-js'
 
 const NAV_ITEMS: { id: string; label: string; icon: string; href: string; separator?: boolean }[] = [
@@ -177,14 +179,20 @@ export default function DashboardClient({
   stats,
   chantiersEnCours,
   prochainsEvenements,
+  showOnboarding,
+  userId,
 }: {
   user: User
   displayName: string
   stats: Stats
   chantiersEnCours: ChantierEnCours[]
   prochainsEvenements: Evenement[]
+  showOnboarding?: boolean
+  userId?: string
 }) {
   const router = useRouter()
+  const isMobile = useIsMobile()
+  const [onboardingOpen, setOnboardingOpen] = useState(showOnboarding ?? false)
   const { isComplet } = usePlan()
   const [greeting, setGreeting] = useState('')
   const [dateStr, setDateStr] = useState('')
@@ -235,19 +243,19 @@ export default function DashboardClient({
 
   const statCards = [
     { label: 'CHANTIERS ACTIFS', value: String(countActifs), color: '#ea580c', desc: 'en cours actuellement', hint: stats.actifs > 0 ? { text: '● Actif', color: '#ea580c' } : null, href: null },
-    { label: 'TOTAL CHANTIERS',  value: String(countTotal),  color: '#3B82F6', desc: 'depuis le début',       hint: null, href: null },
+    { label: 'TOTAL CHANTIERS',  value: String(countTotal),  color: '#ea580c', desc: 'depuis le début',       hint: null, href: null },
     {
       label: 'DEVIS ACCEPTÉS',
       value: fmtEur(countDevisMontant),
-      color: '#10B981',
+      color: '#ea580c',
       desc: `${devisAcceptes.count} devis accepté${devisAcceptes.count !== 1 ? 's' : ''}`,
       hint: null,
-      href: '/dashboard/documents?tab=devis&statut=accepte',
+      href: '/dashboard/comptabilite?tab=devis&statut=accepte',
     },
     {
       label: 'IMPAYÉS',
       value: fmtEur(countImpayes),
-      color: '#EF4444',
+      color: '#ea580c',
       desc: `${impayes.count} facture${impayes.count !== 1 ? 's' : ''} en attente`,
       hint: null,
       href: '/dashboard/finances',
@@ -255,7 +263,10 @@ export default function DashboardClient({
   ]
 
   return (
-    <main className="page-enter" style={{ flex: 1, padding: '40px', overflowY: 'auto' }}>
+    <main className="page-enter" style={{ flex: 1, padding: isMobile ? '16px' : '40px', overflowY: 'auto' }}>
+      {onboardingOpen && userId && (
+        <OnboardingModal userId={userId} onClose={() => setOnboardingOpen(false)} />
+      )}
       {/* Header */}
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '40px', gap: '16px', flexWrap: 'wrap' }}>
         <div>
@@ -286,7 +297,7 @@ export default function DashboardClient({
       </div>
 
       {/* Stat cards */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '16px', marginBottom: '32px' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(4, 1fr)', gap: isMobile ? '10px' : '16px', marginBottom: '32px' }}>
         {statCards.map((card, idx) => (
           <div
             key={card.label}
@@ -346,7 +357,7 @@ export default function DashboardClient({
         </Link>
         {isComplet && (
           <Link
-            href="/dashboard/documents/devis/nouveau"
+            href="/dashboard/comptabilite/devis/nouveau"
             onClick={addRipple}
             onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-3px)'; e.currentTarget.style.boxShadow = '0 0 28px rgba(249,115,22,0.55)'; }}
             onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = 'none'; }}
@@ -357,7 +368,7 @@ export default function DashboardClient({
         )}
         {isComplet && (
           <Link
-            href="/dashboard/documents/factures/nouveau"
+            href="/dashboard/comptabilite/factures/nouveau"
             onClick={addRipple}
             onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-3px)'; e.currentTarget.style.boxShadow = '0 0 28px rgba(249,115,22,0.55)'; }}
             onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = 'none'; }}
@@ -387,7 +398,7 @@ export default function DashboardClient({
       </div>
 
       {/* Two-column layout */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: '20px' }}>
 
         {/* Chantiers en cours */}
         <div

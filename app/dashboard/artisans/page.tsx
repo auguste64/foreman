@@ -6,14 +6,17 @@ import { createClient } from '@/lib/supabase/client'
 import type { Artisan } from '@/lib/supabase/artisans'
 import GoogleContactsModal from '@/components/GoogleContactsModal'
 import SortPills from '@/components/SortPills'
+import { useIsMobile } from '@/lib/useIsMobile'
 
 type SortArtisan = 'date_desc' | 'date_asc' | 'nom_asc' | 'nom_desc' | 'metier'
 
 export default function ArtisansPage() {
+  const isMobile = useIsMobile()
   const [artisans, setArtisans] = useState<Artisan[]>([])
   const [loading, setLoading] = useState(true)
   const [showGoogleModal, setShowGoogleModal] = useState(false)
   const [sort, setSort] = useState<SortArtisan>('date_desc')
+  const [search, setSearch] = useState('')
 
   useEffect(() => {
     const supabase = createClient()
@@ -28,8 +31,8 @@ export default function ArtisansPage() {
   }, [])
 
   return (
-    <div className="page-enter" style={{ flex: 1, padding: '40px', overflowY: 'auto' }}>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '40px' }}>
+    <div className="page-enter" style={{ flex: 1, padding: isMobile ? '16px' : '40px', overflowY: 'auto' }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '24px' }}>
         <div>
           <h1
             style={{
@@ -74,6 +77,23 @@ export default function ArtisansPage() {
         </div>
       </div>
 
+      {/* Search bar */}
+      <div style={{ position: 'relative', marginBottom: '32px' }}>
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }}>
+          <circle cx="7" cy="7" r="4.5" stroke="#8A8880" strokeWidth="1.5"/>
+          <path d="M11 11l3 3" stroke="#8A8880" strokeWidth="1.5" strokeLinecap="round"/>
+        </svg>
+        <input
+          type="text"
+          value={search}
+          onChange={e => setSearch(e.target.value)}
+          placeholder="Rechercher par nom ou métier…"
+          style={{ width: '100%', padding: '10px 14px 10px 38px', backgroundColor: '#111110', border: '1px solid #1E1E1C', borderRadius: '8px', color: '#F0EDE6', fontSize: '14px', outline: 'none', fontFamily: 'var(--font-dm-sans), sans-serif', boxSizing: 'border-box' }}
+          onFocus={e => { e.target.style.borderColor = '#ea580c'; e.target.style.boxShadow = '0 0 0 2px rgba(234,88,12,0.12)' }}
+          onBlur={e => { e.target.style.borderColor = '#1E1E1C'; e.target.style.boxShadow = 'none' }}
+        />
+      </div>
+
       {loading && (
         <p style={{ color: '#8A8880', fontSize: '14px', fontFamily: 'var(--font-dm-sans), sans-serif' }}>
           Chargement…
@@ -102,9 +122,23 @@ export default function ArtisansPage() {
         </div>
       )}
 
-      {!loading && artisans.length > 0 && (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '20px' }}>
-          {[...artisans].sort((a, b) => {
+      {!loading && artisans.length > 0 && (() => {
+        const q = search.toLowerCase().trim()
+        const filtered = q
+          ? artisans.filter(a => a.nom.toLowerCase().includes(q) || a.metier.toLowerCase().includes(q))
+          : artisans
+
+        if (filtered.length === 0) return (
+          <div style={{ backgroundColor: '#111110', border: '1px dashed #1E1E1C', borderRadius: '12px', padding: '60px 24px', textAlign: 'center' }}>
+            <p style={{ color: '#8A8880', fontSize: '14px', fontFamily: 'var(--font-dm-sans), sans-serif', margin: 0 }}>
+              Aucun artisan ne correspond à &quot;{search}&quot;.
+            </p>
+          </div>
+        )
+
+        return (
+        <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, 1fr)', gap: isMobile ? '12px' : '20px' }}>
+          {[...filtered].sort((a, b) => {
             if (sort === 'nom_asc')  return a.nom.localeCompare(b.nom, 'fr')
             if (sort === 'nom_desc') return b.nom.localeCompare(a.nom, 'fr')
             if (sort === 'date_asc') return a.created_at.localeCompare(b.created_at)
@@ -142,7 +176,8 @@ export default function ArtisansPage() {
             )
           })}
         </div>
-      )}
+        )
+      })()}
 
       {showGoogleModal && (
         <GoogleContactsModal

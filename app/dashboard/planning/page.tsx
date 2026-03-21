@@ -704,6 +704,27 @@ export default function PlanningPage() {
       {/* Calendar */}
       {loading ? (
         <p style={{ color: '#8A8880', fontSize: '14px', fontFamily: 'var(--font-dm-sans), sans-serif' }}>Chargement…</p>
+      ) : evenements.length === 0 ? (
+        <div style={{ backgroundColor: '#111110', border: '1px dashed #1E1E1C', borderRadius: '12px', padding: '80px 24px', textAlign: 'center', marginTop: '8px' }}>
+          <svg width="48" height="48" viewBox="0 0 48 48" fill="none" style={{ margin: '0 auto 20px', display: 'block' }}>
+            <rect x="6" y="10" width="36" height="32" rx="2" stroke="#1E1E1C" strokeWidth="2"/>
+            <path d="M6 18h36" stroke="#ea580c" strokeWidth="2"/>
+            <path d="M16 6v8M32 6v8" stroke="#ea580c" strokeWidth="2" strokeLinecap="round"/>
+            <rect x="13" y="25" width="7" height="6" rx="1" fill="#ea580c" opacity="0.4"/>
+          </svg>
+          <h2 style={{ fontFamily: 'var(--font-syne), sans-serif', fontSize: '16px', fontWeight: 600, color: '#8A8880', marginBottom: '8px' }}>
+            Aucun événement pour l&apos;instant
+          </h2>
+          <p style={{ color: '#7A7870', fontSize: '13px', fontFamily: 'var(--font-dm-sans), sans-serif', marginBottom: '24px' }}>
+            Planifiez votre premier rendez-vous ou visite de chantier.
+          </p>
+          <button
+            onClick={() => { setCreateError(null); setShowDatePicker(true) }}
+            style={{ display: 'inline-block', padding: '10px 20px', backgroundColor: '#ea580c', color: '#0D0D0B', border: 'none', borderRadius: '8px', fontSize: '14px', fontWeight: 600, cursor: 'pointer', fontFamily: 'var(--font-dm-sans), sans-serif' }}
+          >
+            + Planifier un événement
+          </button>
+        </div>
       ) : view === 'month' ? (
         <MonthView anchor={anchor} evenements={evenements} onOpenDetail={handleOpenDetail} onDayClick={handleDayClick} />
       ) : (

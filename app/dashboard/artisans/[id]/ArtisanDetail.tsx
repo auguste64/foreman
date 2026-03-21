@@ -303,6 +303,7 @@ export default function ArtisanDetail({ artisan }: { artisan: Artisan }) {
             { label: 'Métier', value: artisan.metier },
             { label: 'Email', value: artisan.email },
             { label: 'Téléphone', value: artisan.telephone },
+            { label: 'Ajouté le', value: new Date(artisan.created_at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' }) },
           ].map(({ label, value }) => (
             <div key={label}>
               <p style={{ ...labelStyle, marginBottom: '4px' }}>{label}</p>

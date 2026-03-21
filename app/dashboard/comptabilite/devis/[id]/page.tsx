@@ -85,7 +85,7 @@ export default function DevisDetailPage() {
       })
       await supabase.from('devis').update({ statut: 'accepte' }).eq('id', devis.id)
       toast.success('Facture créée')
-      router.push(`/dashboard/documents/factures/${fid}`)
+      router.push(`/dashboard/comptabilite/factures/${fid}`)
     } catch (err: unknown) {
       toast.error(err instanceof Error ? err.message : 'Erreur')
       setConverting(false)
@@ -104,7 +104,7 @@ export default function DevisDetailPage() {
     const supabase = createClient()
     await supabase.from('devis').delete().eq('id', id)
     toast.success('Devis supprimé')
-    router.push('/dashboard/documents')
+    router.push('/dashboard/comptabilite')
   }
 
   async function handleSendEmail() {
@@ -139,7 +139,7 @@ export default function DevisDetailPage() {
 
   return (
     <div className="page-enter" style={{ flex: 1, padding: '40px', overflowY: 'auto', maxWidth: 900 }}>
-      <Link href="/dashboard/documents" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, backgroundColor: '#111110', border: '1px solid #1E1E1C', borderRadius: 8, padding: '8px 14px', color: '#F0EDE6', fontSize: 13, fontWeight: 500, cursor: 'pointer', textDecoration: 'none', transition: 'all 0.15s ease', fontFamily: 'var(--font-dm-sans), sans-serif', marginBottom: 24 }}
+      <Link href="/dashboard/comptabilite" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, backgroundColor: '#111110', border: '1px solid #1E1E1C', borderRadius: 8, padding: '8px 14px', color: '#F0EDE6', fontSize: 13, fontWeight: 500, cursor: 'pointer', textDecoration: 'none', transition: 'all 0.15s ease', fontFamily: 'var(--font-dm-sans), sans-serif', marginBottom: 24 }}
         onMouseEnter={e => { e.currentTarget.style.background = '#1E1E1C'; e.currentTarget.style.borderColor = '#ea580c'; e.currentTarget.style.color = '#ea580c' }}
         onMouseLeave={e => { e.currentTarget.style.background = '#111110'; e.currentTarget.style.borderColor = '#1E1E1C'; e.currentTarget.style.color = '#F0EDE6' }}
       >
@@ -157,7 +157,7 @@ export default function DevisDetailPage() {
           {devis.objet && <p style={{ color: '#8A8880', fontSize: 13, fontFamily: 'var(--font-dm-sans), sans-serif', margin: 0 }}>{devis.objet}</p>}
         </div>
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-          <Link href={`/dashboard/documents/devis/nouveau?edit=${id}`} style={btnOutline}>Modifier</Link>
+          <Link href={`/dashboard/comptabilite/devis/nouveau?edit=${id}`} style={btnOutline}>Modifier</Link>
           <a href={`/api/documents-pdf?type=devis&id=${id}`} target="_blank" rel="noreferrer" style={btnOutline}>PDF</a>
           <button onClick={() => setShowEmail(true)} style={btnOutline}>Email</button>
           <button onClick={handleConvertirFacture} disabled={converting}

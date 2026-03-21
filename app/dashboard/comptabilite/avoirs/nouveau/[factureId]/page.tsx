@@ -103,7 +103,7 @@ export default function NouvelAvoirPage() {
         lignes: parsedLignes,
       })
       toast.success('Avoir créé')
-      router.push(`/dashboard/documents/factures/${factureId}`)
+      router.push(`/dashboard/comptabilite/factures/${factureId}`)
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Erreur')
     } finally {
@@ -117,7 +117,7 @@ export default function NouvelAvoirPage() {
 
   return (
     <div className="page-enter" style={{ flex: 1, padding: '40px', overflowY: 'auto', maxWidth: 800 }}>
-      <Link href={`/dashboard/documents/factures/${factureId}`} style={{ display: 'inline-flex', alignItems: 'center', gap: 8, backgroundColor: '#111110', border: '1px solid #1E1E1C', borderRadius: 8, padding: '8px 14px', color: '#F0EDE6', fontSize: 13, fontWeight: 500, cursor: 'pointer', textDecoration: 'none', transition: 'all 0.15s ease', fontFamily: 'var(--font-dm-sans), sans-serif', marginBottom: 28 }}
+      <Link href={`/dashboard/comptabilite/factures/${factureId}`} style={{ display: 'inline-flex', alignItems: 'center', gap: 8, backgroundColor: '#111110', border: '1px solid #1E1E1C', borderRadius: 8, padding: '8px 14px', color: '#F0EDE6', fontSize: 13, fontWeight: 500, cursor: 'pointer', textDecoration: 'none', transition: 'all 0.15s ease', fontFamily: 'var(--font-dm-sans), sans-serif', marginBottom: 28 }}
         onMouseEnter={e => { e.currentTarget.style.background = '#1E1E1C'; e.currentTarget.style.borderColor = '#ea580c'; e.currentTarget.style.color = '#ea580c' }}
         onMouseLeave={e => { e.currentTarget.style.background = '#111110'; e.currentTarget.style.borderColor = '#1E1E1C'; e.currentTarget.style.color = '#F0EDE6' }}
       >
@@ -216,7 +216,7 @@ export default function NouvelAvoirPage() {
           onMouseEnter={e => { if (!saving) { e.currentTarget.style.transform = 'translateY(-1px)' } }}
           onMouseLeave={e => { e.currentTarget.style.transform = 'none' }}
         >{saving ? 'Enregistrement…' : 'Créer l\'avoir'}</button>
-        <Link href={`/dashboard/documents/factures/${factureId}`} style={{ padding: '11px 20px', backgroundColor: 'transparent', color: '#8A8880', border: '1px solid #1E1E1C', borderRadius: 8, fontSize: 14, textDecoration: 'none', fontFamily: 'var(--font-dm-sans), sans-serif' }}>Annuler</Link>
+        <Link href={`/dashboard/comptabilite/factures/${factureId}`} style={{ padding: '11px 20px', backgroundColor: 'transparent', color: '#8A8880', border: '1px solid #1E1E1C', borderRadius: 8, fontSize: 14, textDecoration: 'none', fontFamily: 'var(--font-dm-sans), sans-serif' }}>Annuler</Link>
       </div>
     </div>
   )

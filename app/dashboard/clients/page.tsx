@@ -7,6 +7,7 @@ import { getClients, clientDisplayName } from '@/lib/supabase/clients'
 import type { Client } from '@/lib/supabase/clients'
 import GoogleContactsModal from '@/components/GoogleContactsModal'
 import SortPills from '@/components/SortPills'
+import { useIsMobile } from '@/lib/useIsMobile'
 
 type Filter = 'tous' | 'particulier' | 'entreprise'
 type SortClient = 'nom_asc' | 'nom_desc' | 'date_desc' | 'date_asc'
@@ -20,6 +21,7 @@ function initials(c: Client): string {
 
 export default function ClientsPage() {
   const router = useRouter()
+  const isMobile = useIsMobile()
   const [clients, setClients] = useState<Client[]>([])
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
@@ -48,7 +50,7 @@ export default function ClientsPage() {
   })
 
   return (
-    <div className="page-enter" style={{ flex: 1, padding: '40px', overflowY: 'auto' }}>
+    <div className="page-enter" style={{ flex: 1, padding: isMobile ? '16px' : '40px', overflowY: 'auto' }}>
       {/* Header */}
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 32 }}>
         <div>
@@ -79,15 +81,21 @@ export default function ClientsPage() {
 
       {/* Search + filters */}
       <div style={{ display: 'flex', gap: 12, marginBottom: 28, flexWrap: 'wrap' }}>
-        <input
-          type="text"
-          value={search}
-          onChange={e => setSearch(e.target.value)}
-          placeholder="Rechercher par nom, email, société…"
-          style={{ flex: 1, minWidth: 220, padding: '10px 14px', backgroundColor: '#111110', border: '1px solid #1E1E1C', borderRadius: 8, color: '#F0EDE6', fontSize: 14, outline: 'none', fontFamily: 'var(--font-dm-sans), sans-serif' }}
-          onFocus={e => { e.target.style.borderColor = '#ea580c'; e.target.style.boxShadow = '0 0 0 2px rgba(249,115,22,0.12)' }}
-          onBlur={e => { e.target.style.borderColor = '#1E1E1C'; e.target.style.boxShadow = 'none' }}
-        />
+        <div style={{ position: 'relative', flex: 1, minWidth: 220 }}>
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }}>
+            <circle cx="7" cy="7" r="4.5" stroke="#8A8880" strokeWidth="1.5"/>
+            <path d="M11 11l3 3" stroke="#8A8880" strokeWidth="1.5" strokeLinecap="round"/>
+          </svg>
+          <input
+            type="text"
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            placeholder="Rechercher par nom, email, société…"
+            style={{ width: '100%', padding: '10px 14px 10px 38px', backgroundColor: '#111110', border: '1px solid #1E1E1C', borderRadius: 8, color: '#F0EDE6', fontSize: 14, outline: 'none', fontFamily: 'var(--font-dm-sans), sans-serif', boxSizing: 'border-box' }}
+            onFocus={e => { e.target.style.borderColor = '#ea580c'; e.target.style.boxShadow = '0 0 0 2px rgba(234,88,12,0.12)' }}
+            onBlur={e => { e.target.style.borderColor = '#1E1E1C'; e.target.style.boxShadow = 'none' }}
+          />
+        </div>
         <div style={{ display: 'flex', gap: 0, backgroundColor: '#111110', border: '1px solid #1E1E1C', borderRadius: 8, overflow: 'hidden' }}>
           {(['tous', 'particulier', 'entreprise'] as Filter[]).map(f => (
             <button
@@ -111,22 +119,41 @@ export default function ClientsPage() {
 
       {/* Grid */}
       {loading ? (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 16 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fill, minmax(280px, 1fr))', gap: isMobile ? 12 : 16 }}>
           {[1, 2, 3, 4, 5, 6].map(i => (
             <div key={i} style={{ backgroundColor: '#111110', border: '1px solid #1E1E1C', borderRadius: 12, padding: 20, height: 120 }} />
           ))}
         </div>
       ) : visible.length === 0 ? (
-        <div style={{ textAlign: 'center', padding: '80px 40px' }}>
-          <p style={{ color: '#8A8880', fontSize: 14, fontFamily: 'var(--font-dm-sans), sans-serif', margin: 0 }}>
-            {search || filter !== 'tous' ? 'Aucun client ne correspond à votre recherche.' : 'Aucun client pour l\'instant.'}{' '}
-            {!search && filter === 'tous' && (
-              <Link href="/dashboard/clients/nouveau" style={{ color: '#ea580c' }}>Créer le premier</Link>
-            )}
-          </p>
-        </div>
+        search || filter !== 'tous' ? (
+          <div style={{ textAlign: 'center', padding: '60px 40px' }}>
+            <p style={{ color: '#8A8880', fontSize: 14, fontFamily: 'var(--font-dm-sans), sans-serif', margin: 0 }}>
+              Aucun client ne correspond à votre recherche.
+            </p>
+          </div>
+        ) : (
+          <div style={{ backgroundColor: '#111110', border: '1px dashed #1E1E1C', borderRadius: '12px', padding: '80px 24px', textAlign: 'center' }}>
+            <svg width="48" height="48" viewBox="0 0 48 48" fill="none" style={{ margin: '0 auto 20px', display: 'block' }}>
+              <circle cx="24" cy="18" r="9" stroke="#1E1E1C" strokeWidth="2"/>
+              <path d="M8 42c0-8.837 7.163-16 16-16s16 7.163 16 16" stroke="#ea580c" strokeWidth="2" strokeLinecap="round"/>
+              <circle cx="24" cy="18" r="5" fill="#ea580c" opacity="0.3"/>
+            </svg>
+            <h2 style={{ fontFamily: 'var(--font-syne), sans-serif', fontSize: '16px', fontWeight: 600, color: '#8A8880', marginBottom: '8px' }}>
+              Aucun client pour l&apos;instant
+            </h2>
+            <p style={{ color: '#7A7870', fontSize: '13px', fontFamily: 'var(--font-dm-sans), sans-serif', marginBottom: '24px' }}>
+              Ajoutez votre premier client pour commencer à gérer vos projets.
+            </p>
+            <Link
+              href="/dashboard/clients/nouveau"
+              style={{ display: 'inline-block', padding: '10px 20px', backgroundColor: '#ea580c', color: '#0D0D0B', borderRadius: '8px', fontSize: '14px', fontWeight: 600, textDecoration: 'none', fontFamily: 'var(--font-dm-sans), sans-serif' }}
+            >
+              + Ajouter mon premier client
+            </Link>
+          </div>
+        )
       ) : (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 16 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fill, minmax(280px, 1fr))', gap: isMobile ? 12 : 16 }}>
           {visible.map(c => {
             const name = clientDisplayName(c)
             const email = c.email || c.contact_email || ''

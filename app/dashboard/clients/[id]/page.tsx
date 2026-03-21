@@ -473,7 +473,7 @@ export default function ClientDetailPage() {
                 {docs.map(d => {
                   const statutMap = d.type === 'devis' ? DEVIS_STATUT : FACTURE_STATUT
                   const s = statutMap[d.statut] ?? { label: d.statut, color: '#8A8880' }
-                  const href = `/dashboard/documents/${d.type === 'devis' ? 'devis' : 'factures'}/${d.id}`
+                  const href = `/dashboard/comptabilite/${d.type === 'devis' ? 'devis' : 'factures'}/${d.id}`
                   return (
                     <tr key={`${d.type}-${d.id}`}
                       onMouseEnter={e => e.currentTarget.style.background = 'rgba(249,115,22,0.04)'}

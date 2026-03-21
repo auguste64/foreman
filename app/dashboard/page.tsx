@@ -10,7 +10,7 @@ export default async function DashboardPage() {
 
   const [{ data: entreprise }, { data: profile }] = await Promise.all([
     supabase.from('entreprise_infos').select('raison_sociale').eq('user_id', user.id).single(),
-    supabase.from('profiles').select('prenom, nom').eq('id', user.id).single(),
+    supabase.from('profiles').select('prenom, nom, onboarding_done').eq('id', user.id).single(),
   ])
 
   const emailFallback = (user.email?.split('@')[0] ?? '').replace(/[0-9]/g, '')
@@ -49,6 +49,8 @@ export default async function DashboardPage() {
       }}
       chantiersEnCours={chantiersEnCours ?? []}
       prochainsEvenements={prochainsEvenements ?? []}
+      showOnboarding={!profile?.onboarding_done}
+      userId={user.id}
     />
   )
 }
