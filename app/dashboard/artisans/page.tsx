@@ -32,7 +32,7 @@ export default function ArtisansPage() {
 
   return (
     <div className="page-enter" style={{ flex: 1, padding: isMobile ? '16px' : '40px', overflowY: 'auto' }}>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '24px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '24px', flexWrap: 'wrap', gap: '8px' }}>
         <div>
           <h1
             style={{
@@ -49,7 +49,7 @@ export default function ArtisansPage() {
             {loading ? '…' : `${artisans.length} artisan${artisans.length !== 1 ? 's' : ''}`}
           </p>
         </div>
-        <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+        <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
           <SortPills
             value={sort}
             onChange={v => setSort(v as SortArtisan)}

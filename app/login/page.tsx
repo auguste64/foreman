@@ -63,7 +63,7 @@ export default function LoginPage() {
               color: '#F0EDE6',
             }}
           >
-            FORE<span style={{ color: '#ea580c' }}>MAN</span>
+            THE <span style={{ color: '#ea580c' }}>BUILDER</span>
           </span>
           <p style={{ color: '#8A8880', fontSize: '14px', marginTop: '8px' }}>
             Gestion de chantier pour architectes
@@ -196,7 +196,7 @@ export default function LoginPage() {
               style={{
                 marginTop: '8px',
                 padding: '12px',
-                backgroundColor: loading ? '#9E8630' : '#ea580c',
+                backgroundColor: loading ? 'rgba(234,88,12,0.5)' : '#ea580c',
                 color: '#0D0D0B',
                 border: 'none',
                 borderRadius: '8px',
@@ -206,6 +206,7 @@ export default function LoginPage() {
                 fontFamily: 'var(--font-dm-sans), sans-serif',
                 letterSpacing: '0.02em',
                 transition: 'background-color 0.15s',
+                minHeight: '44px',
               }}
             >
               {loading ? 'Chargement...' : mode === 'login' ? 'Se connecter' : 'Créer mon compte'}

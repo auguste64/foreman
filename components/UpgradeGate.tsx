@@ -68,7 +68,7 @@ export default function UpgradeGate({
         </div>
 
         <a
-          href="/tarifs"
+          href="/#tarifs"
           style={{
             display: 'inline-block',
             background: '#ea580c',

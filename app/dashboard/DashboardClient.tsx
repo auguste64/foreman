@@ -15,7 +15,6 @@ const NAV_ITEMS: { id: string; label: string; icon: string; href: string; separa
   { id: 'comptes-rendus', label: 'Comptes rendus',   icon: '\u{1F4CB}',         href: '/dashboard/comptes-rendus' },
   { id: 'artisans',       label: 'Artisans',          icon: '\u{1F477}',         href: '/dashboard/artisans' },
   { id: 'planning',       label: 'Planning',          icon: '\u{1F4C5}',         href: '/dashboard/planning' },
-  { id: 'stats',          label: 'Statistiques',      icon: '\u{1F4CA}',         href: '/dashboard/stats' },
   { id: 'finances',       label: 'Finances',           icon: '\u{1F4B0}',         href: '/dashboard/finances' },
   { id: 'parametres',     label: 'Paramètres',        icon: '\u2699\uFE0F',      href: '/dashboard/parametres', separator: true },
 ]

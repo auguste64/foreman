@@ -320,7 +320,7 @@ export default function Home() {
             { img: '/screenshots/analyse.png', alt: 'Analyse & statistiques', icon: '📊', title: 'Analyse & statistiques', desc: 'CA, pipeline, projections, impayés. Pilotez votre activité avec précision.', delay: 'd6' },
           ].map((card) => (
             <div key={card.title} className={`feat-card reveal anim ${card.delay}`}>
-              <Image src={card.img} alt={card.alt} width={800} height={180} loading="lazy" style={{ width: '100%', height: '180px', objectFit: 'cover', objectPosition: 'top left', borderRadius: '8px', marginBottom: '20px', display: 'block', background: '#1E1E1C' }} />
+              <Image src={card.img} alt={card.alt} width={800} height={180} loading="lazy" sizes="(max-width: 768px) 100vw, 800px" style={{ width: '100%', objectFit: 'cover', objectPosition: 'top left', borderRadius: '8px', marginBottom: '20px', display: 'block', background: '#1E1E1C' }} />
               <div className="feat-icon">{card.icon}</div>
               <h3 className="feat-title">{card.title}</h3>
               <p className="feat-desc">{card.desc}</p>

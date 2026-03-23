@@ -678,7 +678,8 @@ export default function FinancesPage() {
               <p style={{ color: '#8A8880', fontSize: 14, fontFamily: 'var(--font-dm-sans), sans-serif', margin: 0 }}>Tous les devis acceptés ont été convertis en factures.</p>
             </div>
           ) : (
-            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+            <div style={{ overflowX: 'auto', width: '100%' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '600px' }}>
               <thead>
                 <tr>
                   {['Numéro', 'Client', 'Objet', 'Montant TTC', 'Accepté le', ''].map(h => (
@@ -711,6 +712,7 @@ export default function FinancesPage() {
                 ))}
               </tbody>
             </table>
+            </div>
           )}
         </div>
       </div>
@@ -757,7 +759,8 @@ export default function FinancesPage() {
             <p style={{ color: '#8A8880', fontSize: 14, fontFamily: 'var(--font-dm-sans), sans-serif', margin: 0 }}>Aucune facture pour cette période.</p>
           </div>
         ) : (
-          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+          <div style={{ overflowX: 'auto', width: '100%' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '600px' }}>
             <thead>
               <tr>
                 {['Taux TVA', 'Base HT', 'TVA collectée', 'Total TTC', '% du CA'].map(h => (
@@ -796,6 +799,7 @@ export default function FinancesPage() {
               </tr>
             </tbody>
           </table>
+          </div>
         )}
       </div>
 

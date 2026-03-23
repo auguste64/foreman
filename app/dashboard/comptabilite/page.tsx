@@ -373,7 +373,8 @@ export default function DocumentsPage() {
               filteredDevis.length === 0 ? (
                 <EmptyState message="Aucun devis." cta="Créer le premier" href="/dashboard/comptabilite/devis/nouveau" />
               ) : (
-                <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                <div style={{ overflowX: 'auto', width: '100%' }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '700px' }}>
                   <thead><tr>
                     {['Numéro', 'Client', 'Objet', 'Montant TTC', 'Statut', 'Date', 'Actions'].map(h => (
                       <th key={h} style={thStyle}>{h}</th>
@@ -402,6 +403,7 @@ export default function DocumentsPage() {
                     ))}
                   </tbody>
                 </table>
+                </div>
               )
             )}
 
@@ -410,7 +412,8 @@ export default function DocumentsPage() {
               filteredFactures.length === 0 ? (
                 <EmptyState message="Aucune facture." cta="Créer la première" href="/dashboard/comptabilite/factures/nouveau" />
               ) : (
-                <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                <div style={{ overflowX: 'auto', width: '100%' }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '700px' }}>
                   <thead><tr>
                     {['Numéro', 'Client', 'Objet', 'Montant TTC', 'Statut', 'Échéance', 'Actions'].map(h => (
                       <th key={h} style={thStyle}>{h}</th>
@@ -439,6 +442,7 @@ export default function DocumentsPage() {
                     ))}
                   </tbody>
                 </table>
+                </div>
               )
             )}
 
@@ -447,7 +451,8 @@ export default function DocumentsPage() {
               filteredAvoirs.length === 0 ? (
                 <EmptyState message="Aucun avoir. Les avoirs s'émettent depuis une facture." />
               ) : (
-                <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                <div style={{ overflowX: 'auto', width: '100%' }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '600px' }}>
                   <thead><tr>
                     {['Numéro', 'Motif', 'Montant TTC', 'Statut', 'Date', 'Actions'].map(h => (
                       <th key={h} style={thStyle}>{h}</th>
@@ -471,6 +476,7 @@ export default function DocumentsPage() {
                     ))}
                   </tbody>
                 </table>
+                </div>
               )
             )}
 
@@ -479,7 +485,8 @@ export default function DocumentsPage() {
               filteredAcomptes.length === 0 ? (
                 <EmptyState message="Aucun acompte." cta="Créer le premier" href="/dashboard/comptabilite/acomptes/nouveau" />
               ) : (
-                <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                <div style={{ overflowX: 'auto', width: '100%' }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '700px' }}>
                   <thead><tr>
                     {['Numéro', 'Client', 'Objet', 'Montant TTC', 'Statut', 'Date', 'Actions'].map(h => (
                       <th key={h} style={thStyle}>{h}</th>
@@ -504,6 +511,7 @@ export default function DocumentsPage() {
                     ))}
                   </tbody>
                 </table>
+                </div>
               )
             )}
 

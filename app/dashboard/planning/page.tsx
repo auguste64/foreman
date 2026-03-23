@@ -726,9 +726,17 @@ export default function PlanningPage() {
           </button>
         </div>
       ) : view === 'month' ? (
-        <MonthView anchor={anchor} evenements={evenements} onOpenDetail={handleOpenDetail} onDayClick={handleDayClick} />
+        <div style={{ overflowX: 'auto', width: '100%' }}>
+          <div style={{ minWidth: '700px' }}>
+            <MonthView anchor={anchor} evenements={evenements} onOpenDetail={handleOpenDetail} onDayClick={handleDayClick} />
+          </div>
+        </div>
       ) : (
-        <WeekView anchor={anchor} evenements={evenements} onOpenDetail={handleOpenDetail} onDayClick={handleDayClick} />
+        <div style={{ overflowX: 'auto', width: '100%' }}>
+          <div style={{ minWidth: '700px' }}>
+            <WeekView anchor={anchor} evenements={evenements} onOpenDetail={handleOpenDetail} onDayClick={handleDayClick} />
+          </div>
+        </div>
       )}
 
       {/* ── DateTimePicker modal ─────────────────────────────────────────── */}
