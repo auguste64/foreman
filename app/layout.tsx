@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import { Viewport } from 'next'
 import { Syne, DM_Sans, Plus_Jakarta_Sans } from 'next/font/google'
 import './globals.css'
 import './aurora.css'
@@ -26,7 +27,10 @@ const dmSans = DM_Sans({
   display: 'swap',
 })
 
+export const viewport: Viewport = { width: 'device-width', initialScale: 1, themeColor: '#0D0D0B' }
+
 export const metadata: Metadata = {
+  metadataBase: new URL('https://thebuilder.io'),
   title: 'The Builder — Gestion de chantier',
   description: 'SaaS de gestion de chantier pour architectes et maîtres d\'œuvre',
   icons: {
@@ -34,7 +38,27 @@ export const metadata: Metadata = {
     shortcut: '/favicon.svg',
     apple: '/favicon.svg',
   },
+  robots: { index: true, follow: true, googleBot: { index: true, follow: true } },
+  alternates: { canonical: '/' },
+  openGraph: {
+    title: 'The Builder — Gestion de chantier',
+    description: "SaaS de gestion de chantier pour architectes et maîtres d'œuvre. Dès 11,90€/mois.",
+    url: 'https://thebuilder.io',
+    siteName: 'The Builder',
+    locale: 'fr_FR',
+    type: 'website',
+    images: [{ url: '/og-image.png', width: 1200, height: 630, alt: 'The Builder — Gestion de chantier' }],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'The Builder — Gestion de chantier',
+    description: "SaaS de gestion de chantier pour architectes et maîtres d'œuvre.",
+    images: ['/og-image.png'],
+  },
 }
+
+const organizationSchema = { '@context': 'https://schema.org', '@type': 'Organization', name: 'The Builder', url: 'https://thebuilder.io', description: "Éditeur de logiciel SaaS de gestion de chantier pour les professionnels du bâtiment en France.", foundingLocation: { '@type': 'Place', addressCountry: 'FR' }, inLanguage: 'fr' }
+const websiteSchema = { '@context': 'https://schema.org', '@type': 'WebSite', name: 'The Builder', url: 'https://thebuilder.io', inLanguage: 'fr' }
 
 export default function RootLayout({
   children,
@@ -43,6 +67,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="fr" className={`${syne.variable} ${dmSans.variable} ${plusJakarta.variable}`}>
+      <head>
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationSchema) }} />
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteSchema) }} />
+      </head>
       <body style={{ fontFamily: 'var(--font-dm-sans), DM Sans, sans-serif', background: '#0D0D0B', color: '#F0EDE6' }}>
         <div style={{ position: 'fixed', top: 0, left: 0, width: '240px', height: '100%', background: '#0D0D0B', zIndex: 1, pointerEvents: 'none' }} />
         <div style={{ position: 'fixed', top: 0, left: '240px', right: 0, bottom: 0, zIndex: 0, pointerEvents: 'none', overflow: 'hidden', background: 'transparent' }}>

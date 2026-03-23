@@ -121,8 +121,10 @@ export default function ParametresPage() {
       const ops: Promise<unknown>[] = [upsertProfile(userId, form)]
       if (form.entreprise.trim()) {
         ops.push(
-          supabase.from('entreprise_infos')
-            .upsert({ user_id: userId, raison_sociale: form.entreprise.trim() }, { onConflict: 'user_id' })
+          Promise.resolve(
+            supabase.from('entreprise_infos')
+              .upsert({ user_id: userId, raison_sociale: form.entreprise.trim() }, { onConflict: 'user_id' })
+          )
         )
       }
       await Promise.all(ops)

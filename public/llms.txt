@@ -1,0 +1,18 @@
+# The Builder
+> SaaS de gestion de chantier pour architectes et maîtres d'œuvre
+
+The Builder est un logiciel en ligne (SaaS) dédié à la gestion de chantier pour les architectes et maîtres d'œuvre en France. Il centralise les comptes rendus de chantier (PDF + email), la gestion des artisans (magic link, convocations, présences), la comptabilité (devis, factures, avoirs), le planning synchronisé (Google, Apple, Outlook), la gestion des clients et les statistiques d'activité.
+
+## Tarifs
+- Essentiel : 11,90€/mois — comptes rendus, artisans, planning
+- Pro : 18,90€/mois — toutes fonctionnalités + comptabilité + statistiques
+
+## Marché
+Secteur: BTP, Architecture, Maîtrise d'œuvre | Pays: France | Langue: fr
+
+## Liens
+- / : Présentation du produit
+
+## License
+Citation permitted with attribution: "The Builder — thebuilder.io"
+Training use: No

@@ -1,7 +1,10 @@
-'use client'
-
-import { useEffect } from 'react'
 import './landing.css'
+import LandingAnimations from './LandingAnimations'
+
+export const metadata = {
+  title: "The Builder — Gestion de chantier pour architectes et MOEs",
+  description: "Comptes rendus PDF, gestion artisans, comptabilité et planning synchronisé. Dès 11,90€/mois. Sans engagement.",
+}
 
 const CHECK_ICON_DEFAULT = (
   <svg width="16" height="16" viewBox="0 0 16 16" style={{ flexShrink: 0 }}>
@@ -51,7 +54,7 @@ function PricingCards() {
           ))}
         </div>
         <a
-          href="/dashboard"
+          href="/login"
           style={{
             display: 'block', textAlign: 'center', padding: '14px 32px',
             background: 'transparent', color: '#ea580c',
@@ -100,7 +103,7 @@ function PricingCards() {
           ))}
         </div>
         <a
-          href="/dashboard"
+          href="/login"
           style={{
             display: 'block', textAlign: 'center', padding: '14px 32px',
             background: '#ea580c', color: '#fff',
@@ -120,48 +123,25 @@ function PricingCards() {
 }
 
 export default function Home() {
-  useEffect(() => {
-    const wrapper = document.querySelector('.lp-wrapper') as Element
-
-    // ── Scroll reveal (.reveal)
-    const obs = new IntersectionObserver(
-      (entries) => entries.forEach((e) => { if (e.isIntersecting) e.target.classList.add('on') }),
-      { threshold: 0.1, root: wrapper }
-    )
-    document.querySelectorAll('.reveal').forEach((el) => obs.observe(el))
-
-    // ── CSS animations (.anim)
-    const observer = new IntersectionObserver((entries) => {
-      entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible') })
-    }, { threshold: 0.1 })
-    document.querySelectorAll('.anim').forEach(el => observer.observe(el))
-
-    // ── Button ripple
-    const handlers: Array<{ el: Element; fn: (e: Event) => void }> = []
-    document.querySelectorAll('.btn').forEach((btn) => {
-      const fn = (e: Event) => {
-        const me = e as MouseEvent
-        const rect = btn.getBoundingClientRect()
-        const size = Math.max(rect.width, rect.height) * 2
-        const ripple = document.createElement('span')
-        ripple.classList.add('ripple')
-        ripple.style.cssText = `width:${size}px;height:${size}px;left:${me.clientX - rect.left - size / 2}px;top:${me.clientY - rect.top - size / 2}px;`
-        btn.appendChild(ripple)
-        setTimeout(() => ripple.remove(), 600)
-      }
-      btn.addEventListener('click', fn)
-      handlers.push({ el: btn, fn })
-    })
-
-    return () => {
-      obs.disconnect()
-      observer.disconnect()
-      handlers.forEach(({ el, fn }) => el.removeEventListener('click', fn))
-    }
-  }, [])
-
   return (
     <div className="lp-wrapper">
+      <LandingAnimations />
+
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify({
+        '@context': 'https://schema.org',
+        '@type': 'SoftwareApplication',
+        name: 'The Builder',
+        applicationCategory: 'BusinessApplication',
+        operatingSystem: 'Web',
+        inLanguage: 'fr',
+        description: "SaaS de gestion de chantier pour architectes et maîtres d'œuvre",
+        url: 'https://thebuilder.io',
+        audience: { '@type': 'Audience', audienceType: "Architectes et maîtres d'œuvre", geographicArea: { '@type': 'Country', name: 'France' } },
+        offers: [
+          { '@type': 'Offer', name: 'Essentiel', price: '11.90', priceCurrency: 'EUR', priceSpecification: { '@type': 'UnitPriceSpecification', price: '11.90', priceCurrency: 'EUR', unitText: 'MONTH' } },
+          { '@type': 'Offer', name: 'Pro', price: '18.90', priceCurrency: 'EUR', priceSpecification: { '@type': 'UnitPriceSpecification', price: '18.90', priceCurrency: 'EUR', unitText: 'MONTH' } },
+        ]
+      }) }} />
 
       <div id="bg-wrap" aria-hidden="true">
         <div className="bg-blob b1"></div>
@@ -175,7 +155,7 @@ export default function Home() {
 
       {/* NAV */}
       <nav style={{ position: 'fixed', top: 0, left: 0, right: 0, zIndex: 100, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 60px', height: '70px', background: 'transparent', border: 'none' }}>
-        <a className="logo" href="#">
+        <a className="logo" href="/">
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '3px', flexShrink: 0 }}>
               <div style={{ display: 'flex', gap: '3px' }}>
