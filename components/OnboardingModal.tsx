@@ -67,12 +67,11 @@ export default function OnboardingModal({ userId, onClose }: Props) {
   const backdropRef = useRef<HTMLDivElement>(null)
 
   async function markDone() {
-    try {
-      const supabase = createClient()
-      await supabase
-        .from('profiles')
-        .upsert({ id: userId, onboarding_done: true }, { onConflict: 'id' })
-    } catch { /* ignore */ }
+    const supabase = createClient()
+    const { error } = await supabase
+      .from('profiles')
+      .upsert({ id: userId, onboarding_done: true }, { onConflict: 'id' })
+    if (error) console.error('[Onboarding] Failed to mark done:', error.message)
     onClose()
   }
 
@@ -167,6 +166,11 @@ export default function OnboardingModal({ userId, onClose }: Props) {
 
   async function handleSkip() {
     if (step < TOTAL_STEPS) {
+      // Mark done immediately so a page refresh won't re-show the modal
+      const supabase = createClient()
+      await supabase
+        .from('profiles')
+        .upsert({ id: userId, onboarding_done: true }, { onConflict: 'id' })
       setStep(s => s + 1)
     } else {
       await markDone()
