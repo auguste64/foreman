@@ -144,6 +144,7 @@ export default function NouvelleFacturePage() {
   const { isComplet, loading: planLoading } = usePlan()
   const [datePickerField, setDatePickerField] = useState<'date_emission' | 'date_echeance' | null>(null)
   const [importing, setImporting] = useState(false)
+  const [importedFileName, setImportedFileName] = useState<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
@@ -214,21 +215,9 @@ export default function NouvelleFacturePage() {
       const data = await res.json()
       if (!res.ok) throw new Error(data.error ?? 'Erreur')
 
-      setForm(p => {
-        const updates: Partial<typeof p> = {}
-        if (data.fichier_url) updates.fichier_url = data.fichier_url
-        if (typeof data.montant_ht === 'number') {
-          setLignes([{ libelle: data.description ?? '', quantite: '1', unite: 'forfait', prix_unitaire: String(data.montant_ht), tva_taux: String(data.tva_taux ?? 20) }])
-        }
-        if (data.description) updates.objet = data.description
-        if (data.lot) updates.lot = data.lot
-        if (data.artisan_nom) {
-          const found = artisans.find(a => a.nom.toLowerCase().includes(data.artisan_nom.toLowerCase()))
-          if (found) updates.artisan_id = found.id
-        }
-        return { ...p, ...updates }
-      })
-      toast.success('PDF importé et analysé')
+      setForm(p => ({ ...p, fichier_url: data.fichier_url ?? p.fichier_url }))
+      setImportedFileName(data.nom_fichier ?? file.name)
+      toast.success('PDF importé — remplissez les montants manuellement')
     } catch (err: unknown) {
       toast.error(err instanceof Error ? err.message : 'Erreur import PDF')
     } finally {
@@ -387,43 +376,41 @@ export default function NouvelleFacturePage() {
               {/* PDF Import */}
               <div>
                 <label style={labelStyle}>Import PDF</label>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                  <input
-                    ref={fileInputRef}
-                    type="file"
-                    accept="application/pdf"
-                    style={{ display: 'none' }}
-                    onChange={handleImportPDF}
-                  />
-                  <button
-                    type="button"
-                    onClick={() => fileInputRef.current?.click()}
-                    disabled={importing}
-                    style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '9px 16px', backgroundColor: importing ? '#1a1a18' : '#111110', border: '1px solid #1E1E1C', borderRadius: 8, color: importing ? '#8A8880' : '#ea580c', fontSize: 13, fontWeight: 500, cursor: importing ? 'not-allowed' : 'pointer', fontFamily: 'var(--font-dm-sans), sans-serif', transition: 'all 0.15s' }}
-                    onMouseEnter={e => { if (!importing) { e.currentTarget.style.borderColor = '#ea580c'; e.currentTarget.style.backgroundColor = 'rgba(234,88,12,0.06)' } }}
-                    onMouseLeave={e => { e.currentTarget.style.borderColor = '#1E1E1C'; e.currentTarget.style.backgroundColor = '#111110' }}
-                  >
-                    {importing ? (
-                      <>
-                        <span style={{ width: 14, height: 14, border: '2px solid #ea580c', borderTopColor: 'transparent', borderRadius: '50%', display: 'inline-block', animation: 'spin 0.7s linear infinite' }} />
-                        Extraction IA…
-                      </>
-                    ) : (
-                      <>
-                        <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="#ea580c" strokeWidth="2"><path d="M12 10v6m0 0l-3-3m3 3l3-3M3 17v3a1 1 0 001 1h16a1 1 0 001-1v-3M3 7V5a1 1 0 011-1h4l2 2h8a1 1 0 011 1v4" strokeLinecap="round" strokeLinejoin="round"/></svg>
-                        Importer un PDF
-                      </>
-                    )}
-                  </button>
-                  {form.fichier_url && (
-                    <a
-                      href={form.fichier_url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      style={{ fontSize: 12, color: '#60a5fa', fontFamily: 'var(--font-dm-sans), sans-serif', textDecoration: 'underline', maxWidth: 200, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept="application/pdf"
+                      style={{ display: 'none' }}
+                      onChange={handleImportPDF}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => fileInputRef.current?.click()}
+                      disabled={importing}
+                      style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '9px 16px', backgroundColor: importing ? '#1a1a18' : '#111110', border: '1px solid #1E1E1C', borderRadius: 8, color: importing ? '#8A8880' : '#ea580c', fontSize: 13, fontWeight: 500, cursor: importing ? 'not-allowed' : 'pointer', fontFamily: 'var(--font-dm-sans), sans-serif', transition: 'all 0.15s' }}
+                      onMouseEnter={e => { if (!importing) { e.currentTarget.style.borderColor = '#ea580c'; e.currentTarget.style.backgroundColor = 'rgba(234,88,12,0.06)' } }}
+                      onMouseLeave={e => { e.currentTarget.style.borderColor = '#1E1E1C'; e.currentTarget.style.backgroundColor = '#111110' }}
                     >
-                      📄 Voir le PDF importé
-                    </a>
+                      <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="#ea580c" strokeWidth="2"><path d="M12 10v6m0 0l-3-3m3 3l3-3M3 17v3a1 1 0 001 1h16a1 1 0 001-1v-3M3 7V5a1 1 0 011-1h4l2 2h8a1 1 0 011 1v4" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                      {importing ? 'Envoi en cours…' : 'Importer un PDF'}
+                    </button>
+                  </div>
+                  {form.fichier_url && importedFileName && (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                      <a
+                        href={form.fichier_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        style={{ fontSize: 12, color: '#60a5fa', fontFamily: 'var(--font-dm-sans), sans-serif', textDecoration: 'underline', maxWidth: 300, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
+                      >
+                        {importedFileName}
+                      </a>
+                      <p style={{ margin: 0, fontSize: 11, color: '#8A8880', fontFamily: 'var(--font-dm-sans), sans-serif' }}>
+                        PDF importé — remplissez les montants manuellement
+                      </p>
+                    </div>
                   )}
                 </div>
               </div>
