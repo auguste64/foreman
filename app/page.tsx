@@ -361,7 +361,16 @@ export default function Home() {
             </div>
           </div>
         </div>
-        <div className="footer-copy">© 2026 The Builder — Architectes &amp; MOEs</div>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '10px' }}>
+          <div className="footer-copy">© 2026 The Builder — Architectes &amp; MOEs</div>
+          <div style={{ display: 'flex', gap: '20px', alignItems: 'center' }}>
+            <a href="/mentions-legales" style={{ fontSize: '12px', color: '#8A8880', textDecoration: 'none' }}>Mentions légales</a>
+            <span style={{ fontSize: '12px', color: '#2A2A27' }}>·</span>
+            <a href="/confidentialite" style={{ fontSize: '12px', color: '#8A8880', textDecoration: 'none' }}>Politique de confidentialité</a>
+            <span style={{ fontSize: '12px', color: '#2A2A27' }}>·</span>
+            <a href="/cgu" style={{ fontSize: '12px', color: '#8A8880', textDecoration: 'none' }}>CGU</a>
+          </div>
+        </div>
       </footer>
 
     </div>
