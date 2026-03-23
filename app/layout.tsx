@@ -57,7 +57,7 @@ export const metadata: Metadata = {
   },
 }
 
-const organizationSchema = { '@context': 'https://schema.org', '@type': 'Organization', name: 'The Builder', url: 'https://thebuilder.io', description: "Éditeur de logiciel SaaS de gestion de chantier pour les professionnels du bâtiment en France.", foundingLocation: { '@type': 'Place', addressCountry: 'FR' }, inLanguage: 'fr' }
+const organizationSchema = { '@context': 'https://schema.org', '@type': 'Organization', name: 'The Builder', url: 'https://thebuilder.io', description: "Éditeur de logiciel SaaS de gestion de chantier pour les professionnels du bâtiment en France.", foundingLocation: { '@type': 'Place', addressCountry: 'FR' }, inLanguage: 'fr', logo: { '@type': 'ImageObject', url: 'https://thebuilder.io/og-image.png' }, sameAs: ['https://www.linkedin.com/company/thebuilder-io'] }
 const websiteSchema = { '@context': 'https://schema.org', '@type': 'WebSite', name: 'The Builder', url: 'https://thebuilder.io', inLanguage: 'fr' }
 
 export default function RootLayout({

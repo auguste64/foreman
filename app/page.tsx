@@ -1,5 +1,6 @@
 import './landing.css'
 import LandingAnimations from './LandingAnimations'
+import Image from 'next/image'
 
 export const metadata = {
   title: "The Builder — Gestion de chantier pour architectes et MOEs",
@@ -138,8 +139,8 @@ export default function Home() {
         url: 'https://thebuilder.io',
         audience: { '@type': 'Audience', audienceType: "Architectes et maîtres d'œuvre", geographicArea: { '@type': 'Country', name: 'France' } },
         offers: [
-          { '@type': 'Offer', name: 'Essentiel', price: '11.90', priceCurrency: 'EUR', priceSpecification: { '@type': 'UnitPriceSpecification', price: '11.90', priceCurrency: 'EUR', unitText: 'MONTH' } },
-          { '@type': 'Offer', name: 'Pro', price: '18.90', priceCurrency: 'EUR', priceSpecification: { '@type': 'UnitPriceSpecification', price: '18.90', priceCurrency: 'EUR', unitText: 'MONTH' } },
+          { '@type': 'Offer', name: 'Essentiel', price: '11.90', priceCurrency: 'EUR', availability: 'https://schema.org/OnlineOnly', priceSpecification: { '@type': 'UnitPriceSpecification', price: '11.90', priceCurrency: 'EUR', unitText: 'MONTH' } },
+          { '@type': 'Offer', name: 'Pro', price: '18.90', priceCurrency: 'EUR', availability: 'https://schema.org/OnlineOnly', priceSpecification: { '@type': 'UnitPriceSpecification', price: '18.90', priceCurrency: 'EUR', unitText: 'MONTH' } },
         ]
       }) }} />
 
@@ -319,7 +320,7 @@ export default function Home() {
             { img: '/screenshots/analyse.png', alt: 'Analyse & statistiques', icon: '📊', title: 'Analyse & statistiques', desc: 'CA, pipeline, projections, impayés. Pilotez votre activité avec précision.', delay: 'd6' },
           ].map((card) => (
             <div key={card.title} className={`feat-card reveal anim ${card.delay}`}>
-              <img src={card.img} alt={card.alt} style={{ width: '100%', height: '180px', objectFit: 'cover', objectPosition: 'top left', borderRadius: '8px', marginBottom: '20px', display: 'block', background: '#1E1E1C' }} />
+              <Image src={card.img} alt={card.alt} width={800} height={180} loading="lazy" style={{ width: '100%', height: '180px', objectFit: 'cover', objectPosition: 'top left', borderRadius: '8px', marginBottom: '20px', display: 'block', background: '#1E1E1C' }} />
               <div className="feat-icon">{card.icon}</div>
               <h3 className="feat-title">{card.title}</h3>
               <p className="feat-desc">{card.desc}</p>
