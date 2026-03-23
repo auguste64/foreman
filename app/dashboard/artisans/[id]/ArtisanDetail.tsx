@@ -14,6 +14,7 @@ import { getChantiers } from '@/lib/supabase/chantiers'
 import type { Artisan } from '@/lib/supabase/artisans'
 import type { Chantier } from '@/lib/supabase/chantiers'
 import MetierSelect from '@/components/MetierSelect'
+import { createClient } from '@/lib/supabase/client'
 
 const inputStyle: React.CSSProperties = {
   width: '100%',
@@ -63,6 +64,12 @@ export default function ArtisanDetail({ artisan }: { artisan: Artisan }) {
   const [assigning, setAssigning] = useState(false)
   const [assignError, setAssignError] = useState<string | null>(null)
 
+  // Devis & Factures
+  type DocRow = { id: string; numero: string; statut: string; total_ht: number; total_ttc: number; lot: string | null; fichier_url: string | null; chantier_nom: string | null; created_at: string }
+  const [artisanDevis, setArtisanDevis] = useState<DocRow[]>([])
+  const [artisanFactures, setArtisanFactures] = useState<DocRow[]>([])
+  const [loadingDocs, setLoadingDocs] = useState(true)
+
   // Modal: convocation
   const [showConvocation, setShowConvocation] = useState(false)
   const [convocation, setConvocation] = useState({
@@ -83,8 +90,37 @@ export default function ArtisanDetail({ artisan }: { artisan: Artisan }) {
 
   useEffect(() => {
     loadChantiersArtisan()
+    loadDocs()
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
+
+  async function loadDocs() {
+    setLoadingDocs(true)
+    try {
+      const supabase = createClient()
+      const [dr, fr] = await Promise.all([
+        supabase
+          .from('devis')
+          .select('id, numero, statut, total_ht, total_ttc, lot, fichier_url, created_at, chantiers(nom)')
+          .eq('artisan_id', artisan.id)
+          .order('created_at', { ascending: false }),
+        supabase
+          .from('factures')
+          .select('id, numero, statut, total_ht, total_ttc, lot, fichier_url, created_at, chantiers(nom)')
+          .eq('artisan_id', artisan.id)
+          .order('created_at', { ascending: false }),
+      ])
+      const mapDoc = (r: { id: string; numero: string; statut: string; total_ht: number; total_ttc: number; lot: string | null; fichier_url: string | null; created_at: string; chantiers: { nom: string } | { nom: string }[] | null }) => ({
+        ...r,
+        chantier_nom: r.chantiers
+          ? (Array.isArray(r.chantiers) ? r.chantiers[0]?.nom : (r.chantiers as { nom: string }).nom) ?? null
+          : null,
+      })
+      setArtisanDevis((dr.data ?? []).map(mapDoc))
+      setArtisanFactures((fr.data ?? []).map(mapDoc))
+    } catch { /* ignore */ }
+    finally { setLoadingDocs(false) }
+  }
 
   async function loadChantiersArtisan() {
     setLoadingChantiers(true)
@@ -522,6 +558,113 @@ export default function ArtisanDetail({ artisan }: { artisan: Artisan }) {
             ))}
           </div>
         )}
+      </div>
+
+      {/* Devis & Factures */}
+      <div style={{ backgroundColor: '#111110', border: '1px solid #1E1E1C', borderRadius: '12px', padding: '28px', marginTop: '24px' }}>
+        <h2 style={{ fontFamily: 'var(--font-syne), sans-serif', fontSize: '16px', fontWeight: 600, color: '#F0EDE6', margin: '0 0 20px' }}>
+          Devis & Factures
+        </h2>
+
+        {loadingDocs && (
+          <p style={{ color: '#8A8880', fontSize: '13px', fontFamily: 'var(--font-dm-sans), sans-serif' }}>Chargement…</p>
+        )}
+
+        {!loadingDocs && artisanDevis.length === 0 && artisanFactures.length === 0 && (
+          <p style={{ color: '#8A8880', fontSize: '13px', fontFamily: 'var(--font-dm-sans), sans-serif', fontStyle: 'italic' }}>
+            Aucun document lié à cet artisan.
+          </p>
+        )}
+
+        {!loadingDocs && (artisanDevis.length > 0 || artisanFactures.length > 0) && (() => {
+          const DEVIS_STATUT: Record<string, { label: string; bg: string; color: string }> = {
+            brouillon:  { label: 'Brouillon',  bg: 'rgba(138,136,128,0.15)', color: '#8A8880' },
+            envoye:     { label: 'Envoyé',     bg: 'rgba(96,165,250,0.15)',  color: '#60a5fa' },
+            accepte:    { label: 'Accepté',    bg: 'rgba(74,222,128,0.15)',  color: '#4ade80' },
+            refuse:     { label: 'Refusé',     bg: 'rgba(232,84,71,0.15)',   color: '#E85447' },
+            expire:     { label: 'Expiré',     bg: 'rgba(249,115,22,0.15)',  color: '#ea580c' },
+            brouillon_f: { label: 'Brouillon', bg: 'rgba(138,136,128,0.15)', color: '#8A8880' },
+            envoyee:    { label: 'Envoyée',    bg: 'rgba(96,165,250,0.15)',  color: '#60a5fa' },
+            partiellement_payee: { label: 'Partiel', bg: 'rgba(249,115,22,0.15)', color: '#ea580c' },
+            payee:      { label: 'Payée',      bg: 'rgba(74,222,128,0.15)',  color: '#4ade80' },
+            annulee:    { label: 'Annulée',    bg: 'rgba(232,84,71,0.15)',   color: '#E85447' },
+          }
+
+          const fmtEur = (n: number) => n.toLocaleString('fr-FR', { style: 'currency', currency: 'EUR' })
+          const thStyle: React.CSSProperties = { fontSize: 10, fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#8A8880', fontFamily: 'var(--font-dm-sans), sans-serif', padding: '8px 12px', textAlign: 'left' }
+          const tdStyle: React.CSSProperties = { fontSize: 13, color: '#F0EDE6', fontFamily: 'var(--font-dm-sans), sans-serif', padding: '10px 12px', verticalAlign: 'middle' }
+
+          const DocTable = ({ docs, type }: { docs: typeof artisanDevis; type: 'devis' | 'facture' }) => (
+            <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: 8 }}>
+              <thead>
+                <tr style={{ borderBottom: '1px solid #1E1E1C' }}>
+                  <th style={thStyle}>Chantier</th>
+                  <th style={thStyle}>Lot</th>
+                  <th style={thStyle}>N° document</th>
+                  <th style={{ ...thStyle, textAlign: 'right' }}>Montant HT</th>
+                  <th style={thStyle}>Statut</th>
+                  <th style={thStyle}>PDF</th>
+                </tr>
+              </thead>
+              <tbody>
+                {docs.map(d => {
+                  const s = DEVIS_STATUT[d.statut] ?? { label: d.statut, bg: 'rgba(138,136,128,0.15)', color: '#8A8880' }
+                  return (
+                    <tr key={d.id} style={{ borderBottom: '1px solid #0D0D0B' }}>
+                      <td style={tdStyle}>{d.chantier_nom ?? '—'}</td>
+                      <td style={{ ...tdStyle, color: d.lot ? '#ea580c' : '#4A4A48' }}>{d.lot ?? '—'}</td>
+                      <td style={tdStyle}>
+                        <Link href={`/dashboard/comptabilite/${type === 'devis' ? 'devis' : 'factures'}/${d.id}`} style={{ color: '#F0EDE6', textDecoration: 'none' }}
+                          onMouseEnter={e => e.currentTarget.style.color = '#ea580c'}
+                          onMouseLeave={e => e.currentTarget.style.color = '#F0EDE6'}
+                        >{d.numero}</Link>
+                      </td>
+                      <td style={{ ...tdStyle, textAlign: 'right' }}>{fmtEur(d.total_ht)}</td>
+                      <td style={tdStyle}>
+                        <span style={{ padding: '3px 10px', borderRadius: 20, fontSize: 11, fontWeight: 600, backgroundColor: s.bg, color: s.color, fontFamily: 'var(--font-dm-sans), sans-serif', whiteSpace: 'nowrap' }}>{s.label}</span>
+                      </td>
+                      <td style={tdStyle}>
+                        {d.fichier_url
+                          ? <a href={d.fichier_url} target="_blank" rel="noopener noreferrer" style={{ fontSize: 12, color: '#60a5fa', textDecoration: 'underline' }}>PDF</a>
+                          : <span style={{ fontSize: 12, color: '#4A4A48' }}>—</span>
+                        }
+                      </td>
+                    </tr>
+                  )
+                })}
+              </tbody>
+            </table>
+          )
+
+          const totalDevisHt = artisanDevis.reduce((s, d) => s + d.total_ht, 0)
+          const totalFacturesHt = artisanFactures.reduce((s, d) => s + d.total_ht, 0)
+          const totalTtc = [...artisanDevis, ...artisanFactures].reduce((s, d) => s + d.total_ttc, 0)
+
+          return (
+            <div>
+              {artisanDevis.length > 0 && (
+                <div style={{ marginBottom: 24 }}>
+                  <h3 style={{ fontFamily: 'var(--font-syne), sans-serif', fontSize: 13, fontWeight: 600, color: '#8A8880', margin: '0 0 12px', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Devis</h3>
+                  <DocTable docs={artisanDevis} type="devis" />
+                </div>
+              )}
+              {artisanFactures.length > 0 && (
+                <div style={{ marginBottom: 24 }}>
+                  <h3 style={{ fontFamily: 'var(--font-syne), sans-serif', fontSize: 13, fontWeight: 600, color: '#8A8880', margin: '0 0 12px', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Factures</h3>
+                  <DocTable docs={artisanFactures} type="facture" />
+                </div>
+              )}
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 24, paddingTop: 12, borderTop: '1px solid #1E1E1C' }}>
+                <span style={{ fontSize: 12, color: '#8A8880', fontFamily: 'var(--font-dm-sans), sans-serif' }}>
+                  Devis HT : {fmtEur(totalDevisHt)} · Factures HT : {fmtEur(totalFacturesHt)}
+                </span>
+                <span style={{ fontSize: 14, fontWeight: 700, color: '#ea580c', fontFamily: 'var(--font-syne), sans-serif' }}>
+                  Total TTC : {fmtEur(totalTtc)}
+                </span>
+              </div>
+            </div>
+          )
+        })()}
       </div>
 
       {/* Modal: Assigner à un chantier */}

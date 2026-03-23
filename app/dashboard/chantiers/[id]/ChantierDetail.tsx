@@ -246,6 +246,7 @@ export default function ChantierDetail({ chantier }: { chantier: Chantier }) {
 
   const tabItems = [
     { label: 'Infos', href: `/dashboard/chantiers/${chantier.id}`, pro: false },
+    { label: 'Lots & Devis', href: `/dashboard/chantiers/${chantier.id}/lots`, pro: true },
     { label: 'Devis', href: `/dashboard/chantiers/${chantier.id}/devis`, pro: true },
     { label: 'Factures', href: `/dashboard/chantiers/${chantier.id}/factures`, pro: true },
   ]

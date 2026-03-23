@@ -1,8 +1,8 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import Link from 'next/link'
-import { useRouter, useSearchParams } from 'next/navigation'
+import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { createFactureDoc, calcTotauxDoc, formatEurDoc } from '@/lib/supabase/documents'
 import { clientDisplayName, clientDisplayEmail, clientDisplayAdresse } from '@/lib/supabase/clients'
@@ -34,6 +34,7 @@ const UNITES = ['u', 'h', 'j', 'm²', 'm³', 'forfait', 'ml', 'kg']
 type Ligne = { libelle: string; quantite: string; unite: string; prix_unitaire: string; tva_taux: string }
 const emptyLigne = (): Ligne => ({ libelle: '', quantite: '1', unite: 'u', prix_unitaire: '0', tva_taux: '20' })
 type Chantier = { id: string; nom: string }
+type Artisan = { id: string; nom: string; metier: string }
 
 const microLabel: React.CSSProperties = {
   margin: '0 0 4px', fontSize: 10, fontWeight: 600, letterSpacing: '0.08em',
@@ -50,6 +51,12 @@ const smallFocus = (e: React.FocusEvent<HTMLInputElement | HTMLSelectElement>) =
 const smallBlur = (e: React.FocusEvent<HTMLInputElement | HTMLSelectElement>) => {
   e.target.style.borderColor = '#1E1E1C'; e.target.style.boxShadow = 'none'
 }
+
+const LOT_SUGGESTIONS = [
+  'Maçonnerie', 'Menuiseries ext.', 'Menuiseries int.', 'Plâtrerie',
+  'Électricité', 'Plomberie', 'Climatisation', 'Carrelage',
+  'Peinture', 'Parquet', 'Serrurerie', 'Cuisine', 'Autre',
+]
 
 function LigneCard({ ligne, canDelete, onChange, onDelete }: {
   ligne: Ligne; canDelete: boolean
@@ -125,15 +132,19 @@ export default function NouvelleFacturePage() {
     numero: '', client_nom: '', client_email: '', client_adresse: '',
     objet: '', date_emission: today, date_echeance: in30,
     chantier_id: '', tva_taux: '20', remise_pct: '0', notes: '', conditions: '',
+    artisan_id: '', lot: '', fichier_url: '',
   })
   const [lignes, setLignes] = useState<Ligne[]>([emptyLigne()])
   const [chantiers, setChantiers] = useState<Chantier[]>([])
   const [clients, setClients] = useState<Client[]>([])
+  const [artisans, setArtisans] = useState<Artisan[]>([])
   const [selectedClientId, setSelectedClientId] = useState('')
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const { isComplet, loading: planLoading } = usePlan()
   const [datePickerField, setDatePickerField] = useState<'date_emission' | 'date_echeance' | null>(null)
+  const [importing, setImporting] = useState(false)
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     async function init() {
@@ -153,6 +164,28 @@ export default function NouvelleFacturePage() {
     init()
   }, [])
 
+  // Load artisans when chantier changes
+  useEffect(() => {
+    async function loadArtisans() {
+      const supabase = createClient()
+      if (!form.chantier_id) {
+        const { data } = await supabase.from('artisans').select('id, nom, metier').order('nom')
+        setArtisans((data ?? []) as Artisan[])
+        return
+      }
+      const { data } = await supabase
+        .from('chantier_artisans')
+        .select('artisan_id, artisans(id, nom, metier)')
+        .eq('chantier_id', form.chantier_id)
+      const list = (data ?? []).map((r: { artisans: Artisan | Artisan[] | null }) => {
+        if (!r.artisans) return null
+        return Array.isArray(r.artisans) ? r.artisans[0] : r.artisans
+      }).filter(Boolean) as Artisan[]
+      setArtisans(list)
+    }
+    loadArtisans()
+  }, [form.chantier_id])
+
   const set = (k: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) =>
     setForm(p => ({ ...p, [k]: e.target.value }))
 
@@ -168,12 +201,53 @@ export default function NouvelleFacturePage() {
   }))
   const totaux = calcTotauxDoc(parsedLignes, parseFloat(form.tva_taux) || 0, parseFloat(form.remise_pct) || 0)
 
+  async function handleImportPDF(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setImporting(true)
+    try {
+      const fd = new FormData()
+      fd.append('file', file)
+      if (form.chantier_id) fd.append('chantier_id', form.chantier_id)
+      fd.append('type', 'facture')
+      const res = await fetch('/api/import-document', { method: 'POST', body: fd })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error ?? 'Erreur')
+
+      setForm(p => {
+        const updates: Partial<typeof p> = {}
+        if (data.fichier_url) updates.fichier_url = data.fichier_url
+        if (typeof data.montant_ht === 'number') {
+          setLignes([{ libelle: data.description ?? '', quantite: '1', unite: 'forfait', prix_unitaire: String(data.montant_ht), tva_taux: String(data.tva_taux ?? 20) }])
+        }
+        if (data.description) updates.objet = data.description
+        if (data.lot) updates.lot = data.lot
+        if (data.artisan_nom) {
+          const found = artisans.find(a => a.nom.toLowerCase().includes(data.artisan_nom.toLowerCase()))
+          if (found) updates.artisan_id = found.id
+        }
+        return { ...p, ...updates }
+      })
+      toast.success('PDF importé et analysé')
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : 'Erreur import PDF')
+    } finally {
+      setImporting(false)
+      if (fileInputRef.current) fileInputRef.current.value = ''
+    }
+  }
+
   async function handleSave() {
     setError(null)
     if (!form.numero.trim()) { setError('Le numéro est requis.'); return }
     setSaving(true)
     try {
-      const id = await createFactureDoc({
+      const supabase = createClient()
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) throw new Error('Non authentifié')
+
+      const { data: factureData, error: insertError } = await supabase.from('factures').insert({
+        user_id: user.id,
         devis_id: null,
         numero: form.numero.trim(),
         statut: 'brouillon',
@@ -195,8 +269,20 @@ export default function NouvelleFacturePage() {
         date_paiement: null,
         mode_paiement: null,
         envoye_at: null,
-        lignes: parsedLignes,
-      })
+        artisan_id: form.artisan_id || null,
+        lot: form.lot || null,
+        fichier_url: form.fichier_url || null,
+      }).select('id').single()
+
+      if (insertError) throw new Error(insertError.message)
+      const id = factureData.id
+
+      if (parsedLignes.length > 0) {
+        await supabase.from('facture_lignes').insert(
+          parsedLignes.map((l, i) => ({ facture_id: id, ordre: i + 1, ...l }))
+        )
+      }
+
       toast.success('Facture créée')
       router.push(`/dashboard/comptabilite/factures/${id}`)
     } catch (err: unknown) {
@@ -235,7 +321,7 @@ export default function NouvelleFacturePage() {
                 <label style={labelStyle}>Chantier lié</label>
                 <CustomSelect
                   value={form.chantier_id}
-                  onChange={v => setForm(p => ({ ...p, chantier_id: v }))}
+                  onChange={v => setForm(p => ({ ...p, chantier_id: v, artisan_id: '' }))}
                   options={[{ value: '', label: '— Sans chantier —' }, ...chantiers.map(c => ({ value: c.id, label: c.nom }))]}
                   placeholder="— Sans chantier —"
                 />
@@ -261,6 +347,85 @@ export default function NouvelleFacturePage() {
                   <span style={{ color: form.date_echeance ? '#F0EDE6' : '#8A8880' }}>{form.date_echeance ? formatDateDisplay(form.date_echeance) : 'Choisir…'}</span>
                   <span style={{ color: '#ea580c', fontSize: '12px' }}>▼</span>
                 </button>
+              </div>
+            </div>
+          </Card>
+
+          {/* Artisan + Lot + PDF Import */}
+          <Card title="Artisan & Lot">
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
+                <div>
+                  <label style={labelStyle}>Artisan</label>
+                  <CustomSelect
+                    value={form.artisan_id}
+                    onChange={v => setForm(p => ({ ...p, artisan_id: v }))}
+                    options={[{ value: '', label: '— Aucun artisan —' }, ...artisans.map(a => ({ value: a.id, label: `${a.nom} · ${a.metier}` }))]}
+                    placeholder="— Aucun artisan —"
+                  />
+                </div>
+                <div>
+                  <label style={labelStyle}>Lot</label>
+                  <div style={{ position: 'relative' }}>
+                    <input
+                      type="text"
+                      list="lot-suggestions-facture"
+                      value={form.lot}
+                      onChange={set('lot')}
+                      onFocus={focus}
+                      onBlur={blur}
+                      style={inputStyle}
+                      placeholder="Ex : Électricité"
+                    />
+                    <datalist id="lot-suggestions-facture">
+                      {LOT_SUGGESTIONS.map(l => <option key={l} value={l} />)}
+                    </datalist>
+                  </div>
+                </div>
+              </div>
+
+              {/* PDF Import */}
+              <div>
+                <label style={labelStyle}>Import PDF</label>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="application/pdf"
+                    style={{ display: 'none' }}
+                    onChange={handleImportPDF}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={importing}
+                    style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '9px 16px', backgroundColor: importing ? '#1a1a18' : '#111110', border: '1px solid #1E1E1C', borderRadius: 8, color: importing ? '#8A8880' : '#ea580c', fontSize: 13, fontWeight: 500, cursor: importing ? 'not-allowed' : 'pointer', fontFamily: 'var(--font-dm-sans), sans-serif', transition: 'all 0.15s' }}
+                    onMouseEnter={e => { if (!importing) { e.currentTarget.style.borderColor = '#ea580c'; e.currentTarget.style.backgroundColor = 'rgba(234,88,12,0.06)' } }}
+                    onMouseLeave={e => { e.currentTarget.style.borderColor = '#1E1E1C'; e.currentTarget.style.backgroundColor = '#111110' }}
+                  >
+                    {importing ? (
+                      <>
+                        <span style={{ width: 14, height: 14, border: '2px solid #ea580c', borderTopColor: 'transparent', borderRadius: '50%', display: 'inline-block', animation: 'spin 0.7s linear infinite' }} />
+                        Extraction IA…
+                      </>
+                    ) : (
+                      <>
+                        <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="#ea580c" strokeWidth="2"><path d="M12 10v6m0 0l-3-3m3 3l3-3M3 17v3a1 1 0 001 1h16a1 1 0 001-1v-3M3 7V5a1 1 0 011-1h4l2 2h8a1 1 0 011 1v4" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                        Importer un PDF
+                      </>
+                    )}
+                  </button>
+                  {form.fichier_url && (
+                    <a
+                      href={form.fichier_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      style={{ fontSize: 12, color: '#60a5fa', fontFamily: 'var(--font-dm-sans), sans-serif', textDecoration: 'underline', maxWidth: 200, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
+                    >
+                      📄 Voir le PDF importé
+                    </a>
+                  )}
+                </div>
               </div>
             </div>
           </Card>
@@ -399,6 +564,7 @@ export default function NouvelleFacturePage() {
           onConfirm={(date) => { setForm(prev => ({ ...prev, [datePickerField!]: dateToStr(date) })); setDatePickerField(null) }}
         />
       )}
+      <style>{`@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }`}</style>
     </div>
   )
 }
@@ -428,3 +594,5 @@ function TotauxBlock({ totaux, tvaTaux, remisePct }: { totaux: ReturnType<typeof
   )
 }
 
+// Keep createFactureDoc import used in old code - suppress unused warning
+void createFactureDoc
