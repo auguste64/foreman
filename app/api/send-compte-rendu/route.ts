@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { Resend } from 'resend'
 import { createClient } from '@/lib/supabase/server'
 import { generatePdfBuffer } from '@/lib/pdf/compte-rendu'
+import type { PdfProfile } from '@/lib/pdf/compte-rendu'
 
 export const runtime = 'nodejs'
 
@@ -38,7 +39,27 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Chantier introuvable' }, { status: 404 })
   }
 
-  const buffer = await generatePdfBuffer(cr, chantier)
+  // Récupérer le profil entreprise pour l'en-tête PDF
+  let pdfProfile: PdfProfile | undefined
+  const { data: ei } = await supabase
+    .from('entreprise_infos')
+    .select('raison_sociale, adresse, code_postal, ville, telephone, email, siret, logo_url')
+    .eq('user_id', user.id)
+    .maybeSingle()
+
+  if (ei) {
+    const adresse = [ei.adresse, ei.code_postal, ei.ville].filter(Boolean).join(', ')
+    pdfProfile = {
+      societe:   ei.raison_sociale || undefined,
+      adresse:   adresse || undefined,
+      telephone: ei.telephone || undefined,
+      email:     ei.email || undefined,
+      siret:     ei.siret || undefined,
+      logo:      ei.logo_url || undefined,
+    }
+  }
+
+  const buffer = await generatePdfBuffer(cr, chantier, pdfProfile)
   const filename = `compte-rendu-${chantier.nom.toLowerCase().replace(/\s+/g, '-')}-${cr.date_visite}.pdf`
 
   const dateFormatted = new Date(cr.date_visite).toLocaleDateString('fr-FR', {

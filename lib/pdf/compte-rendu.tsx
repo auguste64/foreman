@@ -3,326 +3,550 @@ import { Document, Page, Text, View, StyleSheet, Image, renderToBuffer } from '@
 import type { CompteRendu } from '@/lib/supabase/comptes-rendus'
 import type { Chantier } from '@/lib/supabase/chantiers'
 
-const styles = StyleSheet.create({
+// ── Profile entreprise (optionnel) ───────────────────────────────────
+export type PdfProfile = {
+  societe?: string
+  nom?: string
+  adresse?: string
+  telephone?: string
+  email?: string
+  siret?: string
+  logo?: string   // URL publique (logo_url depuis entreprise_infos)
+}
+
+// ── Types données observ. ────────────────────────────────────────────
+interface PresenceRow {
+  artisanId?: string
+  nom: string
+  societe?: string
+  statut: string
+  convoque?: boolean
+}
+
+interface Reserve {
+  id?: string
+  description?: string
+  lot?: string
+  responsable?: string
+  statut?: string
+  photos?: string[]
+}
+
+interface Decision {
+  id?: string
+  description?: string
+  texte?: string
+  responsable?: string
+  echeance?: string
+}
+
+interface Lot {
+  id?: string
+  nom?: string
+  intervenant?: string
+  dateDemarrage?: string
+  dateFin?: string
+  avancement?: number
+  notes?: string
+}
+
+interface ParsedObservations {
+  texte: string
+  presences: PresenceRow[]
+  reserves: Reserve[]
+  decisions: Decision[]
+  lots: Lot[]
+}
+
+// ── Parser JSON observations ─────────────────────────────────────────
+function parseObservations(raw: string | null): ParsedObservations {
+  const empty: ParsedObservations = { texte: '', presences: [], reserves: [], decisions: [], lots: [] }
+  if (!raw) return empty
+  try {
+    const parsed = JSON.parse(raw)
+    if (parsed && typeof parsed === 'object') {
+      return {
+        texte:     parsed.texte ?? parsed.observations ?? '',
+        presences: parsed.presences ?? [],
+        reserves:  parsed.reserves  ?? [],
+        decisions: parsed.decisions ?? [],
+        lots:      parsed.lots      ?? [],
+      }
+    }
+    return { ...empty, texte: raw }
+  } catch {
+    return { ...empty, texte: raw }
+  }
+}
+
+// ── Helpers ──────────────────────────────────────────────────────────
+function fmt(dateStr: string | null | undefined) {
+  if (!dateStr) return '—'
+  return new Date(dateStr).toLocaleDateString('fr-FR', {
+    day: 'numeric', month: 'long', year: 'numeric',
+  })
+}
+
+function fmtShort(dateStr: string | null | undefined) {
+  if (!dateStr) return '—'
+  const s = dateStr.includes('T') ? dateStr : dateStr + 'T12:00:00'
+  return new Date(s).toLocaleDateString('fr-FR', {
+    day: '2-digit', month: '2-digit', year: '2-digit',
+  })
+}
+
+function fmtShortMD(dateStr: string | null | undefined) {
+  if (!dateStr) return ''
+  const s = dateStr.includes('T') ? dateStr : dateStr + 'T12:00:00'
+  return new Date(s).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' })
+}
+
+// ── Styles ───────────────────────────────────────────────────────────
+const S = StyleSheet.create({
   page: {
     backgroundColor: '#FFFFFF',
     fontFamily: 'Helvetica',
-    paddingBottom: 60,
+    fontSize: 9,
+    paddingBottom: 44,
   },
-  // ── Header ──────────────────────────────────────────────────────────
+
+  // Header
   header: {
-    backgroundColor: '#0D0D0B',
-    padding: '28 40',
+    padding: '20 40 14 40',
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'flex-start',
+    borderBottomWidth: 2,
+    borderBottomColor: '#111111',
+    borderBottomStyle: 'solid',
   },
   headerLeft: {
     flexDirection: 'column',
-    gap: 4,
+    gap: 2,
   },
-  logo: {
-    fontSize: 22,
+  logoImg: {
+    height: 32,
+    maxWidth: 120,
+    objectFit: 'contain',
+    marginBottom: 5,
+  },
+  companySociete: {
+    fontSize: 10,
     fontFamily: 'Helvetica-Bold',
-    color: '#ea580c',
-    letterSpacing: 3,
+    color: '#111111',
   },
-  headerSubtitle: {
-    fontSize: 9,
-    color: '#8A8880',
-    marginTop: 2,
+  companyLine: {
+    fontSize: 8,
+    color: '#555555',
+    marginTop: 1,
   },
   headerRight: {
     alignItems: 'flex-end',
     gap: 2,
   },
-  headerLabel: {
-    fontSize: 8,
-    color: '#8A8880',
-    textTransform: 'uppercase',
-    letterSpacing: 1,
-  },
-  headerValue: {
+  docType: {
     fontSize: 11,
-    color: '#F0EDE6',
     fontFamily: 'Helvetica-Bold',
-  },
-  // ── Chantier band ───────────────────────────────────────────────────
-  chantierBand: {
-    backgroundColor: '#111110',
-    padding: '14 40',
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-  },
-  chantierField: {
-    flexDirection: 'column',
-    gap: 2,
-  },
-  chantierLabel: {
-    fontSize: 8,
-    color: '#8A8880',
+    color: '#111111',
     textTransform: 'uppercase',
-    letterSpacing: 0.8,
+    letterSpacing: 0.5,
+    marginBottom: 4,
   },
-  chantierValue: {
-    fontSize: 11,
-    color: '#F0EDE6',
-  },
-  // ── Body ────────────────────────────────────────────────────────────
-  body: {
-    padding: '28 40',
-  },
-  section: {
-    marginBottom: 20,
-  },
-  sectionTitle: {
+  docChantier: {
     fontSize: 10,
     fontFamily: 'Helvetica-Bold',
-    color: '#ea580c',
-    textTransform: 'uppercase',
-    letterSpacing: 1.2,
-    marginBottom: 8,
-    paddingBottom: 5,
-    borderBottomWidth: 1,
-    borderBottomColor: '#E8E4DD',
-    borderBottomStyle: 'solid',
+    color: '#222222',
+    textAlign: 'right',
   },
-  sectionText: {
-    fontSize: 10,
-    color: '#2D2D2B',
-    lineHeight: 1.6,
+  docClient: {
+    fontSize: 9,
+    color: '#555555',
+    textAlign: 'right',
   },
-  // ── Progression bar ─────────────────────────────────────────────────
-  progressRow: {
+  docDate: {
+    fontSize: 9,
+    color: '#777777',
+    textAlign: 'right',
+    marginTop: 2,
+  },
+
+  // Progression band
+  progressBand: {
+    padding: '8 40',
+    backgroundColor: '#F9F9F7',
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
+    gap: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: '#E0E0E0',
+    borderBottomStyle: 'solid',
+  },
+  progressLabel: {
+    fontSize: 7,
+    color: '#8A8880',
+    textTransform: 'uppercase',
+    letterSpacing: 0.6,
+    width: 100,
   },
   progressBg: {
     flex: 1,
-    height: 8,
+    height: 5,
     backgroundColor: '#E8E4DD',
-    borderRadius: 4,
+    borderRadius: 3,
   },
   progressFill: {
-    height: 8,
-    backgroundColor: '#ea580c',
-    borderRadius: 4,
+    height: 5,
+    backgroundColor: '#b45309',
+    borderRadius: 3,
   },
-  progressLabel: {
-    fontSize: 12,
+  progressValue: {
+    fontSize: 8,
     fontFamily: 'Helvetica-Bold',
-    color: '#0D0D0B',
-    width: 36,
+    color: '#b45309',
+    width: 30,
     textAlign: 'right',
   },
-  // ── Tags ────────────────────────────────────────────────────────────
-  tagsRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 6,
+
+  // Body
+  body: {
+    padding: '18 40',
   },
-  tag: {
-    backgroundColor: '#F2EFE8',
-    paddingVertical: 4,
-    paddingHorizontal: 10,
-    borderRadius: 20,
-    fontSize: 9,
-    color: '#2D2D2B',
+  section: {
+    marginBottom: 14,
   },
-  // ── Dates grid ──────────────────────────────────────────────────────
-  datesGrid: {
-    flexDirection: 'row',
-    gap: 32,
-  },
-  dateField: {
-    flexDirection: 'column',
-    gap: 3,
-  },
-  dateLabel: {
-    fontSize: 8,
-    color: '#8A8880',
-    textTransform: 'uppercase',
-    letterSpacing: 0.8,
-  },
-  dateValue: {
-    fontSize: 11,
-    color: '#2D2D2B',
+  sectionTitle: {
+    fontSize: 7,
     fontFamily: 'Helvetica-Bold',
+    color: '#111111',
+    textTransform: 'uppercase',
+    letterSpacing: 1,
+    marginBottom: 5,
+    paddingBottom: 3,
+    borderBottomWidth: 1,
+    borderBottomColor: '#E0E0E0',
+    borderBottomStyle: 'solid',
   },
-  // ── Footer ──────────────────────────────────────────────────────────
+  sectionText: {
+    fontSize: 8,
+    color: '#333333',
+    lineHeight: 1.6,
+  },
+
+  // Table
+  tHead: {
+    flexDirection: 'row',
+    backgroundColor: '#F5F5F5',
+    borderWidth: 1,
+    borderColor: '#E0E0E0',
+    borderStyle: 'solid',
+  },
+  tRow: {
+    flexDirection: 'row',
+    borderBottomWidth: 1,
+    borderBottomColor: '#E0E0E0',
+    borderBottomStyle: 'solid',
+    borderLeftWidth: 1,
+    borderLeftColor: '#E0E0E0',
+    borderLeftStyle: 'solid',
+    borderRightWidth: 1,
+    borderRightColor: '#E0E0E0',
+    borderRightStyle: 'solid',
+  },
+  th: {
+    fontSize: 7,
+    fontFamily: 'Helvetica-Bold',
+    color: '#111111',
+    padding: '3 5',
+    borderRightWidth: 1,
+    borderRightColor: '#E0E0E0',
+    borderRightStyle: 'solid',
+  },
+  td: {
+    fontSize: 8,
+    color: '#333333',
+    padding: '3 5',
+    borderRightWidth: 1,
+    borderRightColor: '#E0E0E0',
+    borderRightStyle: 'solid',
+  },
+  tdGray:  { color: '#666666' },
+  tdNoBR:  { borderRightWidth: 0 },
+  tdBold:  { fontFamily: 'Helvetica-Bold' },
+  tdOrange:{ color: '#b45309', fontFamily: 'Helvetica-Bold' },
+
+  // Reserve card
+  card: {
+    marginBottom: 5,
+    padding: '5 7',
+    borderWidth: 1,
+    borderColor: '#E0E0E0',
+    borderStyle: 'solid',
+    borderRadius: 3,
+  },
+  cardHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 2,
+  },
+  cardTitle: {
+    fontSize: 8,
+    fontFamily: 'Helvetica-Bold',
+    color: '#111111',
+  },
+  badgeOuvert: {
+    fontSize: 7, fontFamily: 'Helvetica-Bold', color: '#dc2626',
+    backgroundColor: '#fee2e2', padding: '1 4', borderRadius: 3,
+  },
+  badgeLeve: {
+    fontSize: 7, fontFamily: 'Helvetica-Bold', color: '#16a34a',
+    backgroundColor: '#dcfce7', padding: '1 4', borderRadius: 3,
+  },
+  cardDesc: {
+    fontSize: 8, color: '#333333', lineHeight: 1.4,
+  },
+  cardResp: {
+    fontSize: 7, color: '#777777', marginTop: 2,
+  },
+  cardPhotos: {
+    flexDirection: 'row', gap: 4, marginTop: 4,
+  },
+  cardPhoto: {
+    width: 36, height: 36, objectFit: 'cover', borderRadius: 2,
+  },
+
+  // Decisions
+  decRow: {
+    flexDirection: 'row', gap: 5, marginBottom: 3,
+  },
+  decNum: {
+    fontSize: 8, fontFamily: 'Helvetica-Bold', color: '#b45309', width: 13,
+  },
+  decText: {
+    flex: 1, fontSize: 8, color: '#333333',
+  },
+  decMeta: {
+    fontSize: 8, color: '#777777',
+  },
+  decDate: {
+    fontSize: 8, color: '#888888', width: 34, textAlign: 'right',
+  },
+
+  // Photos
+  photosGrid: {
+    flexDirection: 'row', flexWrap: 'wrap', gap: 4,
+  },
+  photoWrap: {
+    width: '32%',
+  },
+  photoImg: {
+    width: '100%', height: 110, objectFit: 'cover', borderRadius: 2,
+  },
+
+  // Footer
   footer: {
     position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    backgroundColor: '#0D0D0B',
-    padding: '10 40',
+    bottom: 0, left: 0, right: 0,
+    padding: '7 40',
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+    borderTopWidth: 1,
+    borderTopColor: '#E0E0E0',
+    borderTopStyle: 'solid',
+    backgroundColor: '#FFFFFF',
   },
-  footerText: {
-    fontSize: 8,
-    color: '#8A8880',
+  footerLeft: {
+    fontSize: 7, color: '#999999',
   },
-  footerAccent: {
-    fontSize: 8,
-    color: '#ea580c',
-    fontFamily: 'Helvetica-Bold',
-    letterSpacing: 1,
-  },
-  emptyText: {
-    fontSize: 10,
-    color: '#8A8880',
-    fontStyle: 'italic',
-  },
-  divider: {
-    height: 1,
-    backgroundColor: '#E8E4DD',
-    marginVertical: 16,
-  },
-  // ── Photos ──────────────────────────────────────────────────────────
-  photosGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
-  },
-  photoWrapper: {
-    width: '48%',
-  },
-  photoImage: {
-    width: '100%',
-    height: 180,
-    objectFit: 'cover',
-    borderRadius: 4,
+  footerRight: {
+    fontSize: 7, color: '#999999',
   },
 })
 
-function fmt(dateStr: string | null) {
-  if (!dateStr) return '—'
-  return new Date(dateStr).toLocaleDateString('fr-FR', {
-    day: 'numeric',
-    month: 'long',
-    year: 'numeric',
-  })
-}
-
+// ── PDF Component ────────────────────────────────────────────────────
 export function CompteRenduPDF({
   compteRendu,
   chantier,
+  pdfProfile,
 }: {
   compteRendu: CompteRendu
   chantier: Chantier
+  pdfProfile?: PdfProfile
 }) {
-  const progressWidth = `${compteRendu.progression}%`
+  const obs = parseObservations(compteRendu.observations)
+  const reservesOuvertes = obs.reserves.filter(
+    (r) => r.statut === 'Ouvert' || r.statut === 'ouverte'
+  ).length
 
   return (
     <Document
       title={`Compte rendu — ${chantier.nom} — ${fmt(compteRendu.date_visite)}`}
       author="The Builder"
     >
-      <Page size="A4" style={styles.page}>
-        {/* ── Header ── */}
-        <View style={styles.header}>
-          <View style={styles.headerLeft}>
-            <Text style={styles.logo}>THE BUILDER</Text>
-            <Text style={styles.headerSubtitle}>Compte rendu de visite de chantier</Text>
-          </View>
-          <View style={styles.headerRight}>
-            <Text style={styles.headerLabel}>Date du rapport</Text>
-            <Text style={styles.headerValue}>{fmt(compteRendu.date_visite)}</Text>
-          </View>
-        </View>
+      <Page size="A4" style={S.page}>
 
-        {/* ── Chantier band ── */}
-        <View style={styles.chantierBand}>
-          <View style={styles.chantierField}>
-            <Text style={styles.chantierLabel}>Chantier</Text>
-            <Text style={styles.chantierValue}>{chantier.nom}</Text>
+        {/* ── Header ── */}
+        <View style={S.header}>
+
+          {/* Gauche : logo + infos entreprise */}
+          <View style={S.headerLeft}>
+            {pdfProfile?.logo ? (
+              <Image src={pdfProfile.logo} style={S.logoImg} />
+            ) : null}
+            <Text style={S.companySociete}>
+              {pdfProfile?.societe || "Cabinet d'architecture"}
+            </Text>
+            {pdfProfile?.nom       ? <Text style={S.companyLine}>{pdfProfile.nom}</Text>       : null}
+            {pdfProfile?.adresse   ? <Text style={S.companyLine}>{pdfProfile.adresse}</Text>   : null}
+            {pdfProfile?.telephone ? <Text style={S.companyLine}>{pdfProfile.telephone}</Text> : null}
+            {pdfProfile?.email     ? <Text style={S.companyLine}>{pdfProfile.email}</Text>     : null}
+            {pdfProfile?.siret     ? <Text style={S.companyLine}>SIRET : {pdfProfile.siret}</Text> : null}
           </View>
-          <View style={styles.chantierField}>
-            <Text style={styles.chantierLabel}>Client</Text>
-            <Text style={styles.chantierValue}>{chantier.client}</Text>
-          </View>
-          <View style={styles.chantierField}>
-            <Text style={styles.chantierLabel}>Adresse</Text>
-            <Text style={styles.chantierValue}>{chantier.adresse}</Text>
+
+          {/* Droite : titre + chantier + dates */}
+          <View style={S.headerRight}>
+            <Text style={S.docType}>Compte Rendu de Visite</Text>
+            <Text style={S.docChantier}>{chantier.nom}</Text>
+            {chantier.client ? <Text style={S.docClient}>{chantier.client}</Text> : null}
+            <Text style={S.docDate}>Visite du {fmt(compteRendu.date_visite)}</Text>
+            {compteRendu.date_prochaine_visite ? (
+              <Text style={S.docDate}>
+                Prochaine : {fmt(compteRendu.date_prochaine_visite)}
+              </Text>
+            ) : null}
           </View>
         </View>
 
         {/* ── Body ── */}
-        <View style={styles.body}>
+        <View style={S.body}>
 
-          {/* Dates */}
-          <View style={[styles.section]}>
-            <View style={styles.datesGrid}>
-              <View style={styles.dateField}>
-                <Text style={styles.dateLabel}>Date de visite</Text>
-                <Text style={styles.dateValue}>{fmt(compteRendu.date_visite)}</Text>
+          {/* Présences */}
+          {obs.presences.length > 0 && (
+            <View style={S.section}>
+              <Text style={S.sectionTitle}>Présences</Text>
+              <View style={S.tHead}>
+                <Text style={[S.th, { flex: 2 }]}>Nom</Text>
+                <Text style={[S.th, { flex: 2 }]}>Société</Text>
+                <Text style={[S.th, { flex: 1, textAlign: 'center' }]}>Statut</Text>
+                <Text style={[S.th, { flex: 1.5, textAlign: 'center', borderRightWidth: 0 }]}>Convoqué prochaine réunion</Text>
               </View>
-              {compteRendu.date_prochaine_visite && (
-                <View style={styles.dateField}>
-                  <Text style={styles.dateLabel}>Prochaine visite</Text>
-                  <Text style={styles.dateValue}>{fmt(compteRendu.date_prochaine_visite)}</Text>
+              {obs.presences.map((p, i) => (
+                <View key={i} style={S.tRow}>
+                  <Text style={[S.td, { flex: 2 }]}>{p.nom || '—'}</Text>
+                  <Text style={[S.td, S.tdGray, { flex: 2 }]}>{p.societe || '—'}</Text>
+                  <Text style={[S.td, { flex: 1, textAlign: 'center' }]}>{p.statut || '—'}</Text>
+                  <Text style={[S.td, { flex: 1.5, textAlign: 'center', borderRightWidth: 0 }]}>
+                    {p.convoque ? '✓' : ''}
+                  </Text>
                 </View>
-              )}
+              ))}
             </View>
-          </View>
+          )}
 
-          <View style={styles.divider} />
-
-          {/* Progression */}
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Avancement du chantier</Text>
-            <View style={styles.progressRow}>
-              <View style={styles.progressBg}>
-                <View style={[styles.progressFill, { width: progressWidth }]} />
-              </View>
-              <Text style={styles.progressLabel}>{compteRendu.progression}%</Text>
-            </View>
-          </View>
-
-          {/* Artisans présents */}
-          {compteRendu.artisans_presents?.length > 0 && (
-            <View style={styles.section}>
-              <Text style={styles.sectionTitle}>Artisans présents</Text>
-              <View style={styles.tagsRow}>
-                {compteRendu.artisans_presents.map((a, i) => (
-                  <View key={i} style={styles.tag}>
-                    <Text>{a}</Text>
+          {/* Réserves */}
+          {obs.reserves.length > 0 && (
+            <View style={S.section}>
+              <Text style={S.sectionTitle}>
+                Réserves — {reservesOuvertes} ouverte{reservesOuvertes !== 1 ? 's' : ''}
+              </Text>
+              {obs.reserves.map((r, i) => {
+                const isOuvert = r.statut === 'Ouvert' || r.statut === 'ouverte'
+                const statutLabel = r.statut === 'ouverte' ? 'Ouvert' : r.statut === 'levee' ? 'Levé' : (r.statut || '—')
+                return (
+                  <View key={i} style={S.card}>
+                    <View style={S.cardHeader}>
+                      <Text style={S.cardTitle}>
+                        Réserve 1.{i + 1}{r.lot ? ` — ${r.lot}` : ''}
+                      </Text>
+                      <Text style={isOuvert ? S.badgeOuvert : S.badgeLeve}>{statutLabel}</Text>
+                    </View>
+                    <Text style={S.cardDesc}>{r.description || '—'}</Text>
+                    {r.responsable ? (
+                      <Text style={S.cardResp}>Resp. : {r.responsable}</Text>
+                    ) : null}
+                    {r.photos && r.photos.length > 0 && (
+                      <View style={S.cardPhotos}>
+                        {r.photos.slice(0, 4).map((src, pi) => (
+                          <Image key={pi} src={src} style={S.cardPhoto} />
+                        ))}
+                      </View>
+                    )}
                   </View>
-                ))}
+                )
+              })}
+            </View>
+          )}
+
+          {/* Lots */}
+          {obs.lots.length > 0 && (
+            <View style={S.section}>
+              <Text style={S.sectionTitle}>Avancement des lots</Text>
+              <View style={S.tHead}>
+                <Text style={[S.th, { flex: 2 }]}>Lot</Text>
+                <Text style={[S.th, { flex: 2 }]}>Intervenant</Text>
+                <Text style={[S.th, { flex: 1 }]}>Démarrage</Text>
+                <Text style={[S.th, { flex: 1 }]}>Fin</Text>
+                <Text style={[S.th, { flex: 1, borderRightWidth: 0 }]}>Avancement</Text>
               </View>
+              {obs.lots.map((l, i) => (
+                <View key={i} style={S.tRow}>
+                  <Text style={[S.td, S.tdBold, { flex: 2 }]}>{l.nom || '—'}</Text>
+                  <Text style={[S.td, S.tdGray, { flex: 2 }]}>{l.intervenant || '—'}</Text>
+                  <Text style={[S.td, S.tdGray, { flex: 1 }]}>{fmtShort(l.dateDemarrage)}</Text>
+                  <Text style={[S.td, S.tdGray, { flex: 1 }]}>{fmtShort(l.dateFin)}</Text>
+                  <Text style={[S.td, S.tdOrange, { flex: 1, borderRightWidth: 0 }]}>
+                    {l.avancement ?? 0}%
+                  </Text>
+                </View>
+              ))}
+            </View>
+          )}
+
+          {/* Décisions */}
+          {obs.decisions.length > 0 && (
+            <View style={S.section}>
+              <Text style={S.sectionTitle}>Décisions</Text>
+              {obs.decisions.map((d, i) => (
+                <View key={i} style={S.decRow}>
+                  <Text style={S.decNum}>{i + 1}.</Text>
+                  <Text style={S.decText}>
+                    {d.description || d.texte || '—'}
+                    {d.responsable ? (
+                      <Text style={S.decMeta}> — {d.responsable}</Text>
+                    ) : null}
+                  </Text>
+                  {d.echeance ? (
+                    <Text style={S.decDate}>{fmtShortMD(d.echeance)}</Text>
+                  ) : null}
+                </View>
+              ))}
             </View>
           )}
 
           {/* Observations */}
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Observations</Text>
-            <Text style={compteRendu.observations ? styles.sectionText : styles.emptyText}>
-              {compteRendu.observations ?? 'Aucune observation.'}
-            </Text>
-          </View>
+          {obs.texte ? (
+            <View style={S.section}>
+              <Text style={S.sectionTitle}>Observations</Text>
+              <Text style={S.sectionText}>{obs.texte}</Text>
+            </View>
+          ) : null}
 
-          {/* Travaux à faire */}
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Travaux à réaliser</Text>
-            <Text style={compteRendu.travaux_a_faire ? styles.sectionText : styles.emptyText}>
-              {compteRendu.travaux_a_faire ?? 'Aucun travaux spécifiés.'}
-            </Text>
-          </View>
+          {/* Travaux à réaliser */}
+          {compteRendu.travaux_a_faire ? (
+            <View style={S.section}>
+              <Text style={S.sectionTitle}>Travaux à réaliser</Text>
+              <Text style={S.sectionText}>{compteRendu.travaux_a_faire}</Text>
+            </View>
+          ) : null}
 
           {/* Photos */}
           {compteRendu.photos?.length > 0 && (
-            <View style={styles.section}>
-              <Text style={styles.sectionTitle}>
-                Photos ({compteRendu.photos.length})
-              </Text>
-              <View style={styles.photosGrid}>
+            <View style={S.section}>
+              <Text style={S.sectionTitle}>Photos ({compteRendu.photos.length})</Text>
+              <View style={S.photosGrid}>
                 {compteRendu.photos.map((url, i) => (
-                  <View key={i} style={styles.photoWrapper}>
-                    <Image src={url} style={styles.photoImage} />
+                  <View key={i} style={S.photoWrap}>
+                    <Image src={url} style={S.photoImg} />
                   </View>
                 ))}
               </View>
@@ -332,12 +556,15 @@ export function CompteRenduPDF({
         </View>
 
         {/* ── Footer ── */}
-        <View style={styles.footer} fixed>
-          <Text style={styles.footerAccent}>THE BUILDER</Text>
-          <Text style={styles.footerText}>
-            Généré le {new Date().toLocaleDateString('fr-FR')} · Confidentiel
+        <View style={S.footer} fixed>
+          <Text style={S.footerLeft}>
+            {pdfProfile?.societe || 'The Builder'} · Confidentiel
+          </Text>
+          <Text style={S.footerRight}>
+            Généré le {new Date().toLocaleDateString('fr-FR')}
           </Text>
         </View>
+
       </Page>
     </Document>
   )
@@ -345,7 +572,10 @@ export function CompteRenduPDF({
 
 export async function generatePdfBuffer(
   compteRendu: CompteRendu,
-  chantier: Chantier
+  chantier: Chantier,
+  pdfProfile?: PdfProfile
 ): Promise<Buffer> {
-  return renderToBuffer(<CompteRenduPDF compteRendu={compteRendu} chantier={chantier} />)
+  return renderToBuffer(
+    <CompteRenduPDF compteRendu={compteRendu} chantier={chantier} pdfProfile={pdfProfile} />
+  )
 }

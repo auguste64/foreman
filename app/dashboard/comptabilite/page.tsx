@@ -11,7 +11,7 @@ import CustomSelect from '@/components/CustomSelect'
 import SortPills from '@/components/SortPills'
 import UpgradeGate from '@/components/UpgradeGate'
 
-type Tab = 'devis' | 'factures' | 'avoirs' | 'acomptes'
+type Tab = 'devis' | 'factures' | 'avoirs' | 'acomptes' | 'honoraires'
 
 type Chantier = { id: string; nom: string }
 
@@ -56,6 +56,24 @@ const ACOMPTE_STATUT: Record<string, { label: string; bg: string; color: string 
   annule:    { label: 'Annulé',    bg: 'rgba(232,84,71,0.15)',   color: '#E85447' },
 }
 
+type HonoraireDoc = {
+  id: string
+  user_id: string
+  numero: string
+  statut: string
+  client_nom: string
+  date_devis: string | null
+  total_ht: number
+  created_at: string
+}
+
+const HONORAIRE_STATUT: Record<string, { label: string; bg: string; color: string }> = {
+  Brouillon: { label: 'Brouillon', bg: 'rgba(138,136,128,0.15)', color: '#8A8880' },
+  'Envoyé':  { label: 'Envoyé',   bg: 'rgba(96,165,250,0.15)',  color: '#60a5fa' },
+  'Accepté': { label: 'Accepté',  bg: 'rgba(74,222,128,0.15)',  color: '#4ade80' },
+  'Refusé':  { label: 'Refusé',   bg: 'rgba(232,84,71,0.15)',   color: '#E85447' },
+}
+
 function Badge({ map, statut }: { map: Record<string, { label: string; bg: string; color: string }>; statut: string }) {
   const s = map[statut] ?? { label: statut, bg: 'rgba(138,136,128,0.15)', color: '#8A8880' }
   return (
@@ -76,6 +94,7 @@ export default function DocumentsPage() {
   const [factures, setFactures] = useState<FactureDoc[]>([])
   const [avoirs, setAvoirs] = useState<AvoirDoc[]>([])
   const [acomptes, setAcomptes] = useState<AcompteDoc[]>([])
+  const [honoraires, setHonoraires] = useState<HonoraireDoc[]>([])
   const [chantiers, setChantiers] = useState<Chantier[]>([])
   const [selectedChantier, setSelectedChantier] = useState<string | null>(null)
   const [hasSiret, setHasSiret] = useState(true)
@@ -88,18 +107,20 @@ export default function DocumentsPage() {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) return
 
-      const [dr, fr, ar, acr, cr, er] = await Promise.all([
+      const [dr, fr, ar, acr, cr, er, hor] = await Promise.all([
         supabase.from('devis').select('*').eq('user_id', user.id).order('created_at', { ascending: false }),
         supabase.from('factures').select('*').eq('user_id', user.id).order('created_at', { ascending: false }),
         supabase.from('avoirs').select('*').eq('user_id', user.id).order('created_at', { ascending: false }),
         supabase.from('acomptes').select('*').eq('user_id', user.id).order('created_at', { ascending: false }),
         supabase.from('chantiers').select('id, nom').eq('user_id', user.id).order('nom'),
         supabase.from('entreprise_infos').select('siret').eq('user_id', user.id).single(),
+        supabase.from('devis_honoraires').select('id, user_id, numero, statut, client_nom, date_devis, total_ht, created_at').eq('user_id', user.id).order('created_at', { ascending: false }),
       ])
       setDevis((dr.data ?? []) as DevisDoc[])
       setFactures((fr.data ?? []) as FactureDoc[])
       setAvoirs((ar.data ?? []) as AvoirDoc[])
       setAcomptes((acr.data ?? []) as AcompteDoc[])
+      setHonoraires((hor.data ?? []) as HonoraireDoc[])
       setChantiers((cr.data ?? []) as Chantier[])
       setHasSiret(!!(er.data?.siret))
       setLoading(false)
@@ -177,16 +198,18 @@ export default function DocumentsPage() {
   }
 
   const tabCounts: Record<Tab, number> = {
-    devis:     filteredDevis.length,
-    factures:  filteredFactures.length,
-    avoirs:    filteredAvoirs.length,
-    acomptes:  filteredAcomptes.length,
+    devis:      filteredDevis.length,
+    factures:   filteredFactures.length,
+    avoirs:     filteredAvoirs.length,
+    acomptes:   filteredAcomptes.length,
+    honoraires: honoraires.length,
   }
   const tabLabels: Record<Tab, string> = {
-    devis:    'Devis',
-    factures: 'Factures',
-    avoirs:   'Avoirs',
-    acomptes: 'Acomptes',
+    devis:      'Devis',
+    factures:   'Factures',
+    avoirs:     'Avoirs',
+    acomptes:   'Acomptes',
+    honoraires: 'Honoraires',
   }
 
   return (
@@ -296,18 +319,29 @@ export default function DocumentsPage() {
             </p>
           </div>
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-            <Link
-              href="/dashboard/comptabilite/devis/nouveau"
-              style={{ padding: '9px 16px', backgroundColor: 'transparent', color: '#ea580c', border: '1px solid #ea580c', borderRadius: 8, fontSize: 12, fontWeight: 600, textDecoration: 'none', fontFamily: 'var(--font-dm-sans), sans-serif' }}
-            >
-              + Devis
-            </Link>
-            <Link
-              href="/dashboard/comptabilite/factures/nouveau"
-              style={{ padding: '9px 16px', backgroundColor: '#ea580c', color: '#0D0D0B', border: 'none', borderRadius: 8, fontSize: 12, fontWeight: 600, textDecoration: 'none', fontFamily: 'var(--font-dm-sans), sans-serif' }}
-            >
-              + Facture
-            </Link>
+            {tab === 'honoraires' ? (
+              <Link
+                href="/dashboard/comptabilite/honoraires/nouveau"
+                style={{ padding: '9px 16px', backgroundColor: '#ea580c', color: '#0D0D0B', border: 'none', borderRadius: 8, fontSize: 12, fontWeight: 600, textDecoration: 'none', fontFamily: 'var(--font-dm-sans), sans-serif' }}
+              >
+                + Devis honoraires
+              </Link>
+            ) : (
+              <>
+                <Link
+                  href="/dashboard/comptabilite/devis/nouveau"
+                  style={{ padding: '9px 16px', backgroundColor: 'transparent', color: '#ea580c', border: '1px solid #ea580c', borderRadius: 8, fontSize: 12, fontWeight: 600, textDecoration: 'none', fontFamily: 'var(--font-dm-sans), sans-serif' }}
+                >
+                  + Devis
+                </Link>
+                <Link
+                  href="/dashboard/comptabilite/factures/nouveau"
+                  style={{ padding: '9px 16px', backgroundColor: '#ea580c', color: '#0D0D0B', border: 'none', borderRadius: 8, fontSize: 12, fontWeight: 600, textDecoration: 'none', fontFamily: 'var(--font-dm-sans), sans-serif' }}
+                >
+                  + Facture
+                </Link>
+              </>
+            )}
           </div>
         </div>
 
@@ -337,7 +371,7 @@ export default function DocumentsPage() {
 
         {/* Tabs */}
         <div style={{ display: 'flex', gap: 0, marginBottom: 20, borderBottom: '1px solid #1E1E1C', alignItems: 'center' }}>
-          {(['devis', 'factures', 'avoirs', 'acomptes'] as Tab[]).map(t => {
+          {(['devis', 'factures', 'honoraires', 'avoirs', 'acomptes'] as Tab[]).map(t => {
             const active = tab === t
             return (
               <button
@@ -506,6 +540,42 @@ export default function DocumentsPage() {
                         <td style={{ ...tdStyle, color: '#8A8880' }}>{fmtDate(a.date_emission)}</td>
                         <td style={tdStyle}>
                           <Link href={`/dashboard/comptabilite/acomptes/${a.id}`} style={actionLink('#60a5fa')}>Consulter</Link>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+                </div>
+              )
+            )}
+
+            {/* HONORAIRES */}
+            {tab === 'honoraires' && (
+              honoraires.length === 0 ? (
+                <EmptyState message="Aucun devis d'honoraires." cta="Créer le premier" href="/dashboard/comptabilite/honoraires/nouveau" />
+              ) : (
+                <div style={{ overflowX: 'auto', width: '100%' }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '600px' }}>
+                  <thead><tr>
+                    {['Numéro', 'Client', 'Date', 'Montant HT', 'Statut', 'Actions'].map(h => (
+                      <th key={h} style={thStyle}>{h}</th>
+                    ))}
+                  </tr></thead>
+                  <tbody>
+                    {honoraires.map(h => (
+                      <tr key={h.id}
+                        onMouseEnter={e => (e.currentTarget.style.background = 'rgba(249,115,22,0.04)')}
+                        onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+                      >
+                        <td style={{ ...tdStyle, fontFamily: 'var(--font-syne), sans-serif', fontWeight: 600, fontSize: 12 }}>{h.numero}</td>
+                        <td style={tdStyle}>{h.client_nom || '—'}</td>
+                        <td style={{ ...tdStyle, color: '#8A8880' }}>{fmtDate(h.date_devis)}</td>
+                        <td style={{ ...tdStyle, fontWeight: 600, color: '#ea580c' }}>{formatEurDoc(h.total_ht ?? 0)}</td>
+                        <td style={tdStyle}><Badge map={HONORAIRE_STATUT} statut={h.statut} /></td>
+                        <td style={tdStyle}>
+                          <div style={{ display: 'flex', gap: 6 }}>
+                            <Link href={`/dashboard/comptabilite/honoraires/${h.id}`} style={actionLink('#ea580c')}>Consulter</Link>
+                          </div>
                         </td>
                       </tr>
                     ))}

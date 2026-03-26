@@ -1,6 +1,7 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import React, { useEffect, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
@@ -11,9 +12,16 @@ import PhotoAnnotator from '@/components/PhotoAnnotator'
 import { DateTimePicker } from '@/components/DateTimePicker'
 import { DatePickerOverlay, formatDateDisplay, dateToStr } from '@/components/DatePicker'
 
+function Portal({ children }: { children: React.ReactNode }) {
+  const [mounted, setMounted] = React.useState(false)
+  React.useEffect(() => { setMounted(true) }, [])
+  if (!mounted) return null
+  return createPortal(children, document.body)
+}
+
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-type Tab = 'general' | 'presences' | 'reserves' | 'decisions' | 'lots' | 'photos' | 'profil'
+type Tab = 'general' | 'presences' | 'reserves' | 'decisions' | 'lots' | 'photos'
 type StatutPresence = 'P' | 'A' | 'E' | 'C'
 
 interface PresenceRow {
@@ -29,6 +37,7 @@ interface Reserve {
   description: string
   lot: string
   responsable: string
+  dateLimite: string
   statut: 'Ouvert' | 'Levé'
   dateCreation: string
   photos: string[]
@@ -41,6 +50,8 @@ interface Lot {
   dateDemarrage: string
   dateFin: string
   avancement: number
+  commentaire: string
+  photos: string[]
 }
 
 interface Decision {
@@ -69,6 +80,7 @@ const STATUT_META: Record<StatutPresence, { bg: string; color: string; label: st
   E: { bg: 'rgba(251,191,36,0.15)',  color: '#fbbf24', label: 'Excusé'   },
   C: { bg: 'rgba(96,165,250,0.15)',  color: '#60a5fa', label: 'Convoqué' },
 }
+
 
 const inputStyle: React.CSSProperties = {
   width: '100%', padding: '10px 14px', backgroundColor: '#0D0D0B',
@@ -119,41 +131,44 @@ export default function NouveauCompteRenduPage() {
   const [reserves, setReserves] = useState<Reserve[]>([])
   const [decisions, setDecisions] = useState<Decision[]>([])
   const [lots, setLots] = useState<Lot[]>([])
-  const [allArtisans, setAllArtisans] = useState<{ id: string; nom: string; metier: string | null }[]>([])
-  const [addArtisanOpen, setAddArtisanOpen] = useState(false)
-  const addArtisanBtnRef = useRef<HTMLButtonElement>(null)
-  const addArtisanDropdownRef = useRef<HTMLDivElement>(null)
+  const [chantierArtisans, setChantierArtisans] = useState<{ id: string; nom: string; metier: string | null }[]>([])
+  const [draftSaved, setDraftSaved] = useState(false)
 
+  // External intervenant form (Présences tab)
+  const [showExternalForm, setShowExternalForm] = useState(false)
+  const [externalName, setExternalName] = useState('')
+  const [externalSociete, setExternalSociete] = useState('')
+
+  // Date pickers
   const [showDatePickerCR, setShowDatePickerCR] = useState(false)
   const [showDatePickerProchaine, setShowDatePickerProchaine] = useState(false)
   const [heureVisite, setHeureVisite] = useState(9)
+  const [heureProchaineVisite, setHeureProchaineVisite] = useState(9)
   const [decisionDatePicker, setDecisionDatePicker] = useState<number | null>(null)
-  const [lotDatePicker, setLotDatePicker] = useState<{ index: number; field: 'debut' | 'fin' } | null>(null)
+  const [lotDatePicker, setLotDatePicker] = useState<{ lotId: string; field: 'debut' | 'fin' } | null>(null)
+  const [reserveDatePicker, setReserveDatePicker] = useState<string | null>(null)
 
   const [form, setForm] = useState({
     chantier_id: '',
     date_visite: new Date().toISOString().split('T')[0],
     date_prochaine_visite: '',
     progression: 50,
-    observations: '',
-    travaux_a_faire: '',
     artisans_presents: [] as string[],
     photos: [] as string[],
   })
 
-  // Load chantiers + all artisans for the manual-add dropdown
+  // Load chantiers
   useEffect(() => {
     const supabase = createClient()
     supabase.from('chantiers').select('*').order('nom')
       .then(({ data }) => setChantiers((data ?? []) as Chantier[]))
-    supabase.from('artisans').select('id, nom, metier').order('nom')
-      .then(({ data }) => setAllArtisans((data ?? []) as { id: string; nom: string; metier: string | null }[]))
   }, [])
 
-  // Reload presences whenever the selected chantier changes
+  // Reload presences + chantierArtisans whenever the selected chantier changes
   useEffect(() => {
     if (!form.chantier_id) {
       setPresences([])
+      setChantierArtisans([])
       return
     }
     createClient()
@@ -162,37 +177,25 @@ export default function NouveauCompteRenduPage() {
       .eq('chantier_id', form.chantier_id)
       .then(({ data }) => {
         const rows = (data ?? []) as unknown as { artisan_id: string; artisans: { id: string; nom: string; metier: string | null } | null }[]
-        setPresences(
-          rows
-            .filter((r) => r.artisans)
-            .map((r) => ({
-              artisanId: r.artisans!.id,
-              nom: r.artisans!.nom,
-              societe: r.artisans!.metier ?? '',
-              statut: 'A' as StatutPresence,
-              convoque: false,
-            }))
-        )
+        const artisanList = rows
+          .filter((r) => r.artisans)
+          .map((r) => ({ id: r.artisans!.id, nom: r.artisans!.nom, metier: r.artisans!.metier }))
+        setChantierArtisans(artisanList)
+        setPresences((prev) => {
+          if (prev.length > 0) return prev
+          return artisanList.map((a) => ({
+            artisanId: a.id,
+            nom: a.nom,
+            societe: a.metier ?? '',
+            statut: 'P' as StatutPresence,
+            convoque: true,
+          }))
+        })
       })
   }, [form.chantier_id])
 
-  // Close the add-artisan dropdown on outside click
+  // Load profile from localStorage + entreprise_infos (for PDF preview)
   useEffect(() => {
-    function handleClickOutside(e: MouseEvent) {
-      const target = e.target as Node
-      const inBtn = addArtisanBtnRef.current?.contains(target)
-      const inDropdown = addArtisanDropdownRef.current?.contains(target)
-      if (!inBtn && !inDropdown) {
-        setAddArtisanOpen(false)
-      }
-    }
-    document.addEventListener('mousedown', handleClickOutside)
-    return () => document.removeEventListener('mousedown', handleClickOutside)
-  }, [])
-
-  // Load profile: localStorage as base, then fill empty fields from entreprise_infos
-  useEffect(() => {
-    // Apply any locally saved values immediately
     let base = emptyProfile()
     try {
       const saved = localStorage.getItem('foreman_profile')
@@ -200,17 +203,14 @@ export default function NouveauCompteRenduPage() {
     } catch {}
     setProfile(base)
 
-    // Always fetch entreprise_infos to fill any empty fields
     const supabase = createClient()
     supabase.auth.getUser().then(async ({ data: { user } }) => {
       if (!user) return
-
       const { data: ei } = await supabase
         .from('entreprise_infos')
         .select('raison_sociale, adresse, code_postal, ville, telephone, email, siret, logo_url')
         .eq('user_id', user.id)
         .maybeSingle()
-
       if (ei) {
         const adresse = [ei.adresse, ei.code_postal, ei.ville].filter(Boolean).join(', ')
         setProfile((prev) => ({
@@ -224,14 +224,11 @@ export default function NouveauCompteRenduPage() {
         }))
         return
       }
-
-      // Fallback to profiles table
       const { data: prof } = await supabase
         .from('profiles')
         .select('entreprise, prenom, nom, adresse')
         .eq('id', user.id)
         .maybeSingle()
-
       if (prof) {
         setProfile((prev) => ({
           ...prev,
@@ -243,15 +240,24 @@ export default function NouveauCompteRenduPage() {
     })
   }, [])
 
+  // Autosave draft every 30 seconds
+  useEffect(() => {
+    if (!form.chantier_id) return
+    const interval = setInterval(() => {
+      const draft = { form, presences, reserves, decisions, lots }
+      try {
+        localStorage.setItem(`cr_draft_${form.chantier_id}`, JSON.stringify(draft))
+        setDraftSaved(true)
+        setTimeout(() => setDraftSaved(false), 3000)
+      } catch {}
+    }, 30000)
+    return () => clearInterval(interval)
+  }, [form, presences, reserves, decisions, lots])
+
   const selectedChantier = chantiers.find((c) => c.id === form.chantier_id)
 
   function setField(field: string, value: unknown) {
     setForm((prev) => ({ ...prev, [field]: value }))
-  }
-
-  function saveProfile(p: Profile) {
-    setProfile(p)
-    localStorage.setItem('foreman_profile', JSON.stringify(p))
   }
 
   // ── Presences ──
@@ -268,16 +274,23 @@ export default function NouveauCompteRenduPage() {
   function removePresence(id: string) {
     setPresences((prev) => prev.filter((p) => p.artisanId !== id))
   }
-  function addArtisanToPresences(artisan: { id: string; nom: string; metier: string | null }) {
-    setPresences((prev) => [...prev, { artisanId: artisan.id, nom: artisan.nom, societe: artisan.metier ?? '', statut: 'A', convoque: false }])
-    setAddArtisanOpen(false)
+  function addExternalArtisan() {
+    if (!externalName.trim()) return
+    setPresences((prev) => [
+      ...prev,
+      { artisanId: `ext_${uid()}`, nom: externalName.trim(), societe: externalSociete.trim(), statut: 'P', convoque: true },
+    ])
+    setExternalName('')
+    setExternalSociete('')
+    setShowExternalForm(false)
   }
 
   // ── Reserves ──
   function addReserve() {
     setReserves((prev) => [...prev, {
       id: uid(), description: '', lot: '', responsable: '',
-      statut: 'Ouvert', dateCreation: new Date().toISOString().split('T')[0], photos: [],
+      dateLimite: '', statut: 'Ouvert',
+      dateCreation: new Date().toISOString().split('T')[0], photos: [],
     }])
   }
   function updateReserve(id: string, field: keyof Reserve, value: unknown) {
@@ -296,6 +309,28 @@ export default function NouveauCompteRenduPage() {
       r.id === reserveId ? { ...r, photos: r.photos.filter((_, i) => i !== idx) } : r
     ))
   }
+  async function reporterReservesPrecedentes() {
+    if (!form.chantier_id) return
+    const supabase = createClient()
+    const { data } = await supabase
+      .from('comptes_rendus')
+      .select('observations')
+      .eq('chantier_id', form.chantier_id)
+      .order('date_visite', { ascending: false })
+      .limit(1)
+      .maybeSingle()
+    if (!data?.observations) { toast.success('Aucun CR précédent trouvé.'); return }
+    try {
+      const parsed = JSON.parse(data.observations)
+      const ouvertes = ((parsed.reserves ?? []) as Reserve[]).filter((r) => r.statut === 'Ouvert')
+      if (ouvertes.length === 0) { toast.success('Aucune réserve ouverte à reporter.'); return }
+      setReserves((prev) => [
+        ...prev,
+        ...ouvertes.map((r) => ({ ...r, id: uid(), dateCreation: new Date().toISOString().split('T')[0], photos: [] })),
+      ])
+      toast.success(`${ouvertes.length} réserve(s) reportée(s)`)
+    } catch {}
+  }
 
   // ── Decisions ──
   function addDecision() { setDecisions((prev) => [...prev, { id: uid(), description: '', responsable: '', echeance: '' }]) }
@@ -305,13 +340,24 @@ export default function NouveauCompteRenduPage() {
   function deleteDecision(id: string) { setDecisions((prev) => prev.filter((d) => d.id !== id)) }
 
   // ── Lots ──
-  function addLot() { setLots((prev) => [...prev, { id: uid(), nom: '', intervenant: '', dateDemarrage: '', dateFin: '', avancement: 0 }]) }
+  function addLot() {
+    setLots((prev) => [...prev, {
+      id: uid(), nom: '', intervenant: '', dateDemarrage: '', dateFin: '',
+      avancement: 0, commentaire: '', photos: [],
+    }])
+  }
   function updateLot(id: string, field: keyof Lot, value: unknown) {
     setLots((prev) => prev.map((l) => l.id === id ? { ...l, [field]: value } : l))
   }
   function deleteLot(id: string) { setLots((prev) => prev.filter((l) => l.id !== id)) }
+  function addLotPhoto(lotId: string, dataUrl: string) {
+    setLots((prev) => prev.map((l) => l.id === lotId ? { ...l, photos: [...l.photos, dataUrl] } : l))
+  }
+  function removeLotPhoto(lotId: string, idx: number) {
+    setLots((prev) => prev.map((l) => l.id === lotId ? { ...l, photos: l.photos.filter((_, i) => i !== idx) } : l))
+  }
 
-  // ── Photos ──
+  // ── Photos (onglet Photos) ──
   function handlePhotoChange(e: React.ChangeEvent<HTMLInputElement>) {
     const files = Array.from(e.target.files ?? [])
     setPhotoFiles((prev) => [...prev, ...files])
@@ -347,10 +393,7 @@ export default function NouveauCompteRenduPage() {
       const photoUrls = await uploadPhotos()
       const artisansPresentsList = presences.filter((p) => p.statut === 'P').map((p) => p.nom)
 
-      // observations stocke un objet structuré JSON dans la colonne TEXT
-      // (presences/reserves/decisions/lots n'ont pas de colonnes dédiées dans le schéma DB)
       const observationsData = {
-        texte: form.observations,
         presences,
         reserves,
         decisions,
@@ -363,16 +406,10 @@ export default function NouveauCompteRenduPage() {
         date_prochaine_visite: form.date_prochaine_visite || null,
         progression: form.progression,
         observations: JSON.stringify(observationsData),
-        travaux_a_faire: form.travaux_a_faire || null,
+        travaux_a_faire: null,
         artisans_presents: artisansPresentsList,
         photos: photoUrls,
       }
-      console.log('[handleSubmit] insertPayload keys:', Object.keys(insertPayload))
-      console.log('[handleSubmit] chantier_id:', insertPayload.chantier_id)
-      console.log('[handleSubmit] date_visite:', insertPayload.date_visite)
-      console.log('[handleSubmit] progression:', insertPayload.progression)
-      console.log('[handleSubmit] artisans_presents:', insertPayload.artisans_presents)
-      console.log('[handleSubmit] observations length:', insertPayload.observations.length)
       const cr = await createCompteRendu(insertPayload)
 
       // Auto-create planning events
@@ -385,12 +422,11 @@ export default function NouveauCompteRenduPage() {
         void Promise.resolve(supabase.from('evenements').insert({
           user_id: user.id, chantier_id: form.chantier_id,
           titre: `Visite — ${nomChantier}`, type: 'visite_architecte',
-          date_debut: visitDate.toISOString(), date_fin: null, artisan_id: null,
-          notes: form.observations || null,
+          date_debut: visitDate.toISOString(), date_fin: null, artisan_id: null, notes: null,
         })).catch(() => {})
         if (form.date_prochaine_visite) {
           const nextDate = new Date(form.date_prochaine_visite)
-          nextDate.setHours(9, 0, 0, 0)
+          nextDate.setHours(heureProchaineVisite, 0, 0, 0)
           void Promise.resolve(supabase.from('evenements').insert({
             user_id: user.id, chantier_id: form.chantier_id,
             titre: `Prochaine visite — ${nomChantier}`, type: 'prochaine_visite',
@@ -398,6 +434,9 @@ export default function NouveauCompteRenduPage() {
           })).catch(() => {})
         }
       }
+
+      try { localStorage.removeItem(`cr_draft_${form.chantier_id}`) } catch {}
+
       toast.success('Compte rendu créé')
       router.push(`/dashboard/comptes-rendus/${cr.id}`)
     } catch (err: unknown) {
@@ -414,14 +453,15 @@ export default function NouveauCompteRenduPage() {
     { id: 'reserves',  label: reserves.length  ? `Réserves (${reserves.length})`   : 'Réserves'  },
     { id: 'decisions', label: decisions.length ? `Décisions (${decisions.length})` : 'Décisions' },
     { id: 'photos',    label: photoPreviews.length ? `Photos (${photoPreviews.length})` : 'Photos' },
-    { id: 'profil',    label: 'Profil' },
   ]
 
-  // Inline cell style for Lots table
-  const cellInput: React.CSSProperties = {
-    ...inputStyle, padding: '6px 10px', fontSize: '13px',
-    backgroundColor: 'transparent', border: '1px solid transparent',
-  }
+  // ── Artisans + externes pour les selects ──
+  const allIntervenants = [
+    ...chantierArtisans.map(a => ({ value: a.nom, label: `${a.nom}${a.metier ? ` · ${a.metier}` : ''}` })),
+    ...presences.filter(p => p.artisanId.startsWith('ext_')).map(p => ({
+      value: p.nom, label: `${p.nom}${p.societe ? ` · ${p.societe}` : ''}`,
+    })),
+  ]
 
   // ─────────────────────────────────────────────────────────────────────────────
   return (
@@ -480,7 +520,10 @@ export default function NouveauCompteRenduPage() {
                       ))}
                     </select>
                   </div>
+
+                  {/* Dates */}
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                    {/* Date de visite */}
                     <div>
                       <label style={labelStyle}>Date de visite *</label>
                       <button
@@ -491,39 +534,49 @@ export default function NouveauCompteRenduPage() {
                       >
                         <span style={{ color: form.date_visite ? '#F0EDE6' : '#8A8880' }}>
                           {form.date_visite
-                            ? `${new Date(form.date_visite + 'T12:00:00').toLocaleDateString('fr-FR', { weekday: 'short', day: 'numeric', month: 'short' })} — ${heureVisite}:00`
+                            ? `${new Date(form.date_visite + 'T12:00:00').toLocaleDateString('fr-FR', { weekday: 'short', day: 'numeric', month: 'short' })} — ${heureVisite}h00`
                             : 'Choisir date & heure…'}
                         </span>
                         <span style={{ color: '#ea580c', fontSize: '12px' }}>📅</span>
                       </button>
                     </div>
+
+                    {/* Prochaine visite */}
                     <div>
                       <label style={labelStyle}>Prochaine visite</label>
                       <button
                         type="button"
                         onClick={() => setShowDatePickerProchaine(true)}
-                        style={{ ...inputStyle, textAlign: 'left', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'space-between' } as React.CSSProperties}
-                        onMouseEnter={(e) => (e.currentTarget.style.borderColor = '#ea580c')}
-                        onMouseLeave={(e) => (e.currentTarget.style.borderColor = '#1E1E1C')}
+                        style={{ ...inputStyle, textAlign: 'left', cursor: 'pointer', background: '#0D0D0B', display: 'flex', alignItems: 'center', justifyContent: 'space-between' } as React.CSSProperties}
+                        onFocus={focus} onBlur={blur}
                       >
                         <span style={{ color: form.date_prochaine_visite ? '#F0EDE6' : '#8A8880' }}>
-                          {form.date_prochaine_visite ? formatDateDisplay(form.date_prochaine_visite) : 'Choisir une date…'}
+                          {form.date_prochaine_visite
+                            ? `${new Date(form.date_prochaine_visite + 'T12:00:00').toLocaleDateString('fr-FR', { weekday: 'short', day: 'numeric', month: 'short' })} — ${heureProchaineVisite}h00`
+                            : 'Date…'}
                         </span>
-                        <span style={{ color: '#ea580c', fontSize: '12px' }}>▼</span>
+                        <span style={{ color: '#ea580c', fontSize: '12px' }}>📅</span>
                       </button>
                     </div>
                   </div>
+
+                  {/* Avancement global */}
                   <div>
-                    <label style={labelStyle}>Observations / remarques</label>
-                    <textarea value={form.observations} onChange={(e) => setField('observations', e.target.value)} rows={4}
-                      placeholder="Décrivez l'état du chantier, les points importants observés…"
-                      style={{ ...inputStyle, resize: 'vertical', lineHeight: '1.6' }} onFocus={focus} onBlur={blur} />
-                  </div>
-                  <div>
-                    <label style={labelStyle}>Travaux à réaliser</label>
-                    <textarea value={form.travaux_a_faire} onChange={(e) => setField('travaux_a_faire', e.target.value)} rows={3}
-                      placeholder="Listez les tâches à effectuer avant la prochaine visite…"
-                      style={{ ...inputStyle, resize: 'vertical', lineHeight: '1.6' }} onFocus={focus} onBlur={blur} />
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                      <label style={{ ...labelStyle, marginBottom: 0 }}>Avancement global</label>
+                      <span style={{ fontSize: '15px', fontWeight: 700, color: '#ea580c', fontFamily: 'var(--font-syne), sans-serif' }}>
+                        {form.progression}%
+                      </span>
+                    </div>
+                    <input
+                      type="range" min={0} max={100} step={5}
+                      value={form.progression}
+                      onChange={(e) => setField('progression', parseInt(e.target.value))}
+                      style={{ width: '100%', accentColor: '#ea580c', cursor: 'pointer', height: '4px' }}
+                    />
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: '#3A3A38', marginTop: '4px', fontFamily: 'var(--font-dm-sans), sans-serif' }}>
+                      <span>0%</span><span>50%</span><span>100%</span>
+                    </div>
                   </div>
                 </div>
               )}
@@ -539,7 +592,7 @@ export default function NouveauCompteRenduPage() {
                     <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                       <thead>
                         <tr>
-                          {['Nom', 'Société / Métier', 'Statut', 'Convoqué prochaine réunion'].map((h) => (
+                          {['Nom', 'Société / Métier', 'Statut', 'Convoqué prochaine réunion', ''].map((h) => (
                             <th key={h} style={{
                               fontFamily: 'var(--font-syne), sans-serif', fontWeight: 700,
                               fontSize: '11px', letterSpacing: '0.08em', textTransform: 'uppercase',
@@ -595,51 +648,48 @@ export default function NouveauCompteRenduPage() {
                     </table>
                   ) : null}
 
-                  {/* + Ajouter un artisan */}
+                  {/* + Ajouter un intervenant externe */}
                   {form.chantier_id && (
-                    <div style={{ position: 'relative', display: 'inline-block', marginTop: presences.length > 0 ? '12px' : '0' }}>
-                      <button ref={addArtisanBtnRef} type="button"
-                        onClick={() => setAddArtisanOpen((o) => !o)}
-                        style={{
-                          padding: '8px 14px', backgroundColor: 'transparent', border: '1px dashed #1E1E1C',
-                          borderRadius: '8px', color: '#8A8880', fontSize: '13px', cursor: 'pointer',
-                          fontFamily: 'var(--font-dm-sans), sans-serif', transition: 'all 0.15s',
-                        }}
-                        onMouseEnter={(e) => { e.currentTarget.style.borderColor = 'rgba(249,115,22,0.4)'; e.currentTarget.style.color = '#ea580c' }}
-                        onMouseLeave={(e) => { e.currentTarget.style.borderColor = '#1E1E1C'; e.currentTarget.style.color = '#8A8880' }}>
-                        + Ajouter un artisan
-                      </button>
-                      {addArtisanOpen && (
-                        <div ref={addArtisanDropdownRef} style={{
-                          position: 'absolute', top: 'calc(100% + 4px)', left: 0,
-                          minWidth: '240px',
-                          backgroundColor: '#111110', border: '1px solid #1E1E1C', borderRadius: '10px',
-                          zIndex: 9999, maxHeight: '200px', overflowY: 'auto',
-                          boxShadow: '0 8px 32px rgba(0,0,0,0.5)',
-                        }}>
-                          {(() => {
-                            const filtered = allArtisans.filter((a) => !presences.some((p) => p.artisanId === a.id))
-                            if (filtered.length === 0) return (
-                              <div style={{ padding: '12px 16px', fontSize: '13px', color: '#8A8880', fontFamily: 'var(--font-dm-sans), sans-serif' }}>
-                                Tous les artisans sont déjà ajoutés.
-                              </div>
-                            )
-                            return filtered.map((a, i) => (
-                              <button key={a.id} type="button"
-                                onClick={(e) => { e.stopPropagation(); addArtisanToPresences(a) }}
-                                style={{
-                                  width: '100%', display: 'flex', flexDirection: 'column', gap: '2px',
-                                  padding: '12px 16px', backgroundColor: 'transparent',
-                                  border: 'none', borderBottom: i < filtered.length - 1 ? '1px solid #1E1E1C' : 'none',
-                                  cursor: 'pointer', textAlign: 'left', boxSizing: 'border-box',
-                                }}
-                                onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#1E1E1C' }}
-                                onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'transparent' }}>
-                                <span style={{ fontSize: '14px', fontWeight: 600, color: '#F0EDE6', fontFamily: 'var(--font-dm-sans), sans-serif' }}>{a.nom}</span>
-                                {a.metier && <span style={{ fontSize: '12px', color: '#8A8880', fontFamily: 'var(--font-dm-sans), sans-serif' }}>{a.metier}</span>}
-                              </button>
-                            ))
-                          })()}
+                    <div style={{ marginTop: presences.length > 0 ? '16px' : '0' }}>
+                      {!showExternalForm ? (
+                        <button type="button"
+                          onClick={() => setShowExternalForm(true)}
+                          style={{
+                            padding: '8px 14px', backgroundColor: 'transparent', border: '1px dashed #1E1E1C',
+                            borderRadius: '8px', color: '#8A8880', fontSize: '13px', cursor: 'pointer',
+                            fontFamily: 'var(--font-dm-sans), sans-serif', transition: 'all 0.15s',
+                          }}
+                          onMouseEnter={(e) => { e.currentTarget.style.borderColor = 'rgba(249,115,22,0.4)'; e.currentTarget.style.color = '#ea580c' }}
+                          onMouseLeave={(e) => { e.currentTarget.style.borderColor = '#1E1E1C'; e.currentTarget.style.color = '#8A8880' }}>
+                          + Ajouter un intervenant externe
+                        </button>
+                      ) : (
+                        <div style={{ backgroundColor: '#0D0D0B', border: '1px solid #1E1E1C', borderRadius: '10px', padding: '16px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                          <p style={{ margin: 0, fontSize: '12px', color: '#8A8880', fontFamily: 'var(--font-dm-sans), sans-serif' }}>
+                            Intervenant non lié à la base artisans
+                          </p>
+                          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+                            <div>
+                              <label style={labelStyle}>Nom *</label>
+                              <input value={externalName} onChange={(e) => setExternalName(e.target.value)}
+                                placeholder="Jean Dupont" style={inputStyle} onFocus={focus} onBlur={blur} />
+                            </div>
+                            <div>
+                              <label style={labelStyle}>Société / Métier</label>
+                              <input value={externalSociete} onChange={(e) => setExternalSociete(e.target.value)}
+                                placeholder="Plomberie Martin" style={inputStyle} onFocus={focus} onBlur={blur} />
+                            </div>
+                          </div>
+                          <div style={{ display: 'flex', gap: '8px' }}>
+                            <button type="button" onClick={addExternalArtisan}
+                              style={{ padding: '8px 16px', backgroundColor: '#ea580c', color: '#0D0D0B', border: 'none', borderRadius: '7px', fontSize: '13px', fontWeight: 600, cursor: 'pointer', fontFamily: 'var(--font-dm-sans), sans-serif' }}>
+                              Ajouter
+                            </button>
+                            <button type="button" onClick={() => { setShowExternalForm(false); setExternalName(''); setExternalSociete('') }}
+                              style={{ padding: '8px 12px', backgroundColor: 'transparent', color: '#8A8880', border: '1px solid #1E1E1C', borderRadius: '7px', fontSize: '13px', cursor: 'pointer', fontFamily: 'var(--font-dm-sans), sans-serif' }}>
+                              Annuler
+                            </button>
+                          </div>
                         </div>
                       )}
                     </div>
@@ -655,9 +705,159 @@ export default function NouveauCompteRenduPage() {
                 </div>
               )}
 
+              {/* ── LOTS ── */}
+              {tab === 'lots' && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                  {lots.map((l, idx) => (
+                    <div key={l.id} style={{ backgroundColor: '#0D0D0B', border: '1px solid #1E1E1C', borderRadius: '10px', padding: '20px' }}>
+                      {/* Lot header */}
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
+                        <span style={{ fontFamily: 'var(--font-syne), sans-serif', fontWeight: 700, fontSize: '14px', color: '#ea580c' }}>
+                          Lot {idx + 1}
+                        </span>
+                        <button type="button" onClick={() => deleteLot(l.id)}
+                          style={{ background: 'none', border: '1px solid #1E1E1C', borderRadius: '6px', color: '#8A8880', cursor: 'pointer', fontSize: '14px', padding: '4px 8px', lineHeight: 1, transition: 'all 0.15s' }}
+                          onMouseEnter={(e) => { e.currentTarget.style.borderColor = '#EF4444'; e.currentTarget.style.color = '#EF4444' }}
+                          onMouseLeave={(e) => { e.currentTarget.style.borderColor = '#1E1E1C'; e.currentTarget.style.color = '#8A8880' }}>
+                          🗑
+                        </button>
+                      </div>
+
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '14px' }}>
+                        {/* Nom */}
+                        <div>
+                          <label style={labelStyle}>Nom du lot</label>
+                          <input value={l.nom} onChange={(e) => updateLot(l.id, 'nom', e.target.value)}
+                            placeholder="Ex : Gros œuvre, Electricité…"
+                            style={{ ...inputStyle, fontSize: '13px' }} onFocus={focus} onBlur={blur} />
+                        </div>
+
+                        {/* Intervenant */}
+                        <div>
+                          <label style={labelStyle}>Intervenant</label>
+                          <div style={{ position: 'relative' }}>
+                            <select value={l.intervenant} onChange={(e) => updateLot(l.id, 'intervenant', e.target.value)}
+                              style={{ background: '#111110', border: '1px solid #1E1E1C', borderRadius: '8px', padding: '10px 32px 10px 12px', color: l.intervenant ? '#F0EDE6' : '#8A8880', fontSize: '13px', width: '100%', appearance: 'none', WebkitAppearance: 'none', cursor: 'pointer', outline: 'none', fontFamily: 'var(--font-dm-sans), sans-serif', boxSizing: 'border-box' } as React.CSSProperties}
+                              onFocus={focus} onBlur={blur}>
+                              <option value="">— Artisan —</option>
+                              {allIntervenants.map(a => <option key={a.value} value={a.value} style={{ backgroundColor: '#111110' }}>{a.label}</option>)}
+                            </select>
+                            <svg style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} width="12" height="8" viewBox="0 0 12 8" fill="none"><path d="M1 1l5 5 5-5" stroke="#8A8880" strokeWidth="1.5" strokeLinecap="round" /></svg>
+                          </div>
+                        </div>
+
+                        {/* Démarrage */}
+                        <div>
+                          <label style={labelStyle}>Date démarrage</label>
+                          <button type="button" onClick={() => setLotDatePicker({ lotId: l.id, field: 'debut' })}
+                            style={{ ...inputStyle, textAlign: 'left', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '13px' } as React.CSSProperties}
+                            onMouseEnter={e => e.currentTarget.style.borderColor = '#ea580c'}
+                            onMouseLeave={e => e.currentTarget.style.borderColor = '#1E1E1C'}>
+                            <span style={{ color: l.dateDemarrage ? '#F0EDE6' : '#8A8880' }}>{l.dateDemarrage ? formatDateDisplay(l.dateDemarrage) : 'jj/mm/aaaa'}</span>
+                            <span style={{ color: '#ea580c', fontSize: '11px' }}>▼</span>
+                          </button>
+                        </div>
+
+                        {/* Fin */}
+                        <div>
+                          <label style={labelStyle}>Date fin</label>
+                          <button type="button" onClick={() => setLotDatePicker({ lotId: l.id, field: 'fin' })}
+                            style={{ ...inputStyle, textAlign: 'left', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '13px' } as React.CSSProperties}
+                            onMouseEnter={e => e.currentTarget.style.borderColor = '#ea580c'}
+                            onMouseLeave={e => e.currentTarget.style.borderColor = '#1E1E1C'}>
+                            <span style={{ color: l.dateFin ? '#F0EDE6' : '#8A8880' }}>{l.dateFin ? formatDateDisplay(l.dateFin) : 'jj/mm/aaaa'}</span>
+                            <span style={{ color: '#ea580c', fontSize: '11px' }}>▼</span>
+                          </button>
+                        </div>
+
+                        {/* Avancement */}
+                        <div style={{ gridColumn: '1 / -1' }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+                            <label style={{ ...labelStyle, marginBottom: 0 }}>Avancement</label>
+                            <span style={{ fontSize: '14px', fontWeight: 700, color: '#ea580c', fontFamily: 'var(--font-syne), sans-serif' }}>{l.avancement}%</span>
+                          </div>
+                          <input type="range" min={0} max={100} step={5} value={l.avancement}
+                            onChange={(e) => updateLot(l.id, 'avancement', parseInt(e.target.value))}
+                            style={{ width: '100%', accentColor: '#ea580c', cursor: 'pointer' }} />
+                        </div>
+
+                        {/* Commentaire */}
+                        <div style={{ gridColumn: '1 / -1' }}>
+                          <label style={labelStyle}>Commentaire</label>
+                          <textarea value={l.commentaire} onChange={(e) => updateLot(l.id, 'commentaire', e.target.value)}
+                            rows={2} placeholder="Observations sur ce lot..."
+                            style={{ ...inputStyle, resize: 'vertical', lineHeight: '1.5', fontSize: '13px' }}
+                            onFocus={focus} onBlur={blur} />
+                        </div>
+                      </div>
+
+                      {/* Photos du lot */}
+                      <div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px' }}>
+                          <span style={{ ...labelStyle, marginBottom: 0 }}>Photos</span>
+                          <label style={{ cursor: 'pointer' }}>
+                            <span style={{
+                              padding: '3px 10px', backgroundColor: 'rgba(249,115,22,0.1)', color: '#ea580c',
+                              borderRadius: '6px', fontSize: '12px', fontWeight: 500,
+                              fontFamily: 'var(--font-dm-sans), sans-serif',
+                            }}>
+                              📷 Ajouter photo
+                            </span>
+                            <input type="file" accept="image/*" style={{ display: 'none' }}
+                              onChange={(e) => {
+                                const file = e.target.files?.[0]
+                                if (!file) return
+                                const reader = new FileReader()
+                                reader.onload = (ev) => {
+                                  if (ev.target?.result) addLotPhoto(l.id, ev.target.result as string)
+                                }
+                                reader.readAsDataURL(file)
+                                e.target.value = ''
+                              }} />
+                          </label>
+                        </div>
+                        {l.photos.length > 0 && (
+                          <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                            {l.photos.map((src, pi) => (
+                              <div key={pi} style={{ position: 'relative', display: 'inline-block' }}>
+                                {/* eslint-disable-next-line @next/next/no-img-element */}
+                                <img src={src} alt="" style={{ width: '80px', height: '80px', objectFit: 'cover', borderRadius: '6px', border: '1px solid #1E1E1C', display: 'block' }} />
+                                <button type="button" onClick={() => removeLotPhoto(l.id, pi)}
+                                  style={{ position: 'absolute', top: '-6px', right: '-6px', width: '18px', height: '18px', borderRadius: '50%', backgroundColor: '#EF4444', color: '#fff', border: 'none', cursor: 'pointer', fontSize: '11px', fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 10, lineHeight: 1 }}>
+                                  ×
+                                </button>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                  <button type="button" onClick={addLot}
+                    style={{ padding: '14px', border: '1px dashed #1E1E1C', borderRadius: '10px', backgroundColor: 'transparent', color: '#8A8880', fontSize: '13px', fontFamily: 'var(--font-dm-sans), sans-serif', cursor: 'pointer', width: '100%', transition: 'all 0.15s' }}
+                    onMouseEnter={(e) => { e.currentTarget.style.borderColor = 'rgba(249,115,22,0.4)'; e.currentTarget.style.color = '#ea580c' }}
+                    onMouseLeave={(e) => { e.currentTarget.style.borderColor = '#1E1E1C'; e.currentTarget.style.color = '#8A8880' }}>
+                    + Ajouter un lot
+                  </button>
+                </div>
+              )}
+
               {/* ── RÉSERVES ── */}
               {tab === 'reserves' && (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                  {form.chantier_id && (
+                    <button type="button" onClick={reporterReservesPrecedentes}
+                      style={{
+                        padding: '10px 16px', backgroundColor: 'rgba(249,115,22,0.08)', border: '1px solid rgba(249,115,22,0.25)',
+                        borderRadius: '8px', color: '#ea580c', fontSize: '13px', cursor: 'pointer',
+                        fontFamily: 'var(--font-dm-sans), sans-serif', textAlign: 'left', transition: 'all 0.15s',
+                      }}
+                      onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = 'rgba(249,115,22,0.15)' }}
+                      onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'rgba(249,115,22,0.08)' }}>
+                      📋 Reporter les réserves ouvertes du CR précédent
+                    </button>
+                  )}
+
                   {reserves.map((r, idx) => (
                     <div key={r.id} style={{ backgroundColor: '#0D0D0B', border: '1px solid #1E1E1C', borderRadius: '10px', padding: '20px' }}>
                       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
@@ -676,8 +876,10 @@ export default function NouveauCompteRenduPage() {
                             {r.statut}
                           </button>
                           <button type="button" onClick={() => deleteReserve(r.id)}
-                            style={{ background: 'none', border: 'none', color: '#8A8880', cursor: 'pointer', fontSize: '18px', padding: '0 4px', lineHeight: 1 }}>
-                            ×
+                            style={{ background: 'none', border: '1px solid #1E1E1C', borderRadius: '6px', color: '#8A8880', cursor: 'pointer', fontSize: '14px', padding: '4px 8px', lineHeight: 1, transition: 'all 0.15s' }}
+                            onMouseEnter={(e) => { e.currentTarget.style.borderColor = '#EF4444'; e.currentTarget.style.color = '#EF4444' }}
+                            onMouseLeave={(e) => { e.currentTarget.style.borderColor = '#1E1E1C'; e.currentTarget.style.color = '#8A8880' }}>
+                            🗑
                           </button>
                         </div>
                       </div>
@@ -685,9 +887,31 @@ export default function NouveauCompteRenduPage() {
                         <div style={{ gridColumn: '1 / -1' }}>
                           <label style={labelStyle}>Description</label>
                           <textarea value={r.description} onChange={(e) => updateReserve(r.id, 'description', e.target.value)}
-                            rows={2} placeholder="Décrire la réserve…"
+                            rows={2} placeholder="Décrire la réserve..."
                             style={{ ...inputStyle, resize: 'vertical', lineHeight: '1.5', fontSize: '13px' }}
                             onFocus={focus} onBlur={blur} />
+                        </div>
+                        <div>
+                          <label style={labelStyle}>Responsable</label>
+                          <div style={{ position: 'relative' }}>
+                            <select value={r.responsable} onChange={(e) => updateReserve(r.id, 'responsable', e.target.value)}
+                              style={{ background: '#111110', border: '1px solid #1E1E1C', borderRadius: '8px', padding: '8px 32px 8px 12px', color: r.responsable ? '#F0EDE6' : '#8A8880', fontSize: '13px', width: '100%', appearance: 'none', WebkitAppearance: 'none', cursor: 'pointer', outline: 'none', fontFamily: 'var(--font-dm-sans), sans-serif' } as React.CSSProperties}
+                              onFocus={focus} onBlur={blur}>
+                              <option value="">— Sélectionner —</option>
+                              {allIntervenants.map(a => <option key={a.value} value={a.value} style={{ backgroundColor: '#111110' }}>{a.label}</option>)}
+                            </select>
+                            <svg style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} width="12" height="8" viewBox="0 0 12 8" fill="none"><path d="M1 1l5 5 5-5" stroke="#8A8880" strokeWidth="1.5" strokeLinecap="round" /></svg>
+                          </div>
+                        </div>
+                        <div>
+                          <label style={labelStyle}>Date limite de levée</label>
+                          <button type="button" onClick={() => setReserveDatePicker(r.id)}
+                            style={{ background: '#111110', border: '1px solid #1E1E1C', borderRadius: '8px', padding: '8px 12px', color: r.dateLimite ? '#F0EDE6' : '#8A8880', fontSize: '13px', cursor: 'pointer', textAlign: 'left', width: '100%', fontFamily: 'var(--font-dm-sans), sans-serif', display: 'flex', alignItems: 'center', justifyContent: 'space-between', boxSizing: 'border-box' } as React.CSSProperties}
+                            onMouseEnter={e => e.currentTarget.style.borderColor = '#ea580c'}
+                            onMouseLeave={e => e.currentTarget.style.borderColor = '#1E1E1C'}>
+                            <span>{r.dateLimite ? formatDateDisplay(r.dateLimite) : 'jj/mm/aaaa'}</span>
+                            <span style={{ color: '#ea580c', fontSize: '11px' }}>▼</span>
+                          </button>
                         </div>
                         <div>
                           <label style={labelStyle}>Lot concerné</label>
@@ -697,18 +921,6 @@ export default function NouveauCompteRenduPage() {
                             <option value="">— Sélectionner —</option>
                             {lots.map((l) => <option key={l.id} value={l.nom} style={{ backgroundColor: '#111110' }}>{l.nom || '(sans nom)'}</option>)}
                           </select>
-                        </div>
-                        <div>
-                          <label style={labelStyle}>Responsable</label>
-                          <div style={{ position: 'relative' }}>
-                            <select value={r.responsable} onChange={(e) => updateReserve(r.id, 'responsable', e.target.value)}
-                              style={{ background: '#111110', border: '1px solid #1E1E1C', borderRadius: '8px', padding: '8px 32px 8px 12px', color: r.responsable ? '#F0EDE6' : '#8A8880', fontSize: '13px', width: '100%', appearance: 'none', WebkitAppearance: 'none', cursor: 'pointer', outline: 'none', fontFamily: 'var(--font-dm-sans), sans-serif' } as React.CSSProperties}
-                              onFocus={focus} onBlur={blur}>
-                              <option value="">— Sélectionner —</option>
-                              {allArtisans.map(a => <option key={a.id} value={a.nom} style={{ backgroundColor: '#111110' }}>{a.nom}{a.metier ? ` · ${a.metier}` : ''}</option>)}
-                            </select>
-                            <svg style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} width="12" height="8" viewBox="0 0 12 8" fill="none"><path d="M1 1l5 5 5-5" stroke="#8A8880" strokeWidth="1.5" strokeLinecap="round" /></svg>
-                          </div>
                         </div>
                       </div>
                       {/* Reserve photos */}
@@ -736,11 +948,11 @@ export default function NouveauCompteRenduPage() {
                         {r.photos.length > 0 && (
                           <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
                             {r.photos.map((src, pi) => (
-                              <div key={pi} style={{ position: 'relative', width: '80px', height: '80px' }}>
+                              <div key={pi} style={{ position: 'relative', display: 'inline-block' }}>
                                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                                <img src={src} alt="" style={{ width: '80px', height: '80px', objectFit: 'cover', borderRadius: '6px', border: '1px solid #1E1E1C' }} />
+                                <img src={src} alt="" style={{ width: '80px', height: '80px', objectFit: 'cover', borderRadius: '6px', border: '1px solid #1E1E1C', display: 'block' }} />
                                 <button type="button" onClick={() => removeReservePhoto(r.id, pi)}
-                                  style={{ position: 'absolute', top: '3px', right: '3px', width: '18px', height: '18px', borderRadius: '50%', border: 'none', backgroundColor: 'rgba(0,0,0,0.75)', color: '#fff', cursor: 'pointer', fontSize: '11px', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0 }}>
+                                  style={{ position: 'absolute', top: '-6px', right: '-6px', width: '18px', height: '18px', borderRadius: '50%', backgroundColor: '#EF4444', color: '#fff', border: 'none', cursor: 'pointer', fontSize: '11px', fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 10, lineHeight: 1 }}>
                                   ×
                                 </button>
                               </div>
@@ -777,7 +989,7 @@ export default function NouveauCompteRenduPage() {
                             style={{ background: '#111110', border: '1px solid #1E1E1C', borderRadius: '8px', padding: '8px 32px 8px 12px', color: d.responsable ? '#F0EDE6' : '#8A8880', fontSize: '13px', width: '100%', appearance: 'none', WebkitAppearance: 'none', cursor: 'pointer', outline: 'none', fontFamily: 'var(--font-dm-sans), sans-serif' } as React.CSSProperties}
                             onFocus={focus} onBlur={blur}>
                             <option value="">— Sélectionner —</option>
-                            {allArtisans.map(a => <option key={a.id} value={a.nom} style={{ backgroundColor: '#111110' }}>{a.nom}{a.metier ? ` · ${a.metier}` : ''}</option>)}
+                            {allIntervenants.map(a => <option key={a.value} value={a.value} style={{ backgroundColor: '#111110' }}>{a.label}</option>)}
                           </select>
                           <svg style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} width="12" height="8" viewBox="0 0 12 8" fill="none"><path d="M1 1l5 5 5-5" stroke="#8A8880" strokeWidth="1.5" strokeLinecap="round" /></svg>
                         </div>
@@ -792,8 +1004,10 @@ export default function NouveauCompteRenduPage() {
                         </button>
                       </div>
                       <button type="button" onClick={() => deleteDecision(d.id)}
-                        style={{ background: 'none', border: 'none', color: '#8A8880', cursor: 'pointer', fontSize: '18px', paddingBottom: '10px' }}>
-                        ×
+                        style={{ background: 'none', border: '1px solid #1E1E1C', borderRadius: '6px', color: '#8A8880', cursor: 'pointer', fontSize: '14px', paddingBottom: '10px', transition: 'all 0.15s' }}
+                        onMouseEnter={(e) => { e.currentTarget.style.borderColor = '#EF4444'; e.currentTarget.style.color = '#EF4444' }}
+                        onMouseLeave={(e) => { e.currentTarget.style.borderColor = '#1E1E1C'; e.currentTarget.style.color = '#8A8880' }}>
+                        🗑
                       </button>
                     </div>
                   ))}
@@ -802,87 +1016,6 @@ export default function NouveauCompteRenduPage() {
                     onMouseEnter={(e) => { e.currentTarget.style.borderColor = 'rgba(249,115,22,0.4)'; e.currentTarget.style.color = '#ea580c' }}
                     onMouseLeave={(e) => { e.currentTarget.style.borderColor = '#1E1E1C'; e.currentTarget.style.color = '#8A8880' }}>
                     + Ajouter une décision
-                  </button>
-                </div>
-              )}
-
-              {/* ── LOTS ── */}
-              {tab === 'lots' && (
-                <div>
-                  {lots.length > 0 && (
-                    <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: '16px' }}>
-                      <thead>
-                        <tr>
-                          {['Lot', 'Intervenant', 'Démarrage', 'Fin', 'Avancement', ''].map((h) => (
-                            <th key={h} style={{
-                              fontFamily: 'var(--font-syne), sans-serif', fontWeight: 700, fontSize: '11px',
-                              letterSpacing: '0.08em', textTransform: 'uppercase', color: '#7A7870',
-                              textAlign: 'left', padding: '8px 10px', borderBottom: '1px solid #1E1E1C',
-                            }}>{h}</th>
-                          ))}
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {lots.map((l, i) => (
-                          <tr key={l.id} style={{ backgroundColor: i % 2 === 0 ? '#0D0D0B' : '#111110' }}>
-                            <td style={{ padding: '6px 8px' }}>
-                              <input value={l.nom} onChange={(e) => updateLot(l.id, 'nom', e.target.value)} placeholder="Nom du lot"
-                                style={cellInput}
-                                onFocus={(e) => { e.target.style.borderColor = '#ea580c'; e.target.style.backgroundColor = '#0D0D0B' }}
-                                onBlur={(e) => { e.target.style.borderColor = 'transparent'; e.target.style.backgroundColor = 'transparent' }} />
-                            </td>
-                            <td style={{ padding: '6px 8px' }}>
-                              <div style={{ position: 'relative' }}>
-                                <select value={l.intervenant} onChange={(e) => updateLot(l.id, 'intervenant', e.target.value)}
-                                  style={{ background: 'transparent', border: '1px solid #1E1E1C', borderRadius: '6px', padding: '4px 24px 4px 8px', color: l.intervenant ? '#F0EDE6' : '#8A8880', fontSize: '12px', width: '100%', appearance: 'none', WebkitAppearance: 'none', cursor: 'pointer', outline: 'none', fontFamily: 'var(--font-dm-sans), sans-serif' } as React.CSSProperties}
-                                  onFocus={(e) => { e.currentTarget.style.borderColor = '#ea580c'; e.currentTarget.style.background = '#0D0D0B' }}
-                                  onBlur={(e) => { e.currentTarget.style.borderColor = '#1E1E1C'; e.currentTarget.style.background = 'transparent' }}>
-                                  <option value="">— Artisan —</option>
-                                  {allArtisans.map(a => <option key={a.id} value={a.nom} style={{ backgroundColor: '#111110' }}>{a.nom}{a.metier ? ` · ${a.metier}` : ''}</option>)}
-                                </select>
-                                <svg style={{ position: 'absolute', right: 6, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} width="10" height="6" viewBox="0 0 12 8" fill="none"><path d="M1 1l5 5 5-5" stroke="#8A8880" strokeWidth="1.5" strokeLinecap="round" /></svg>
-                              </div>
-                            </td>
-                            <td style={{ padding: '6px 8px' }}>
-                              <button type="button" onClick={() => setLotDatePicker({ index: i, field: 'debut' })}
-                                style={{ background: 'transparent', border: '1px solid #1E1E1C', borderRadius: '6px', padding: '4px 8px', color: l.dateDemarrage ? '#F0EDE6' : '#8A8880', fontSize: '12px', cursor: 'pointer', whiteSpace: 'nowrap', fontFamily: 'var(--font-dm-sans), sans-serif', width: '100%', textAlign: 'left' }}
-                                onMouseEnter={e => { e.currentTarget.style.borderColor = '#ea580c'; e.currentTarget.style.background = '#0D0D0B' }}
-                                onMouseLeave={e => { e.currentTarget.style.borderColor = '#1E1E1C'; e.currentTarget.style.background = 'transparent' }}>
-                                {l.dateDemarrage ? formatDateDisplay(l.dateDemarrage) : 'jj/mm/aa'}
-                              </button>
-                            </td>
-                            <td style={{ padding: '6px 8px' }}>
-                              <button type="button" onClick={() => setLotDatePicker({ index: i, field: 'fin' })}
-                                style={{ background: 'transparent', border: '1px solid #1E1E1C', borderRadius: '6px', padding: '4px 8px', color: l.dateFin ? '#F0EDE6' : '#8A8880', fontSize: '12px', cursor: 'pointer', whiteSpace: 'nowrap', fontFamily: 'var(--font-dm-sans), sans-serif', width: '100%', textAlign: 'left' }}
-                                onMouseEnter={e => { e.currentTarget.style.borderColor = '#ea580c'; e.currentTarget.style.background = '#0D0D0B' }}
-                                onMouseLeave={e => { e.currentTarget.style.borderColor = '#1E1E1C'; e.currentTarget.style.background = 'transparent' }}>
-                                {l.dateFin ? formatDateDisplay(l.dateFin) : 'jj/mm/aa'}
-                              </button>
-                            </td>
-                            <td style={{ padding: '6px 8px', minWidth: '130px' }}>
-                              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                <input type="range" min={0} max={100} step={5} value={l.avancement}
-                                  onChange={(e) => updateLot(l.id, 'avancement', parseInt(e.target.value))}
-                                  style={{ flex: 1, accentColor: '#ea580c', cursor: 'pointer' }} />
-                                <span style={{ fontSize: '12px', color: '#ea580c', fontWeight: 600, fontFamily: 'var(--font-syne), sans-serif', width: '32px', textAlign: 'right', flexShrink: 0 }}>
-                                  {l.avancement}%
-                                </span>
-                              </div>
-                            </td>
-                            <td style={{ padding: '6px 4px' }}>
-                              <button type="button" onClick={() => deleteLot(l.id)}
-                                style={{ background: 'none', border: 'none', color: '#8A8880', cursor: 'pointer', fontSize: '16px' }}>×</button>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  )}
-                  <button type="button" onClick={addLot}
-                    style={{ padding: '14px', border: '1px dashed #1E1E1C', borderRadius: '10px', backgroundColor: 'transparent', color: '#8A8880', fontSize: '13px', fontFamily: 'var(--font-dm-sans), sans-serif', cursor: 'pointer', width: '100%', transition: 'all 0.15s' }}
-                    onMouseEnter={(e) => { e.currentTarget.style.borderColor = 'rgba(249,115,22,0.4)'; e.currentTarget.style.color = '#ea580c' }}
-                    onMouseLeave={(e) => { e.currentTarget.style.borderColor = '#1E1E1C'; e.currentTarget.style.color = '#8A8880' }}>
-                    + Ajouter un lot
                   </button>
                 </div>
               )}
@@ -917,69 +1050,6 @@ export default function NouveauCompteRenduPage() {
                       ))}
                     </div>
                   )}
-                </div>
-              )}
-
-              {/* ── PROFIL ── */}
-              {tab === 'profil' && (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                  <p style={{ color: '#8A8880', fontSize: '13px', fontFamily: 'var(--font-dm-sans), sans-serif', margin: 0 }}>
-                    Ces informations apparaissent dans l'en-tête du compte rendu. Sauvegardées automatiquement dans votre navigateur.
-                  </p>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
-                    <div>
-                      <label style={labelStyle}>Nom / Prénom</label>
-                      <input value={profile.nom} onChange={(e) => saveProfile({ ...profile, nom: e.target.value })}
-                        placeholder="Jean Dupont" style={inputStyle} onFocus={focus} onBlur={blur} />
-                    </div>
-                    <div>
-                      <label style={labelStyle}>Société</label>
-                      <input value={profile.societe} onChange={(e) => saveProfile({ ...profile, societe: e.target.value })}
-                        placeholder="Cabinet d'architecture" style={inputStyle} onFocus={focus} onBlur={blur} />
-                    </div>
-                    <div style={{ gridColumn: '1 / -1' }}>
-                      <label style={labelStyle}>Adresse</label>
-                      <input value={profile.adresse} onChange={(e) => saveProfile({ ...profile, adresse: e.target.value })}
-                        placeholder="12 rue de la Paix, 75001 Paris" style={inputStyle} onFocus={focus} onBlur={blur} />
-                    </div>
-                    <div>
-                      <label style={labelStyle}>Téléphone</label>
-                      <input value={profile.telephone} onChange={(e) => saveProfile({ ...profile, telephone: e.target.value })}
-                        placeholder="+33 6 00 00 00 00" style={inputStyle} onFocus={focus} onBlur={blur} />
-                    </div>
-                    <div>
-                      <label style={labelStyle}>Email</label>
-                      <input type="email" value={profile.email} onChange={(e) => saveProfile({ ...profile, email: e.target.value })}
-                        placeholder="contact@cabinet.fr" style={inputStyle} onFocus={focus} onBlur={blur} />
-                    </div>
-                    <div>
-                      <label style={labelStyle}>SIRET</label>
-                      <input value={profile.siret} onChange={(e) => saveProfile({ ...profile, siret: e.target.value })}
-                        placeholder="123 456 789 00012" style={inputStyle} onFocus={focus} onBlur={blur} />
-                    </div>
-                    <div style={{ gridColumn: '1 / -1' }}>
-                      <label style={labelStyle}>Logo</label>
-                      <label style={{ display: 'flex', alignItems: 'center', gap: '14px', cursor: 'pointer' }}>
-                        {profile.logo ? (
-                          // eslint-disable-next-line @next/next/no-img-element
-                          <img src={profile.logo} alt="Logo" style={{ height: '52px', width: 'auto', borderRadius: '6px', border: '1px solid #1E1E1C' }} />
-                        ) : (
-                          <div style={{ width: '52px', height: '52px', borderRadius: '6px', border: '1px dashed #1E1E1C', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#8A8880', fontSize: '22px' }}>↑</div>
-                        )}
-                        <span style={{ fontSize: '13px', color: '#8A8880', fontFamily: 'var(--font-dm-sans), sans-serif' }}>
-                          {profile.logo ? 'Changer le logo' : 'Importer un logo (PNG, SVG)'}
-                        </span>
-                        <input type="file" accept="image/*" style={{ display: 'none' }}
-                          onChange={(e) => {
-                            const file = e.target.files?.[0]
-                            if (!file) return
-                            const reader = new FileReader()
-                            reader.onload = (ev) => saveProfile({ ...profile, logo: ev.target?.result as string })
-                            reader.readAsDataURL(file)
-                          }} />
-                      </label>
-                    </div>
-                  </div>
                 </div>
               )}
 
@@ -1033,13 +1103,14 @@ export default function NouveauCompteRenduPage() {
                 <div style={{ fontSize: '10px', color: '#222', marginTop: '4px', fontWeight: 600 }}>{selectedChantier?.nom ?? '—'}</div>
                 {selectedChantier?.client && <div style={{ fontSize: '9px', color: '#555' }}>{selectedChantier.client}</div>}
                 <div style={{ fontSize: '9px', color: '#777', marginTop: '2px' }}>
-                  Visite du {form.date_visite ? new Date(form.date_visite + 'T12:00:00').toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' }) : '—'}
+                  Visite du {form.date_visite ? new Date(form.date_visite + 'T12:00:00').toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' }) : '—'} à {heureVisite}h00
                 </div>
                 {form.date_prochaine_visite && (
                   <div style={{ fontSize: '9px', color: '#999' }}>
-                    Prochaine : {new Date(form.date_prochaine_visite + 'T12:00:00').toLocaleDateString('fr-FR', { day: 'numeric', month: 'long' })}
+                    Prochaine : {new Date(form.date_prochaine_visite + 'T12:00:00').toLocaleDateString('fr-FR', { day: 'numeric', month: 'long' })} à {heureProchaineVisite}h00
                   </div>
                 )}
+                {form.progression > 0 && <div style={{ fontSize: '9px', color: '#b45309', fontWeight: 600 }}>Avancement global : {form.progression}%</div>}
               </div>
             </div>
 
@@ -1071,37 +1142,18 @@ export default function NouveauCompteRenduPage() {
                     })}
                   </tbody>
                 </table>
-              </div>
-            )}
-
-            {/* PDF reserves */}
-            {reserves.length > 0 && (
-              <div style={{ marginBottom: '12px' }}>
-                <div style={pdfSectionTitle}>
-                  Réserves — {reserves.filter((r) => r.statut === 'Ouvert').length} ouverte{reserves.filter((r) => r.statut === 'Ouvert').length !== 1 ? 's' : ''}
+                {/* Légende statuts */}
+                <div style={{ display: 'flex', gap: '10px', marginTop: '4px', flexWrap: 'wrap' }}>
+                  {STATUT_ORDER.map((s) => {
+                    const m = STATUT_META[s]
+                    return (
+                      <span key={s} style={{ display: 'inline-flex', alignItems: 'center', gap: '3px', fontSize: '7px', color: '#555' }}>
+                        <span style={{ backgroundColor: m.bg, color: m.color, padding: '1px 4px', borderRadius: '2px', fontWeight: 700, fontFamily: 'monospace' }}>{s}</span>
+                        <span>= {m.label}</span>
+                      </span>
+                    )
+                  })}
                 </div>
-                {reserves.map((r, i) => (
-                  <div key={r.id} style={{ marginBottom: '6px', padding: '6px', border: '1px solid #e0e0e0', borderRadius: '3px' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '3px' }}>
-                      <span style={{ fontWeight: 700, fontSize: '8px' }}>Réserve 1.{i + 1}{r.lot ? ` — ${r.lot}` : ''}</span>
-                      <span style={{
-                        fontSize: '7px', padding: '1px 5px', borderRadius: '3px', fontWeight: 600,
-                        backgroundColor: r.statut === 'Ouvert' ? '#fee2e2' : '#dcfce7',
-                        color: r.statut === 'Ouvert' ? '#dc2626' : '#16a34a',
-                      }}>{r.statut}</span>
-                    </div>
-                    <div style={{ fontSize: '8px', color: '#333' }}>{r.description || '—'}</div>
-                    {r.responsable && <div style={{ fontSize: '7px', color: '#777', marginTop: '2px' }}>Resp. : {r.responsable}</div>}
-                    {r.photos.length > 0 && (
-                      <div style={{ display: 'flex', gap: '4px', marginTop: '5px' }}>
-                        {r.photos.slice(0, 4).map((src, pi) => (
-                          // eslint-disable-next-line @next/next/no-img-element
-                          <img key={pi} src={src} alt="" style={{ width: '38px', height: '38px', objectFit: 'cover', borderRadius: '2px', border: '1px solid #ddd' }} />
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                ))}
               </div>
             )}
 
@@ -1140,6 +1192,44 @@ export default function NouveauCompteRenduPage() {
                     ))}
                   </tbody>
                 </table>
+                {/* Commentaires lots */}
+                {lots.filter(l => l.commentaire).map((l) => (
+                  <div key={l.id} style={{ marginTop: '4px', fontSize: '7px', color: '#555' }}>
+                    <strong>{l.nom || `Lot`} :</strong> {l.commentaire}
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* PDF reserves */}
+            {reserves.length > 0 && (
+              <div style={{ marginBottom: '12px' }}>
+                <div style={pdfSectionTitle}>
+                  Réserves — {reserves.filter((r) => r.statut === 'Ouvert').length} ouverte{reserves.filter((r) => r.statut === 'Ouvert').length !== 1 ? 's' : ''}
+                </div>
+                {reserves.map((r, i) => (
+                  <div key={r.id} style={{ marginBottom: '6px', padding: '6px', border: '1px solid #e0e0e0', borderRadius: '3px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '3px' }}>
+                      <span style={{ fontWeight: 700, fontSize: '8px' }}>Réserve 1.{i + 1}{r.lot ? ` — ${r.lot}` : ''}</span>
+                      <span style={{
+                        fontSize: '7px', padding: '1px 5px', borderRadius: '3px', fontWeight: 600,
+                        backgroundColor: r.statut === 'Ouvert' ? '#fee2e2' : '#dcfce7',
+                        color: r.statut === 'Ouvert' ? '#dc2626' : '#16a34a',
+                      }}>{r.statut}</span>
+                    </div>
+                    <div style={{ fontSize: '8px', color: '#333' }}>{r.description || '—'}</div>
+                    {r.responsable && <div style={{ fontSize: '7px', color: '#777', marginTop: '2px' }}>Resp. : {r.responsable}</div>}
+                    {r.dateLimite && <div style={{ fontSize: '7px', color: '#777' }}>Limite : {formatDateDisplay(r.dateLimite)}</div>}
+                    {r.photos.length > 0 && (
+                      <div style={{ display: 'flex', gap: '4px', marginTop: '5px' }}>
+                        {r.photos.slice(0, 4).map((src, pi) => (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img key={pi} src={src} alt="" style={{ width: '38px', height: '38px', objectFit: 'cover', borderRadius: '2px', border: '1px solid #ddd' }} />
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                ))}
               </div>
             )}
 
@@ -1164,22 +1254,6 @@ export default function NouveauCompteRenduPage() {
               </div>
             )}
 
-            {/* PDF observations */}
-            {form.observations && (
-              <div style={{ marginBottom: '12px' }}>
-                <div style={pdfSectionTitle}>Observations</div>
-                <p style={{ fontSize: '8px', color: '#333', lineHeight: 1.6, margin: 0, whiteSpace: 'pre-wrap' }}>{form.observations}</p>
-              </div>
-            )}
-
-            {/* PDF travaux */}
-            {form.travaux_a_faire && (
-              <div style={{ marginBottom: '12px' }}>
-                <div style={pdfSectionTitle}>Travaux à réaliser</div>
-                <p style={{ fontSize: '8px', color: '#333', lineHeight: 1.6, margin: 0, whiteSpace: 'pre-wrap' }}>{form.travaux_a_faire}</p>
-              </div>
-            )}
-
             {/* PDF photos */}
             {photoPreviews.length > 0 && (
               <div>
@@ -1194,7 +1268,7 @@ export default function NouveauCompteRenduPage() {
             )}
 
             {/* Empty state */}
-            {!form.chantier_id && presences.length === 0 && reserves.length === 0 && lots.length === 0 && !form.observations && (
+            {!form.chantier_id && presences.length === 0 && reserves.length === 0 && lots.length === 0 && (
               <p style={{ textAlign: 'center', color: '#bbb', fontSize: '9px', padding: '20px 0', margin: 0 }}>
                 Remplissez le formulaire pour voir l'aperçu
               </p>
@@ -1213,51 +1287,89 @@ export default function NouveauCompteRenduPage() {
       )}
 
       {decisionDatePicker !== null && (
-        <DatePickerOverlay
-          label="Échéance de la décision"
-          initialDate={decisions[decisionDatePicker]?.echeance ? new Date(decisions[decisionDatePicker].echeance + 'T12:00:00') : undefined}
-          onCancel={() => setDecisionDatePicker(null)}
-          onConfirm={(date) => {
-            updateDecision(decisions[decisionDatePicker!].id, 'echeance', dateToStr(date))
-            setDecisionDatePicker(null)
-          }}
-        />
+        <Portal>
+          <DatePickerOverlay
+            label="Échéance de la décision"
+            initialDate={decisions[decisionDatePicker]?.echeance ? new Date(decisions[decisionDatePicker].echeance + 'T12:00:00') : undefined}
+            onCancel={() => setDecisionDatePicker(null)}
+            onConfirm={(date) => {
+              updateDecision(decisions[decisionDatePicker!].id, 'echeance', dateToStr(date))
+              setDecisionDatePicker(null)
+            }}
+          />
+        </Portal>
       )}
 
       {lotDatePicker !== null && (
-        <DatePickerOverlay
-          label={lotDatePicker.field === 'debut' ? 'Date de démarrage' : 'Date de fin'}
-          initialDate={(() => {
-            const lot = lots[lotDatePicker.index]
-            const val = lotDatePicker.field === 'debut' ? lot?.dateDemarrage : lot?.dateFin
-            return val ? new Date(val + 'T12:00:00') : undefined
-          })()}
-          onCancel={() => setLotDatePicker(null)}
-          onConfirm={(date) => {
-            const lot = lots[lotDatePicker!.index]
-            updateLot(lot.id, lotDatePicker!.field === 'debut' ? 'dateDemarrage' : 'dateFin', dateToStr(date))
-            setLotDatePicker(null)
-          }}
-        />
+        <Portal>
+          <DatePickerOverlay
+            label={lotDatePicker.field === 'debut' ? 'Date de démarrage' : 'Date de fin'}
+            initialDate={(() => {
+              const lot = lots.find((l) => l.id === lotDatePicker.lotId)
+              const val = lotDatePicker.field === 'debut' ? lot?.dateDemarrage : lot?.dateFin
+              return val ? new Date(val + 'T12:00:00') : undefined
+            })()}
+            onCancel={() => setLotDatePicker(null)}
+            onConfirm={(date) => {
+              updateLot(lotDatePicker!.lotId, lotDatePicker!.field === 'debut' ? 'dateDemarrage' : 'dateFin', dateToStr(date))
+              setLotDatePicker(null)
+            }}
+          />
+        </Portal>
+      )}
+
+      {reserveDatePicker !== null && (
+        <Portal>
+          <DatePickerOverlay
+            label="Date limite de levée"
+            initialDate={(() => {
+              const r = reserves.find((r) => r.id === reserveDatePicker)
+              return r?.dateLimite ? new Date(r.dateLimite + 'T12:00:00') : undefined
+            })()}
+            onCancel={() => setReserveDatePicker(null)}
+            onConfirm={(date) => {
+              updateReserve(reserveDatePicker!, 'dateLimite', dateToStr(date))
+              setReserveDatePicker(null)
+            }}
+          />
+        </Portal>
       )}
 
       {showDatePickerProchaine && (
-        <DatePickerOverlay
-          label="Prochaine visite"
-          initialDate={form.date_prochaine_visite ? new Date(form.date_prochaine_visite + 'T12:00:00') : undefined}
-          onCancel={() => setShowDatePickerProchaine(false)}
-          onConfirm={(date) => {
-            setField('date_prochaine_visite', dateToStr(date))
-            setShowDatePickerProchaine(false)
-          }}
-        />
+        <Portal>
+          <div
+            style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.6)', zIndex: 99998 }}
+            onClick={() => setShowDatePickerProchaine(false)}
+          />
+          <div
+            style={{ position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', zIndex: 99999 }}
+            onClick={e => e.stopPropagation()}
+          >
+            <DateTimePicker
+              label="Prochaine visite"
+              initialDate={form.date_prochaine_visite ? new Date(form.date_prochaine_visite + 'T12:00:00') : undefined}
+              onCancel={() => setShowDatePickerProchaine(false)}
+              onConfirm={(date, heureDebut) => {
+                setField('date_prochaine_visite', dateToStr(date))
+                setHeureProchaineVisite(parseInt(heureDebut.split(':')[0]))
+                setShowDatePickerProchaine(false)
+              }}
+            />
+          </div>
+        </Portal>
       )}
 
-      {/* ── DateTimePicker modal ───────────────────────────────────────── */}
+      {/* DateTimePicker modal (date de visite) */}
       {showDatePickerCR && (
-        <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9000 }}
-          onClick={() => setShowDatePickerCR(false)}>
-          <div onClick={e => e.stopPropagation()}>
+        <Portal>
+          <div
+            style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.6)', zIndex: 99998 }}
+            onClick={() => setShowDatePickerCR(false)}
+          />
+          <div
+            style={{ position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', zIndex: 99999 }}
+            onClick={e => e.stopPropagation()}
+          >
             <DateTimePicker
               label="Date de visite"
               initialDate={form.date_visite ? new Date(form.date_visite + 'T12:00:00') : undefined}
@@ -1272,7 +1384,23 @@ export default function NouveauCompteRenduPage() {
               }}
             />
           </div>
-        </div>
+        </Portal>
+      )}
+
+      {/* Draft saved badge */}
+      {draftSaved && (
+        <Portal>
+          <div style={{
+            position: 'fixed', bottom: '24px', right: '24px',
+            backgroundColor: '#111110', border: '1px solid #1E1E1C', borderRadius: '8px',
+            padding: '10px 16px', fontSize: '12px', color: '#4ade80',
+            fontFamily: 'var(--font-dm-sans), sans-serif', zIndex: 99999,
+            display: 'flex', alignItems: 'center', gap: '6px',
+            boxShadow: '0 4px 16px rgba(0,0,0,0.5)',
+          }}>
+            <span style={{ fontSize: '8px' }}>●</span> Brouillon sauvegardé
+          </div>
+        </Portal>
       )}
     </div>
   )

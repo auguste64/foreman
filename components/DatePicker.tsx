@@ -2,11 +2,14 @@
 import { useState } from 'react'
 
 type Props = {
-  onConfirm: (date: Date) => void
+  onConfirm: (date: Date, heure?: number) => void
   onCancel?: () => void
+  onDateSelect?: (date: Date) => void
   label?: string
   initialDate?: Date
   minDate?: Date
+  withTime?: boolean
+  initialHeure?: number
 }
 
 const DAYS_HEADER = ['L', 'M', 'M', 'J', 'V', 'S', 'D']
@@ -27,7 +30,9 @@ function toDateStr(d: Date): string {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
 }
 
-export function DatePicker({ onConfirm, onCancel, label, initialDate, minDate }: Props) {
+const PICKER_HEURES = Array.from({ length: 15 }, (_, i) => i + 6) // 6 → 20
+
+export function DatePicker({ onConfirm, onCancel, onDateSelect, label, initialDate, minDate, withTime, initialHeure }: Props) {
   const fallbackMin = new Date(); fallbackMin.setHours(0, 0, 0, 0)
   const min = minDate ?? null
 
@@ -37,6 +42,7 @@ export function DatePicker({ onConfirm, onCancel, label, initialDate, minDate }:
     return d
   })
   const [selected, setSelected] = useState<Date | null>(initialDate ?? null)
+  const [heure, setHeure] = useState<number>(initialHeure ?? 9)
 
   const year = anchor.getFullYear()
   const month = anchor.getMonth()
@@ -89,7 +95,7 @@ export function DatePicker({ onConfirm, onCancel, label, initialDate, minDate }:
           return (
             <button
               key={i}
-              onClick={() => !disabled && setSelected(d)}
+              onClick={() => { if (!disabled) { setSelected(d); onDateSelect?.(d) } }}
               style={{
                 width: '100%', aspectRatio: '1 / 1', border: 'none', outline: 'none',
                 borderRadius: '6px',
@@ -113,16 +119,41 @@ export function DatePicker({ onConfirm, onCancel, label, initialDate, minDate }:
       {/* Confirm area */}
       {selected ? (
         <div>
-          <div style={{ background: '#0D0D0B', border: '1px solid #1E1E1C', borderRadius: '10px', padding: '12px 14px', marginBottom: '10px' }}>
+          <div style={{ background: '#0D0D0B', border: '1px solid #1E1E1C', borderRadius: '10px', padding: '12px 14px', marginBottom: withTime ? '12px' : '10px' }}>
             <p style={{ fontSize: '11px', color: '#8A8880', fontFamily: 'var(--font-dm-sans), sans-serif', margin: '0 0 4px', textTransform: 'uppercase', letterSpacing: '0.06em', fontWeight: 600 }}>
               Date sélectionnée
             </p>
             <p style={{ fontSize: '15px', fontWeight: 600, color: '#F0EDE6', fontFamily: 'var(--font-syne), sans-serif', margin: 0, textTransform: 'capitalize' }}>
               {selected.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
+              {withTime && <span style={{ color: '#ea580c' }}> — {heure}h00</span>}
             </p>
           </div>
+
+          {/* Time selector (optional) */}
+          {withTime && (
+            <div style={{ marginBottom: '12px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                <span style={{ fontSize: '11px', color: '#8A8880', fontFamily: 'var(--font-dm-sans), sans-serif', textTransform: 'uppercase', letterSpacing: '0.06em', fontWeight: 600 }}>
+                  Heure
+                </span>
+                <span style={{ fontSize: '15px', fontWeight: 700, color: '#ea580c', fontFamily: 'var(--font-syne), sans-serif' }}>
+                  {heure}h00
+                </span>
+              </div>
+              <input
+                type="range" min={6} max={20} step={1}
+                value={heure}
+                onChange={e => setHeure(parseInt(e.target.value))}
+                style={{ width: '100%', accentColor: '#ea580c', cursor: 'pointer', height: '4px' }}
+              />
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '10px', color: '#3A3A38', marginTop: '4px', fontFamily: 'var(--font-dm-sans), sans-serif' }}>
+                <span>6h</span><span>13h</span><span>20h</span>
+              </div>
+            </div>
+          )}
+
           <button
-            onClick={() => onConfirm(selected)}
+            onClick={() => onConfirm(selected, withTime ? heure : undefined)}
             style={{ width: '100%', padding: '11px', background: '#ea580c', border: 'none', borderRadius: '8px', color: '#0D0D0B', fontSize: '13px', fontWeight: 700, cursor: 'pointer', fontFamily: 'var(--font-dm-sans), sans-serif', transition: 'all 0.2s', marginBottom: onCancel ? '8px' : 0 }}
             onMouseEnter={e => { e.currentTarget.style.boxShadow = '0 0 20px rgba(234,88,12,0.5)'; e.currentTarget.style.transform = 'translateY(-1px)' }}
             onMouseLeave={e => { e.currentTarget.style.boxShadow = 'none'; e.currentTarget.style.transform = 'translateY(0)' }}
@@ -149,16 +180,17 @@ export function DatePicker({ onConfirm, onCancel, label, initialDate, minDate }:
 }
 
 /** Overlay wrapper — centres DatePicker over the page */
-export function DatePickerOverlay({ onConfirm, onCancel, label, initialDate, minDate }: Props) {
+export function DatePickerOverlay({ onConfirm, onCancel, label, initialDate, minDate, withTime, initialHeure }: Props) {
   return (
-    <div
-      style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.65)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9500 }}
-      onClick={onCancel}
-    >
-      <div onClick={e => e.stopPropagation()}>
-        <DatePicker onConfirm={onConfirm} onCancel={onCancel} label={label} initialDate={initialDate} minDate={minDate} />
+    <>
+      <div
+        style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.6)', zIndex: 99998 }}
+        onClick={onCancel}
+      />
+      <div style={{ position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', zIndex: 99999 }}>
+        <DatePicker onConfirm={onConfirm} onCancel={onCancel} label={label} initialDate={initialDate} minDate={minDate} withTime={withTime} initialHeure={initialHeure} />
       </div>
-    </div>
+    </>
   )
 }
 

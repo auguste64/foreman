@@ -207,15 +207,11 @@ export default function ComptesRendusPage() {
                         <button
                           onClick={e => handleDuplicate(cr, e)}
                           disabled={duplicating.has(cr.id)}
-                          title="Dupliquer ce CR"
-                          style={{ padding: '6px 8px', backgroundColor: 'transparent', border: '1px solid #1E1E1C', borderRadius: '6px', color: '#8A8880', cursor: duplicating.has(cr.id) ? 'wait' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.15s', flexShrink: 0 }}
-                          onMouseEnter={e => { if (!duplicating.has(cr.id)) { e.currentTarget.style.borderColor = '#ea580c'; e.currentTarget.style.color = '#ea580c'; e.currentTarget.style.backgroundColor = 'rgba(234,88,12,0.08)' }}}
-                          onMouseLeave={e => { e.currentTarget.style.borderColor = '#1E1E1C'; e.currentTarget.style.color = '#8A8880'; e.currentTarget.style.backgroundColor = 'transparent' }}
+                          style={{ backgroundColor: '#ea580c', color: '#0D0D0B', border: 'none', borderRadius: '7px', padding: '6px 14px', fontSize: '12px', fontWeight: 600, cursor: duplicating.has(cr.id) ? 'wait' : 'pointer', fontFamily: 'var(--font-dm-sans), sans-serif', transition: 'all 0.15s', flexShrink: 0 }}
+                          onMouseEnter={e => { if (!duplicating.has(cr.id)) e.currentTarget.style.backgroundColor = '#c2410c' }}
+                          onMouseLeave={e => { e.currentTarget.style.backgroundColor = '#ea580c' }}
                         >
-                          <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
-                            <rect x="5" y="5" width="9" height="9" rx="1.5" stroke="currentColor" strokeWidth="1.5"/>
-                            <path d="M11 5V3.5A1.5 1.5 0 009.5 2H3.5A1.5 1.5 0 002 3.5v6A1.5 1.5 0 003.5 11H5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
-                          </svg>
+                          Dupliquer
                         </button>
                       </div>
                     </div>
