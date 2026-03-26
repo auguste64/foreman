@@ -7,7 +7,7 @@ import type { DevisDoc, DevisLigneDoc, FactureDoc, FactureLigneDoc, EntrepriseIn
 // ── Helpers ────────────────────────────────────────────────────────
 
 function fmtEur(n: number) {
-  return n.toLocaleString('fr-FR', { style: 'currency', currency: 'EUR' })
+  return n.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ' ') + ' €'
 }
 function fmtDate(iso: string | null | undefined): string {
   if (!iso) return '—'
@@ -42,29 +42,29 @@ const S = StyleSheet.create({
     marginBottom: 16,
   },
   logoBox: {
-    width: 120,
-    height: 56,
+    width: 180,
+    height: 90,
     backgroundColor: '#EBEBEB',
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 6,
   },
-  logoImg: { width: 120, height: 56, objectFit: 'contain' },
+  logoImg: { width: 180, height: 90, objectFit: 'contain' },
   logoText: { fontSize: 7, color: '#BBBBBB', letterSpacing: 1 },
-  companyName: { fontSize: 10, fontFamily: 'Helvetica-Bold', color: '#111111', marginBottom: 1 },
-  companyForm: { fontSize: 8, color: '#666666' },
+  companyName: { fontSize: 16, fontFamily: 'Helvetica-Bold', color: '#111111', marginBottom: 2 },
+  companyForm: { fontSize: 11, color: '#666666' },
   docTypeTitle: {
-    fontSize: 52,
+    fontSize: 32,
     fontFamily: 'Helvetica-Bold',
     color: '#111111',
     textAlign: 'right',
     letterSpacing: -1,
     marginBottom: 8,
   },
-  metaLabel: { fontSize: 8, color: '#444444', textAlign: 'right', marginBottom: 2 },
+  metaLabel: { fontSize: 10, color: '#444444', textAlign: 'right', marginBottom: 2 },
   metaBold: { fontFamily: 'Helvetica-Bold' },
-  metaEcheance: { fontSize: 8, color: '#B45309', textAlign: 'right', marginBottom: 2 },
-  metaObjet: { fontSize: 8, color: '#ea580c', textAlign: 'right', marginTop: 4, fontStyle: 'italic' },
+  metaEcheance: { fontSize: 10, color: '#B45309', textAlign: 'right', marginBottom: 2 },
+  metaObjet: { fontSize: 10, color: '#ea580c', textAlign: 'right', marginTop: 4, fontStyle: 'italic' },
 
   // Divider
   divider: { borderBottomWidth: 1, borderBottomColor: '#DDDDDD', marginBottom: 14 },
@@ -83,7 +83,7 @@ const S = StyleSheet.create({
     letterSpacing: 1,
     marginBottom: 5,
   },
-  bodyLine: { fontSize: 9, color: '#444444', marginBottom: 2, lineHeight: 1.5 },
+  bodyLine: { fontSize: 10, color: '#444444', marginBottom: 2, lineHeight: 1.5 },
   bodyBold: { fontFamily: 'Helvetica-Bold', color: '#111111' },
   bodyGray: { color: '#888888' },
 
@@ -290,7 +290,7 @@ function DevisPDF({ devis, lignes, entreprise }: DevisDocProps) {
         {/* ── HEADER ── */}
         <View style={S.header}>
           {/* Left: logo + company */}
-          <View>
+          <View style={{ justifyContent: 'flex-start', alignItems: 'flex-start' }}>
             {entreprise?.logo_url ? (
               <Image src={entreprise.logo_url} style={S.logoImg} />
             ) : (
@@ -381,7 +381,7 @@ function FacturePDF({ facture, lignes, entreprise }: FactureDocProps) {
 
         {/* ── HEADER ── */}
         <View style={S.header}>
-          <View>
+          <View style={{ justifyContent: 'flex-start', alignItems: 'flex-start' }}>
             {entreprise?.logo_url ? (
               <Image src={entreprise.logo_url} style={S.logoImg} />
             ) : (

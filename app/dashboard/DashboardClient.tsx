@@ -63,7 +63,7 @@ type Evenement = {
   titre: string
   date_debut: string
   chantier_id: string
-  chantiers: { nom: string }[] | null
+  chantiers: { nom: string } | { nom: string }[] | null
 }
 
 export function Sidebar({ user }: { user: User }) {
@@ -501,7 +501,7 @@ export default function DashboardClient({
                         {ev.titre}
                       </p>
                       <p style={{ fontSize: '12px', color: '#8A8880', fontFamily: 'Inter, sans-serif', margin: 0 }}>
-                        {(Array.isArray(ev.chantiers) ? ev.chantiers[0]?.nom : null) ?? ev.chantier_id}
+                        {(Array.isArray(ev.chantiers) ? ev.chantiers[0]?.nom : ev.chantiers?.nom) ?? 'Chantier inconnu'}
                       </p>
                     </div>
                     <span style={{ fontSize: '12px', color: '#8A8880', fontFamily: 'Inter, sans-serif', whiteSpace: 'nowrap', marginLeft: '12px' }}>

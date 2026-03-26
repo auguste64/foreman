@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState, useCallback } from 'react'
 import Link from 'next/link'
+import { createClient } from '@/lib/supabase/client'
 import { getEntrepriseInfo, upsertEntrepriseInfo } from '@/lib/supabase/documents'
 import type { EntrepriseInfo } from '@/lib/supabase/documents'
 import { toast } from '@/components/Toast'
@@ -75,6 +76,10 @@ export default function ParametresPage() {
   const [logoDragging, setLogoDragging] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
+  const [acomptePercent, setAcomptePercent] = useState(30)
+  const [savingAcompte, setSavingAcompte] = useState(false)
+  const [userId, setUserId] = useState<string | null>(null)
+
   const processLogoFile = useCallback((file: File) => {
     if (!file.type.startsWith('image/')) return
     const reader = new FileReader()
@@ -100,15 +105,38 @@ export default function ParametresPage() {
   }, [])
 
   useEffect(() => {
-    getEntrepriseInfo().then(info => {
+    async function load() {
+      const supabase = createClient()
+      const { data: { user } } = await supabase.auth.getUser()
+      if (user) {
+        setUserId(user.id)
+        const { data: profile } = await supabase.from('profiles').select('acompte_default_percent').eq('id', user.id).single()
+        if (profile?.acompte_default_percent != null) setAcomptePercent(profile.acompte_default_percent)
+      }
+      const info = await getEntrepriseInfo()
       if (info) {
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
         const { user_id, ...rest } = info
         setForm({ ...emptyForm, ...rest })
       }
       setLoaded(true)
-    })
+    }
+    load()
   }, [])
+
+  async function handleSaveAcompte() {
+    if (!userId) return
+    setSavingAcompte(true)
+    try {
+      const supabase = createClient()
+      await supabase.from('profiles').upsert({ id: userId, acompte_default_percent: acomptePercent }, { onConflict: 'id' })
+      toast.success('Pourcentage d\'acompte sauvegardé')
+    } catch {
+      toast.error('Erreur lors de la sauvegarde')
+    } finally {
+      setSavingAcompte(false)
+    }
+  }
 
   const set = (k: keyof FormState) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
     setForm(p => ({ ...p, [k]: e.target.value }))
@@ -332,6 +360,41 @@ export default function ParametresPage() {
         <Link href="/dashboard/comptabilite" style={{ padding: '11px 20px', backgroundColor: 'transparent', color: '#8A8880', border: '1px solid #1E1E1C', borderRadius: 8, fontSize: 14, textDecoration: 'none', fontFamily: 'var(--font-dm-sans), sans-serif' }}>
           Annuler
         </Link>
+      </div>
+
+      {/* Comptabilité */}
+      <div style={{ backgroundColor: '#111110', border: '1px solid #1E1E1C', borderRadius: 12, padding: 28, marginTop: 20 }}>
+        <h2 style={{ fontFamily: 'var(--font-syne), sans-serif', fontSize: 15, fontWeight: 600, color: '#F0EDE6', margin: '0 0 8px' }}>Comptabilité</h2>
+        <p style={{ color: '#8A8880', fontSize: 13, fontFamily: 'var(--font-dm-sans), sans-serif', margin: '0 0 20px' }}>
+          Paramètres de facturation et d'acompte.
+        </p>
+        <div style={{ maxWidth: 260 }}>
+          <label style={labelStyle}>Pourcentage d'acompte par défaut</label>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <input
+              type="number"
+              min={1}
+              max={100}
+              value={acomptePercent}
+              onChange={e => setAcomptePercent(Math.min(100, Math.max(1, parseInt(e.target.value) || 1)))}
+              onFocus={focus}
+              onBlur={blur}
+              style={{ ...inputStyle, width: 100 }}
+            />
+            <span style={{ color: '#8A8880', fontSize: 14, fontFamily: 'var(--font-dm-sans), sans-serif' }}>%</span>
+          </div>
+        </div>
+        <div style={{ marginTop: 16 }}>
+          <button
+            onClick={handleSaveAcompte}
+            disabled={savingAcompte}
+            style={{ padding: '10px 24px', backgroundColor: savingAcompte ? '#c45a10' : '#ea580c', color: '#0D0D0B', border: 'none', borderRadius: 8, fontSize: 14, fontWeight: 600, cursor: savingAcompte ? 'not-allowed' : 'pointer', fontFamily: 'var(--font-dm-sans), sans-serif' }}
+            onMouseEnter={e => { if (!savingAcompte) { e.currentTarget.style.transform = 'translateY(-1px)'; e.currentTarget.style.boxShadow = '0 0 20px rgba(249,115,22,0.4)' } }}
+            onMouseLeave={e => { e.currentTarget.style.transform = 'none'; e.currentTarget.style.boxShadow = 'none' }}
+          >
+            {savingAcompte ? 'Sauvegarde…' : 'Enregistrer'}
+          </button>
+        </div>
       </div>
     </div>
   )

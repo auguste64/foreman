@@ -256,7 +256,7 @@ export default function NouveauDevisHonorairesPage() {
               </p>
             </div>
             <div style={{ display: 'flex', gap: 8 }}>
-              <Link href="/dashboard/comptabilite/honoraires/template" style={{ padding: '9px 14px', backgroundColor: 'transparent', color: '#8A8880', border: '1px solid #1E1E1C', borderRadius: 8, fontSize: 12, fontWeight: 600, textDecoration: 'none', fontFamily: 'var(--font-dm-sans), sans-serif' }}>
+              <Link href="/dashboard/comptabilite/honoraires/template" style={{ padding: '9px 14px', backgroundColor: '#ea580c', color: '#fff', border: 'none', borderRadius: 8, fontSize: 12, fontWeight: 600, textDecoration: 'none', fontFamily: 'var(--font-dm-sans), sans-serif' }}>
                 Configurer modèle
               </Link>
               <button

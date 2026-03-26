@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { useParams, useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { getDevisDoc, createFactureDoc, formatEurDoc, fmtDate, calcTotauxDoc } from '@/lib/supabase/documents'
-import type { DevisDoc, DevisLigneDoc } from '@/lib/supabase/documents'
+import type { DevisDoc, DevisLigneDoc, FactureDoc } from '@/lib/supabase/documents'
 import { toast } from '@/components/Toast'
 import CustomSelect from '@/components/CustomSelect'
 import UpgradeGate from '@/components/UpgradeGate'
@@ -34,23 +34,57 @@ export default function DevisDetailPage() {
   const [sending, setSending] = useState(false)
   const { isComplet, loading: planLoading } = usePlan()
 
+  const [showAcompteModal, setShowAcompteModal] = useState(false)
+  const [showFactureFinaleModal, setShowFactureFinaleModal] = useState(false)
+  const [acomptePercent, setAcomptePercent] = useState(30)
+  const [creatingAcompte, setCreatingAcompte] = useState(false)
+  const [facturesLiees, setFacturesLiees] = useState<FactureDoc[]>([])
+
   useEffect(() => {
-    getDevisDoc(id).then(d => {
-      setDevis(d)
-      setLignes(d.lignes)
-      setEmailForm(p => ({
-        ...p,
-        to: d.client_email || '',
-        subject: `Devis ${d.numero}${d.objet ? ` — ${d.objet}` : ''}`,
-        body: `Bonjour,\n\nVeuillez trouver ci-joint le devis ${d.numero}.\n\nCordialement`,
-      }))
-      setLoading(false)
-    }).catch(() => setLoading(false))
+    async function load() {
+      try {
+        const supabase = createClient()
+        const { data: { user } } = await supabase.auth.getUser()
+        if (user) {
+          const { data: profile } = await supabase.from('profiles').select('acompte_default_percent').eq('id', user.id).single()
+          if (profile?.acompte_default_percent != null) setAcomptePercent(profile.acompte_default_percent)
+        }
+        const d = await getDevisDoc(id)
+        setDevis(d)
+        setLignes(d.lignes)
+        setEmailForm(p => ({
+          ...p,
+          to: d.client_email || '',
+          subject: `Devis ${d.numero}${d.objet ? ` — ${d.objet}` : ''}`,
+          body: `Bonjour,\n\nVeuillez trouver ci-joint le devis ${d.numero}.\n\nCordialement`,
+        }))
+        const supabase2 = createClient()
+        const { data: fl } = await supabase2.from('factures').select('*').eq('devis_id', d.id).order('created_at', { ascending: true })
+        setFacturesLiees((fl ?? []) as FactureDoc[])
+      } finally {
+        setLoading(false)
+      }
+    }
+    load()
   }, [id])
+
+  const acomptesPaies = facturesLiees
+    .filter(f => f.type === 'acompte' && f.statut === 'payee')
+    .reduce((sum, f) => sum + (f.total_ttc || 0), 0)
+
+  const acomptesHTPaies = facturesLiees
+    .filter(f => f.type === 'acompte' && f.statut === 'payee')
+    .reduce((sum, f) => sum + (f.total_ht || 0), 0)
 
   async function handleConvertirFacture() {
     if (!devis) return
+    setShowFactureFinaleModal(true)
+  }
+
+  async function handleConfirmFactureFinale() {
+    if (!devis) return
     setConverting(true)
+    setShowFactureFinaleModal(false)
     try {
       const supabase = createClient()
       const { data: { user } } = await supabase.auth.getUser()
@@ -59,6 +93,18 @@ export default function DevisDetailPage() {
       const annee = new Date().getFullYear()
       const numero = `FACT-${annee}-${(count || 0) + 1}`
       const in30 = new Date(Date.now() + 30 * 86400000).toISOString().split('T')[0]
+
+      const montantHT = devis.total_ht - acomptesHTPaies
+      const montantTTC = devis.total_ttc - acomptesPaies
+      const montantTVA = montantTTC - montantHT
+
+      const acomptePct = acomptesPaies > 0 && devis.total_ttc > 0
+        ? Math.round((acomptesPaies / devis.total_ttc) * 100)
+        : 0
+      const objet = acomptesPaies > 0
+        ? `Solde — ${devis.objet || devis.numero} (acompte de ${acomptePct}% déduit)`
+        : devis.objet
+
       const fid = await createFactureDoc({
         devis_id: devis.id,
         chantier_id: devis.chantier_id,
@@ -67,16 +113,16 @@ export default function DevisDetailPage() {
         client_nom: devis.client_nom,
         client_email: devis.client_email,
         client_adresse: devis.client_adresse,
-        objet: devis.objet,
+        objet,
         date_emission: new Date().toISOString().split('T')[0],
         date_echeance: in30,
         tva_taux: devis.tva_taux,
         remise_pct: devis.remise_pct,
         notes: devis.notes,
         conditions: devis.conditions,
-        total_ht: devis.total_ht,
-        total_tva: devis.total_tva,
-        total_ttc: devis.total_ttc,
+        total_ht: montantHT,
+        total_tva: montantTVA,
+        total_ttc: montantTTC,
         montant_paye: 0,
         date_paiement: null,
         mode_paiement: null,
@@ -89,6 +135,61 @@ export default function DevisDetailPage() {
     } catch (err: unknown) {
       toast.error(err instanceof Error ? err.message : 'Erreur')
       setConverting(false)
+    }
+  }
+
+  async function handleCreateAcompte() {
+    if (!devis) return
+    setCreatingAcompte(true)
+    try {
+      const supabase = createClient()
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) throw new Error('Non authentifié')
+      const { count } = await supabase.from('factures').select('*', { count: 'exact', head: true }).eq('user_id', user.id)
+      const annee = new Date().getFullYear()
+      const numero = `FACT-${annee}-${(count || 0) + 1}`
+      const in30 = new Date(Date.now() + 30 * 86400000).toISOString().split('T')[0]
+      const montant_ht = Math.round(devis.total_ht * acomptePercent) / 100
+      const montant_ttc = Math.round(devis.total_ttc * acomptePercent) / 100
+      const montant_tva = Math.round(devis.total_tva * acomptePercent) / 100
+      const fid = await createFactureDoc({
+        type: 'acompte',
+        acompte_percent: acomptePercent,
+        devis_id: devis.id,
+        chantier_id: devis.chantier_id,
+        numero,
+        statut: 'brouillon',
+        client_nom: devis.client_nom,
+        client_email: devis.client_email,
+        client_adresse: devis.client_adresse,
+        objet: `Acompte ${acomptePercent}% — ${devis.objet || devis.numero}`,
+        date_emission: new Date().toISOString().split('T')[0],
+        date_echeance: in30,
+        tva_taux: devis.tva_taux,
+        remise_pct: 0,
+        notes: '',
+        conditions: '',
+        total_ht: montant_ht,
+        total_tva: montant_tva,
+        total_ttc: montant_ttc,
+        montant_paye: 0,
+        date_paiement: null,
+        mode_paiement: null,
+        envoye_at: null,
+        lignes: [{
+          libelle: `Acompte ${acomptePercent}% sur devis ${devis.numero}${devis.objet ? ` — ${devis.objet}` : ''}`,
+          quantite: 1,
+          unite: 'forfait',
+          prix_unitaire: montant_ht,
+          tva_taux: devis.tva_taux,
+        }],
+      })
+      setShowAcompteModal(false)
+      toast.success('Facture d\'acompte créée')
+      router.push(`/dashboard/comptabilite/factures/${fid}`)
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : 'Erreur')
+      setCreatingAcompte(false)
     }
   }
 
@@ -160,6 +261,12 @@ export default function DevisDetailPage() {
           <Link href={`/dashboard/comptabilite/devis/nouveau?edit=${id}`} style={btnOutline}>Modifier</Link>
           <a href={`/api/documents-pdf?type=devis&id=${id}`} target="_blank" rel="noreferrer" style={btnOutline}>PDF</a>
           <button onClick={() => setShowEmail(true)} style={btnOutline}>Email</button>
+          {devis.statut === 'accepte' && (
+            <button onClick={() => setShowAcompteModal(true)}
+              style={{ ...btnPrimary, backgroundColor: '#ea580c' }}>
+              Créer une facture d'acompte
+            </button>
+          )}
           <button onClick={handleConvertirFacture} disabled={converting}
             style={{ ...btnPrimary, opacity: converting ? 0.7 : 1, cursor: converting ? 'not-allowed' : 'pointer' }}>
             {converting ? 'Conversion…' : 'Convertir en facture →'}
@@ -247,6 +354,83 @@ export default function DevisDetailPage() {
         </div>
       )}
 
+      {/* Suivi financier */}
+      <SuiviFinancier devis={devis} facturesLiees={facturesLiees} />
+
+      {/* Acompte Modal */}
+      {showAcompteModal && (
+        <Modal title="Facture d'acompte" onClose={() => setShowAcompteModal(false)}>
+          <p style={{ fontSize: 13, color: '#8A8880', fontFamily: 'var(--font-dm-sans), sans-serif', marginBottom: 20 }}>
+            Définissez le pourcentage à facturer en acompte sur ce devis.
+          </p>
+          <div style={{ marginBottom: 16 }}>
+            <label style={labelStyle}>Pourcentage</label>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <input
+                type="number"
+                min={1}
+                max={100}
+                value={acomptePercent}
+                onChange={e => setAcomptePercent(Math.min(100, Math.max(1, parseInt(e.target.value) || 1)))}
+                style={{ ...inputStyle, width: 100 }}
+              />
+              <span style={{ color: '#8A8880', fontSize: 14, fontFamily: 'var(--font-dm-sans), sans-serif' }}>%</span>
+            </div>
+          </div>
+          <div style={{ backgroundColor: 'rgba(249,115,22,0.06)', border: '1px solid rgba(249,115,22,0.2)', borderRadius: 8, padding: '12px 16px', marginBottom: 20 }}>
+            <p style={{ fontSize: 13, color: '#ea580c', fontFamily: 'var(--font-dm-sans), sans-serif', margin: 0 }}>
+              {acomptePercent}% de {formatEurDoc(devis.total_ttc)} = <strong>{formatEurDoc(Math.round(devis.total_ttc * acomptePercent) / 100)} TTC</strong>
+              <span style={{ color: '#8A8880', marginLeft: 8 }}>({formatEurDoc(Math.round(devis.total_ht * acomptePercent) / 100)} HT)</span>
+            </p>
+          </div>
+          <div style={{ display: 'flex', gap: 10 }}>
+            <button onClick={handleCreateAcompte} disabled={creatingAcompte}
+              style={{ ...btnPrimary, opacity: creatingAcompte ? 0.7 : 1, cursor: creatingAcompte ? 'not-allowed' : 'pointer' }}>
+              {creatingAcompte ? 'Création…' : 'Générer la facture'}
+            </button>
+            <button onClick={() => setShowAcompteModal(false)} style={btnOutline}>Annuler</button>
+          </div>
+        </Modal>
+      )}
+
+      {/* Modale facture finale */}
+      {showFactureFinaleModal && devis && (
+        <Modal title="Convertir en facture finale" onClose={() => setShowFactureFinaleModal(false)}>
+          {acomptesPaies > 0 ? (
+            <>
+              <p style={{ fontSize: 13, color: '#8A8880', fontFamily: 'var(--font-dm-sans), sans-serif', marginBottom: 16 }}>
+                Des acomptes réglés seront déduits du montant total.
+              </p>
+              <div style={{ backgroundColor: 'rgba(249,115,22,0.06)', border: '1px solid rgba(249,115,22,0.2)', borderRadius: 8, padding: '14px 16px', marginBottom: 20, display: 'flex', flexDirection: 'column', gap: 8 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, fontFamily: 'var(--font-dm-sans), sans-serif' }}>
+                  <span style={{ color: '#8A8880' }}>Montant total TTC</span>
+                  <span style={{ color: '#F0EDE6' }}>{formatEurDoc(devis.total_ttc)}</span>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, fontFamily: 'var(--font-dm-sans), sans-serif' }}>
+                  <span style={{ color: '#8A8880' }}>Acomptes réglés déduits</span>
+                  <span style={{ color: '#E85447' }}>- {formatEurDoc(acomptesPaies)}</span>
+                </div>
+                <div style={{ borderTop: '1px solid rgba(249,115,22,0.2)', paddingTop: 8, display: 'flex', justifyContent: 'space-between', fontSize: 14, fontWeight: 700, fontFamily: 'var(--font-syne), sans-serif' }}>
+                  <span style={{ color: '#F0EDE6' }}>Solde à facturer</span>
+                  <span style={{ color: '#ea580c' }}>{formatEurDoc(devis.total_ttc - acomptesPaies)}</span>
+                </div>
+              </div>
+            </>
+          ) : (
+            <p style={{ fontSize: 13, color: '#8A8880', fontFamily: 'var(--font-dm-sans), sans-serif', marginBottom: 20 }}>
+              Une facture de <strong style={{ color: '#F0EDE6' }}>{formatEurDoc(devis.total_ttc)}</strong> TTC sera créée.
+            </p>
+          )}
+          <div style={{ display: 'flex', gap: 10 }}>
+            <button onClick={handleConfirmFactureFinale} disabled={converting}
+              style={{ ...btnPrimary, opacity: converting ? 0.7 : 1, cursor: converting ? 'not-allowed' : 'pointer' }}>
+              {converting ? 'Création…' : 'Créer la facture'}
+            </button>
+            <button onClick={() => setShowFactureFinaleModal(false)} style={btnOutline}>Annuler</button>
+          </div>
+        </Modal>
+      )}
+
       {/* Email Modal */}
       {showEmail && (
         <Modal title="Envoyer par email" onClose={() => setShowEmail(false)}>
@@ -325,6 +509,150 @@ const inputStyle: React.CSSProperties = {
 const labelStyle: React.CSSProperties = {
   display: 'block', fontSize: 11, fontWeight: 600, letterSpacing: '0.08em',
   textTransform: 'uppercase', color: '#8A8880', marginBottom: 6, fontFamily: 'var(--font-dm-sans), sans-serif',
+}
+
+function SuiviFinancier({ devis, facturesLiees }: { devis: DevisDoc; facturesLiees: FactureDoc[] }) {
+  const router = useRouter()
+  const [hoveredIdx, setHoveredIdx] = useState<number | null>(null)
+
+  type TimelineEvent = { label: string; date: string | null; color: string; factureId?: string }
+  const events: TimelineEvent[] = []
+
+  // 1. Devis créé
+  events.push({ label: 'Devis créé', date: devis.created_at, color: '#ea580c' })
+
+  // 2. Devis envoyé
+  if (devis.statut === 'envoye' || devis.statut === 'accepte' || devis.statut === 'refuse' || devis.statut === 'expire') {
+    events.push({ label: 'Devis envoyé', date: devis.envoye_at ?? devis.created_at, color: '#60a5fa' })
+  }
+
+  // 3. Devis accepté
+  if (devis.statut === 'accepte') {
+    events.push({ label: 'Devis accepté', date: devis.accepte_at ?? null, color: '#4ade80' })
+  }
+
+  // 4 & 5. Factures liées
+  for (const f of facturesLiees) {
+    const isAcompte = (f as FactureDoc & { type?: string }).type === 'acompte'
+    const pct = (f as FactureDoc & { acompte_percent?: number | null }).acompte_percent
+    if (isAcompte) {
+      events.push({
+        label: `Facture d'acompte créée${pct ? ` — ${pct}%` : ''} (${formatEurDoc(f.total_ttc)})`,
+        date: f.created_at,
+        color: '#ea580c',
+        factureId: f.id,
+      })
+      if (f.statut === 'payee') {
+        events.push({
+          label: `Acompte réglé — ${formatEurDoc(f.montant_paye ?? f.total_ttc)}`,
+          date: f.date_paiement ?? f.created_at,
+          color: '#22c55e',
+          factureId: f.id,
+        })
+      }
+    } else {
+      events.push({
+        label: `Facture finale créée — ${formatEurDoc(f.total_ttc)}`,
+        date: f.created_at,
+        color: '#ea580c',
+        factureId: f.id,
+      })
+      if (f.statut === 'payee') {
+        events.push({
+          label: `Facture réglée — ${formatEurDoc(f.montant_paye ?? f.total_ttc)}`,
+          date: f.date_paiement ?? f.created_at,
+          color: '#22c55e',
+          factureId: f.id,
+        })
+      }
+    }
+  }
+
+  // Récap
+  const acomptesEncaisses = facturesLiees
+    .filter(f => (f as FactureDoc & { type?: string }).type === 'acompte' && f.statut === 'payee')
+    .reduce((s, f) => s + (f.montant_paye ?? f.total_ttc ?? 0), 0)
+  const solde = (devis.total_ttc ?? 0) - acomptesEncaisses
+  const solde0 = solde <= 0.005
+
+  return (
+    <div style={{ backgroundColor: '#111110', border: '1px solid #1E1E1C', borderRadius: 12, padding: 24, marginBottom: 20 }}>
+      <h2 style={{ fontFamily: 'var(--font-syne), sans-serif', fontSize: 14, fontWeight: 600, color: '#F0EDE6', margin: '0 0 20px' }}>
+        Suivi financier
+      </h2>
+
+      {/* Timeline */}
+      <div style={{ position: 'relative', paddingLeft: 20 }}>
+        {/* Ligne verticale */}
+        <div style={{ position: 'absolute', left: 6, top: 8, bottom: 8, width: 1, backgroundColor: '#1E1E1C' }} />
+
+        {[...events].reverse().map((ev, i) => {
+          const clickable = !!ev.factureId
+          const hovered = hoveredIdx === i
+          return (
+            <div
+              key={i}
+              onClick={clickable ? () => router.push(`/dashboard/comptabilite/factures/${ev.factureId}`) : undefined}
+              onMouseEnter={clickable ? () => setHoveredIdx(i) : undefined}
+              onMouseLeave={clickable ? () => setHoveredIdx(null) : undefined}
+              style={{
+                position: 'relative',
+                display: 'flex',
+                alignItems: 'flex-start',
+                gap: 12,
+                marginBottom: i < events.length - 1 ? 16 : 0,
+                cursor: clickable ? 'pointer' : 'default',
+                backgroundColor: hovered ? '#1E1E1C' : 'transparent',
+                borderRadius: 6,
+                padding: clickable ? '4px 6px 4px 0' : '0',
+                marginLeft: clickable ? -6 : 0,
+                transition: 'background-color 0.15s',
+              }}
+            >
+              {/* Point */}
+              <div style={{ position: 'absolute', left: clickable ? -8 : -14, top: 5, width: 8, height: 8, borderRadius: '50%', backgroundColor: ev.color, flexShrink: 0, border: '1px solid #0D0D0B' }} />
+              <div style={{ flex: 1 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <p style={{ margin: 0, fontSize: 13, color: '#F0EDE6', fontFamily: 'var(--font-dm-sans), sans-serif', lineHeight: 1.4 }}>{ev.label}</p>
+                  {clickable && <span style={{ color: '#8A8880', fontSize: 12 }}>→</span>}
+                </div>
+                {ev.date && (
+                  <p style={{ margin: '2px 0 0', fontSize: 11, color: '#8A8880', fontFamily: 'var(--font-dm-sans), sans-serif' }}>
+                    {fmtDate(ev.date)}
+                  </p>
+                )}
+              </div>
+            </div>
+          )
+        })}
+      </div>
+
+      {/* Séparateur */}
+      <div style={{ borderTop: '1px solid #1E1E1C', margin: '20px 0 16px' }} />
+
+      {/* Récapitulatif */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+        {[
+          { label: 'Montant total HT',    value: formatEurDoc(devis.total_ht),   color: '#F0EDE6' },
+          { label: 'Montant total TTC',   value: formatEurDoc(devis.total_ttc),  color: '#F0EDE6' },
+          { label: 'Acomptes encaissés',  value: formatEurDoc(acomptesEncaisses), color: '#22c55e' },
+        ].map(r => (
+          <div key={r.label} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, fontFamily: 'var(--font-dm-sans), sans-serif' }}>
+            <span style={{ color: '#8A8880' }}>{r.label}</span>
+            <span style={{ color: r.color, fontWeight: 500 }}>{r.value}</span>
+          </div>
+        ))}
+        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 14, fontWeight: 700, fontFamily: 'var(--font-syne), sans-serif', paddingTop: 8, borderTop: '1px solid #1E1E1C', marginTop: 4 }}>
+          <span style={{ color: '#8A8880' }}>Solde restant dû</span>
+          {solde0 ? (
+            <span style={{ color: '#22c55e' }}>Soldé ✓</span>
+          ) : (
+            <span style={{ color: '#ea580c' }}>{formatEurDoc(solde)}</span>
+          )}
+        </div>
+      </div>
+    </div>
+  )
 }
 
 function EmailForm({ form, onChange, onSend, onCancel, sending }: {

@@ -7,6 +7,7 @@ export type Profile = {
   telephone: string
   adresse: string
   entreprise: string
+  acompte_default_percent?: number | null
 }
 
 export type UpsertProfileInput = Omit<Profile, 'id'>

@@ -68,6 +68,8 @@ export type FactureDoc = {
   user_id: string
   devis_id: string | null
   chantier_id: string | null
+  type?: string
+  acompte_percent?: number | null
   numero: string
   statut: 'brouillon' | 'envoyee' | 'partiellement_payee' | 'payee' | 'annulee'
   client_nom: string

@@ -123,10 +123,12 @@ const S = StyleSheet.create({
   headerLeft: {
     flexDirection: 'column',
     gap: 2,
+    justifyContent: 'flex-start',
+    alignItems: 'flex-start',
   },
   logoImg: {
-    height: 32,
-    maxWidth: 120,
+    height: 90,
+    maxWidth: 180,
     objectFit: 'contain',
     marginBottom: 5,
   },

@@ -100,6 +100,12 @@ export default function DocumentsPage() {
   const [hasSiret, setHasSiret] = useState(true)
   const [loading, setLoading] = useState(true)
   const [sort, setSort] = useState<'date_desc' | 'date_asc' | 'montant_desc' | 'montant_asc' | 'statut'>('date_desc')
+  const [addClientModal, setAddClientModal] = useState<{ devisId: string } | null>(null)
+  const [addClientNom, setAddClientNom] = useState('')
+  const [savingClient, setSavingClient] = useState(false)
+  const [clientsUniques, setClientsUniques] = useState<string[]>([])
+  const [addClientListOpen, setAddClientListOpen] = useState(false)
+
 
   useEffect(() => {
     async function load() {
@@ -127,6 +133,28 @@ export default function DocumentsPage() {
     }
     load()
   }, [])
+
+  useEffect(() => {
+    if (!addClientModal) return
+    setAddClientNom('')
+    setAddClientListOpen(false)
+    async function fetchClients() {
+      const supabase = createClient()
+      const [ch, dv, fa] = await Promise.all([
+        supabase.from('chantiers').select('client').not('client', 'is', null).neq('client', ''),
+        supabase.from('devis').select('client_nom').not('client_nom', 'is', null).neq('client_nom', ''),
+        supabase.from('factures').select('client_nom').not('client_nom', 'is', null).neq('client_nom', ''),
+      ])
+      const all = [
+        ...(ch.data ?? []).map((r: { client: string }) => r.client),
+        ...(dv.data ?? []).map((r: { client_nom: string }) => r.client_nom),
+        ...(fa.data ?? []).map((r: { client_nom: string }) => r.client_nom),
+      ]
+      const uniques = [...new Set(all)].sort()
+      setClientsUniques(uniques)
+    }
+    fetchClients()
+  }, [addClientModal])
 
   // Filtered views
   function applySort<T extends { created_at?: string; date_emission?: string; total_ttc?: number | null; statut?: string }>(arr: T[]): T[] {
@@ -185,6 +213,23 @@ export default function DocumentsPage() {
     await supabase.from('factures').update({ statut }).eq('id', id)
     setFactures(prev => prev.map(f => f.id === id ? { ...f, statut: statut as FactureDoc['statut'] } : f))
     toast.success('Statut mis à jour')
+  }
+
+  async function handleAddClient() {
+    if (!addClientModal || !addClientNom.trim()) return
+    setSavingClient(true)
+    try {
+      const supabase = createClient()
+      await supabase.from('devis').update({ client_nom: addClientNom.trim() }).eq('id', addClientModal.devisId)
+      setDevis(prev => prev.map(d => d.id === addClientModal.devisId ? { ...d, client_nom: addClientNom.trim() } : d))
+      toast.success('Client ajouté')
+      setAddClientModal(null)
+      setAddClientNom('')
+    } catch {
+      toast.error('Erreur lors de la sauvegarde')
+    } finally {
+      setSavingClient(false)
+    }
   }
 
   const thStyle: React.CSSProperties = {
@@ -421,7 +466,16 @@ export default function DocumentsPage() {
                         onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
                       >
                         <td style={{ ...tdStyle, fontFamily: 'var(--font-syne), sans-serif', fontWeight: 600, fontSize: 12 }}>{d.numero}</td>
-                        <td style={tdStyle}>{d.client_nom || '—'}</td>
+                        <td style={tdStyle}>
+                          {d.client_nom || (
+                            <button
+                              onClick={e => { e.stopPropagation(); setAddClientNom(''); setAddClientModal({ devisId: d.id }) }}
+                              style={{ fontSize: 11, padding: '4px 10px', borderRadius: 6, border: 'none', background: 'rgba(234, 88, 12, 0.12)', color: '#ea580c', cursor: 'pointer', fontFamily: 'var(--font-dm-sans)', fontWeight: 500, letterSpacing: '0.02em', whiteSpace: 'nowrap' }}
+                            >
+                              + Ajouter client
+                            </button>
+                          )}
+                        </td>
                         <td style={{ ...tdStyle, color: '#8A8880', maxWidth: 160, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{d.objet || '—'}</td>
                         <td style={{ ...tdStyle, fontWeight: 600, color: '#ea580c' }}>{formatEurDoc(d.total_ttc ?? 0)}</td>
                         <td style={tdStyle}><Badge map={DEVIS_STATUT} statut={d.statut} /></td>
@@ -459,7 +513,16 @@ export default function DocumentsPage() {
                         onMouseEnter={e => (e.currentTarget.style.background = 'rgba(249,115,22,0.04)')}
                         onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
                       >
-                        <td style={{ ...tdStyle, fontFamily: 'var(--font-syne), sans-serif', fontWeight: 600, fontSize: 12 }}>{f.numero}</td>
+                        <td style={{ ...tdStyle, fontFamily: 'var(--font-syne), sans-serif', fontWeight: 600, fontSize: 12 }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                            {f.numero}
+                            {(f as FactureDoc & { type?: string; acompte_percent?: number | null }).type === 'acompte' && (
+                              <span style={{ padding: '2px 8px', borderRadius: 20, fontSize: 10, fontWeight: 700, backgroundColor: 'rgba(234,88,12,0.12)', color: '#ea580c', fontFamily: 'var(--font-dm-sans), sans-serif', whiteSpace: 'nowrap' }}>
+                                Acompte {(f as FactureDoc & { acompte_percent?: number | null }).acompte_percent ?? ''}%
+                              </span>
+                            )}
+                          </div>
+                        </td>
                         <td style={tdStyle}>{f.client_nom || '—'}</td>
                         <td style={{ ...tdStyle, color: '#8A8880', maxWidth: 160, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{f.objet || '—'}</td>
                         <td style={{ ...tdStyle, fontWeight: 600, color: '#ea580c' }}>{formatEurDoc(f.total_ttc ?? 0)}</td>
@@ -589,6 +652,71 @@ export default function DocumentsPage() {
         )}
       </div>
     </div>
+
+    {/* Modale ajout client */}
+    {addClientModal && (() => {
+      const filtered = clientsUniques.filter(c => c.toLowerCase().includes(addClientNom.trim().toLowerCase()))
+      return (
+        <div
+          onClick={() => setAddClientModal(null)}
+          style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.7)', zIndex: 50, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}
+        >
+          <div
+            onClick={e => e.stopPropagation()}
+            style={{ backgroundColor: '#111110', border: '1px solid #1E1E1C', borderRadius: 12, padding: 32, width: 400, boxShadow: '0 24px 64px rgba(0,0,0,0.6)' }}
+          >
+            <h2 style={{ fontFamily: 'var(--font-syne), sans-serif', fontSize: 18, fontWeight: 700, color: '#F0EDE6', margin: '0 0 20px' }}>
+              Ajouter un client
+            </h2>
+            <label style={{ display: 'block', fontSize: 11, fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#8A8880', marginBottom: 8, fontFamily: 'var(--font-dm-sans), sans-serif' }}>
+              Nom du client
+            </label>
+            <div style={{ position: 'relative' }}>
+              <input
+                value={addClientNom}
+                onChange={e => { setAddClientNom(e.target.value); setAddClientListOpen(true) }}
+                onFocus={() => setAddClientListOpen(true)}
+                onBlur={() => setTimeout(() => setAddClientListOpen(false), 150)}
+                placeholder="Rechercher ou saisir un client..."
+                style={{ width: '100%', background: '#111110', border: '1px solid #ea580c', borderRadius: 8, padding: '12px 16px', color: '#F0EDE6', fontSize: 15, outline: 'none', boxSizing: 'border-box', fontFamily: 'var(--font-dm-sans), sans-serif' }}
+              />
+              {addClientListOpen && addClientNom.length > 0 && (
+                <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, background: '#111110', border: '1px solid #1E1E1C', borderRadius: 8, marginTop: 4, zIndex: 50, maxHeight: 200, overflowY: 'auto' }}>
+                  {filtered.length > 0 ? filtered.map(c => (
+                    <div
+                      key={c}
+                      onMouseDown={() => { setAddClientNom(c); setAddClientListOpen(false) }}
+                      style={{ padding: '10px 16px', cursor: 'pointer', color: '#F0EDE6', fontSize: 14, fontFamily: 'var(--font-dm-sans), sans-serif' }}
+                      onMouseEnter={e => (e.currentTarget.style.background = '#1E1E1C')}
+                      onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+                    >
+                      {c}
+                    </div>
+                  )) : (
+                    <div style={{ padding: '10px 16px', color: '#8A8880', fontSize: 14, fontFamily: 'var(--font-dm-sans), sans-serif' }}>Saisir un nouveau client</div>
+                  )}
+                </div>
+              )}
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, marginTop: 24 }}>
+              <button
+                onClick={() => setAddClientModal(null)}
+                style={{ padding: '10px 20px', background: 'transparent', color: '#8A8880', border: '1px solid #1E1E1C', borderRadius: 6, fontSize: 14, cursor: 'pointer', fontFamily: 'var(--font-dm-sans), sans-serif' }}
+              >
+                Annuler
+              </button>
+              <button
+                onClick={handleAddClient}
+                disabled={savingClient || !addClientNom.trim()}
+                style={{ padding: '10px 20px', background: savingClient || !addClientNom.trim() ? '#c45a10' : '#ea580c', color: '#fff', border: 'none', borderRadius: 6, fontSize: 14, fontWeight: 600, cursor: savingClient || !addClientNom.trim() ? 'not-allowed' : 'pointer', fontFamily: 'var(--font-dm-sans), sans-serif' }}
+              >
+                {savingClient ? 'Sauvegarde…' : 'Enregistrer'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )
+    })()}
     </UpgradeGate>
   )
 }
