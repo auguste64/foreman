@@ -41,6 +41,7 @@ const navItems: NavItem[] = [
   { href: '/dashboard', label: 'Tableau de bord' },
   { href: '/dashboard/chantiers', label: 'Chantiers' },
   { href: '/dashboard/comptes-rendus', label: 'Comptes rendus' },
+  { href: '/dashboard/contrats', label: 'Contrats' },
   { href: '/dashboard/comptabilite', label: 'Comptabilité', requiresComplet: true },
   { href: '/dashboard/finances', label: 'Analyse', requiresComplet: true },
   { href: '/dashboard/artisans', label: 'Artisans' },

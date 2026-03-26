@@ -9,6 +9,7 @@ import { toast } from '@/components/Toast'
 import type { CompteRenduWithChantier } from '@/lib/supabase/comptes-rendus'
 import type { Chantier } from '@/lib/supabase/chantiers'
 import PhotoAnnotator from '@/components/PhotoAnnotator'
+import ArtisanAutocomplete from '@/components/ArtisanAutocomplete'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -456,6 +457,14 @@ export default function ModifierCompteRendu({ compteRendu: cr }: { compteRendu: 
     backgroundColor: 'transparent', border: '1px solid transparent',
   }
 
+  // Options pour l'autocomplete artisan (tous les artisans DB + externes ajoutés manuellement)
+  const allIntervenants = [
+    ...allArtisans.map(a => ({ value: a.nom, label: `${a.nom}${a.metier ? ` — ${a.metier}` : ''}` })),
+    ...presences
+      .filter(p => p.artisanId.startsWith('ext_') && !allArtisans.some(a => a.nom === p.nom))
+      .map(p => ({ value: p.nom, label: `${p.nom}${p.societe ? ` — ${p.societe}` : ''}` })),
+  ]
+
   // ─────────────────────────────────────────────────────────────────────────────
   return (
     <div style={{ flex: 1, padding: '32px 40px', overflowY: 'auto' }}>
@@ -728,8 +737,12 @@ export default function ModifierCompteRendu({ compteRendu: cr }: { compteRendu: 
                         </div>
                         <div>
                           <label style={labelStyle}>Responsable</label>
-                          <input value={r.responsable} onChange={(e) => updateReserve(r.id, 'responsable', e.target.value)}
-                            placeholder="Entreprise / Artisan" style={{ ...inputStyle, fontSize: '13px' }} onFocus={focus} onBlur={blur} />
+                          <ArtisanAutocomplete
+                            value={r.responsable}
+                            onChange={(v) => updateReserve(r.id, 'responsable', v)}
+                            options={allIntervenants}
+                            placeholder="— Sélectionner —"
+                          />
                         </div>
                       </div>
                       {/* Reserve photos */}
@@ -793,8 +806,12 @@ export default function ModifierCompteRendu({ compteRendu: cr }: { compteRendu: 
                       </div>
                       <div>
                         <label style={labelStyle}>Responsable</label>
-                        <input value={d.responsable} onChange={(e) => updateDecision(d.id, 'responsable', e.target.value)}
-                          placeholder="Nom / Société" style={{ ...inputStyle, fontSize: '13px' }} onFocus={focus} onBlur={blur} />
+                        <ArtisanAutocomplete
+                          value={d.responsable}
+                          onChange={(v) => updateDecision(d.id, 'responsable', v)}
+                          options={allIntervenants}
+                          placeholder="— Sélectionner —"
+                        />
                       </div>
                       <div>
                         <label style={labelStyle}>Échéance</label>
@@ -842,10 +859,12 @@ export default function ModifierCompteRendu({ compteRendu: cr }: { compteRendu: 
                                 onBlur={(e) => { e.target.style.borderColor = 'transparent'; e.target.style.backgroundColor = 'transparent' }} />
                             </td>
                             <td style={{ padding: '6px 8px' }}>
-                              <input value={l.intervenant} onChange={(e) => updateLot(l.id, 'intervenant', e.target.value)} placeholder="Entreprise"
-                                style={cellInput}
-                                onFocus={(e) => { e.target.style.borderColor = '#ea580c'; e.target.style.backgroundColor = '#0D0D0B' }}
-                                onBlur={(e) => { e.target.style.borderColor = 'transparent'; e.target.style.backgroundColor = 'transparent' }} />
+                              <ArtisanAutocomplete
+                                value={l.intervenant}
+                                onChange={(v) => updateLot(l.id, 'intervenant', v)}
+                                options={allIntervenants}
+                                placeholder="— Artisan —"
+                              />
                             </td>
                             <td style={{ padding: '6px 8px' }}>
                               <input type="date" value={l.dateDemarrage} onChange={(e) => updateLot(l.id, 'dateDemarrage', e.target.value)}

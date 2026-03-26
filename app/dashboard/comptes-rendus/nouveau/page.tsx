@@ -11,6 +11,7 @@ import type { Chantier } from '@/lib/supabase/chantiers'
 import PhotoAnnotator from '@/components/PhotoAnnotator'
 import { DateTimePicker } from '@/components/DateTimePicker'
 import { DatePickerOverlay, formatDateDisplay, dateToStr } from '@/components/DatePicker'
+import ArtisanAutocomplete from '@/components/ArtisanAutocomplete'
 
 function Portal({ children }: { children: React.ReactNode }) {
   const [mounted, setMounted] = React.useState(false)
@@ -132,6 +133,7 @@ export default function NouveauCompteRenduPage() {
   const [decisions, setDecisions] = useState<Decision[]>([])
   const [lots, setLots] = useState<Lot[]>([])
   const [chantierArtisans, setChantierArtisans] = useState<{ id: string; nom: string; metier: string | null }[]>([])
+  const [allArtisans, setAllArtisans] = useState<{ id: string; nom: string; metier: string | null }[]>([])
   const [draftSaved, setDraftSaved] = useState(false)
 
   // External intervenant form (Présences tab)
@@ -157,11 +159,13 @@ export default function NouveauCompteRenduPage() {
     photos: [] as string[],
   })
 
-  // Load chantiers
+  // Load chantiers + all artisans
   useEffect(() => {
     const supabase = createClient()
     supabase.from('chantiers').select('*').order('nom')
       .then(({ data }) => setChantiers((data ?? []) as Chantier[]))
+    supabase.from('artisans').select('id, nom, metier').order('nom')
+      .then(({ data }) => setAllArtisans((data ?? []) as { id: string; nom: string; metier: string | null }[]))
   }, [])
 
   // Reload presences + chantierArtisans whenever the selected chantier changes
@@ -455,12 +459,12 @@ export default function NouveauCompteRenduPage() {
     { id: 'photos',    label: photoPreviews.length ? `Photos (${photoPreviews.length})` : 'Photos' },
   ]
 
-  // ── Artisans + externes pour les selects ──
+  // ── Artisans pour les selects (tous les artisans DB + externes ajoutés manuellement) ──
   const allIntervenants = [
-    ...chantierArtisans.map(a => ({ value: a.nom, label: `${a.nom}${a.metier ? ` · ${a.metier}` : ''}` })),
-    ...presences.filter(p => p.artisanId.startsWith('ext_')).map(p => ({
-      value: p.nom, label: `${p.nom}${p.societe ? ` · ${p.societe}` : ''}`,
-    })),
+    ...allArtisans.map(a => ({ value: a.nom, label: `${a.nom}${a.metier ? ` — ${a.metier}` : ''}` })),
+    ...presences
+      .filter(p => p.artisanId.startsWith('ext_') && !allArtisans.some(a => a.nom === p.nom))
+      .map(p => ({ value: p.nom, label: `${p.nom}${p.societe ? ` — ${p.societe}` : ''}` })),
   ]
 
   // ─────────────────────────────────────────────────────────────────────────────
@@ -735,15 +739,12 @@ export default function NouveauCompteRenduPage() {
                         {/* Intervenant */}
                         <div>
                           <label style={labelStyle}>Intervenant</label>
-                          <div style={{ position: 'relative' }}>
-                            <select value={l.intervenant} onChange={(e) => updateLot(l.id, 'intervenant', e.target.value)}
-                              style={{ background: '#111110', border: '1px solid #1E1E1C', borderRadius: '8px', padding: '10px 32px 10px 12px', color: l.intervenant ? '#F0EDE6' : '#8A8880', fontSize: '13px', width: '100%', appearance: 'none', WebkitAppearance: 'none', cursor: 'pointer', outline: 'none', fontFamily: 'var(--font-dm-sans), sans-serif', boxSizing: 'border-box' } as React.CSSProperties}
-                              onFocus={focus} onBlur={blur}>
-                              <option value="">— Artisan —</option>
-                              {allIntervenants.map(a => <option key={a.value} value={a.value} style={{ backgroundColor: '#111110' }}>{a.label}</option>)}
-                            </select>
-                            <svg style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} width="12" height="8" viewBox="0 0 12 8" fill="none"><path d="M1 1l5 5 5-5" stroke="#8A8880" strokeWidth="1.5" strokeLinecap="round" /></svg>
-                          </div>
+                          <ArtisanAutocomplete
+                            value={l.intervenant}
+                            onChange={(v) => updateLot(l.id, 'intervenant', v)}
+                            options={allIntervenants}
+                            placeholder="— Artisan —"
+                          />
                         </div>
 
                         {/* Démarrage */}
@@ -893,15 +894,12 @@ export default function NouveauCompteRenduPage() {
                         </div>
                         <div>
                           <label style={labelStyle}>Responsable</label>
-                          <div style={{ position: 'relative' }}>
-                            <select value={r.responsable} onChange={(e) => updateReserve(r.id, 'responsable', e.target.value)}
-                              style={{ background: '#111110', border: '1px solid #1E1E1C', borderRadius: '8px', padding: '8px 32px 8px 12px', color: r.responsable ? '#F0EDE6' : '#8A8880', fontSize: '13px', width: '100%', appearance: 'none', WebkitAppearance: 'none', cursor: 'pointer', outline: 'none', fontFamily: 'var(--font-dm-sans), sans-serif' } as React.CSSProperties}
-                              onFocus={focus} onBlur={blur}>
-                              <option value="">— Sélectionner —</option>
-                              {allIntervenants.map(a => <option key={a.value} value={a.value} style={{ backgroundColor: '#111110' }}>{a.label}</option>)}
-                            </select>
-                            <svg style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} width="12" height="8" viewBox="0 0 12 8" fill="none"><path d="M1 1l5 5 5-5" stroke="#8A8880" strokeWidth="1.5" strokeLinecap="round" /></svg>
-                          </div>
+                          <ArtisanAutocomplete
+                            value={r.responsable}
+                            onChange={(v) => updateReserve(r.id, 'responsable', v)}
+                            options={allIntervenants}
+                            placeholder="— Sélectionner —"
+                          />
                         </div>
                         <div>
                           <label style={labelStyle}>Date limite de levée</label>
@@ -984,15 +982,12 @@ export default function NouveauCompteRenduPage() {
                       </div>
                       <div>
                         <label style={labelStyle}>Responsable</label>
-                        <div style={{ position: 'relative' }}>
-                          <select value={d.responsable} onChange={(e) => updateDecision(d.id, 'responsable', e.target.value)}
-                            style={{ background: '#111110', border: '1px solid #1E1E1C', borderRadius: '8px', padding: '8px 32px 8px 12px', color: d.responsable ? '#F0EDE6' : '#8A8880', fontSize: '13px', width: '100%', appearance: 'none', WebkitAppearance: 'none', cursor: 'pointer', outline: 'none', fontFamily: 'var(--font-dm-sans), sans-serif' } as React.CSSProperties}
-                            onFocus={focus} onBlur={blur}>
-                            <option value="">— Sélectionner —</option>
-                            {allIntervenants.map(a => <option key={a.value} value={a.value} style={{ backgroundColor: '#111110' }}>{a.label}</option>)}
-                          </select>
-                          <svg style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} width="12" height="8" viewBox="0 0 12 8" fill="none"><path d="M1 1l5 5 5-5" stroke="#8A8880" strokeWidth="1.5" strokeLinecap="round" /></svg>
-                        </div>
+                        <ArtisanAutocomplete
+                          value={d.responsable}
+                          onChange={(v) => updateDecision(d.id, 'responsable', v)}
+                          options={allIntervenants}
+                          placeholder="— Sélectionner —"
+                        />
                       </div>
                       <div>
                         <label style={labelStyle}>Échéance</label>
