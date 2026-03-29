@@ -42,7 +42,8 @@ export async function POST(req: NextRequest) {
     assurance_contrat: profileData.assurance_contrat,
   }
 
-  const buffer = await renderToBuffer(React.createElement(ContratMoeDocument, { profile }))
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const buffer = await renderToBuffer(React.createElement(ContratMoeDocument, { profile }) as any)
   const societe = profile.societe
 
   const { error: sendError } = await resend.emails.send({

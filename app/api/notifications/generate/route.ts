@@ -47,7 +47,7 @@ export async function POST() {
     .lte('date_emission', sevenDaysAgo)
 
   for (const d of devisEnvoyes ?? []) {
-    const lien = `/dashboard/comptabilite?tab=devis`
+    const lien = `/dashboard/documents?tab=devis`
     if (!isDupe('relance_devis', lien + `&id=${d.id}`)) {
       const jours = Math.floor(
         (Date.now() - new Date(d.date_emission).getTime()) / 86400000
@@ -57,7 +57,7 @@ export async function POST() {
         type: 'relance_devis',
         titre: `Relancer ${d.client_nom} — Devis ${d.numero}`,
         message: `Le devis ${d.numero} envoyé à ${d.client_nom} est sans réponse depuis ${jours} jours.`,
-        lien: `/dashboard/comptabilite?tab=devis&id=${d.id}`,
+        lien: `/dashboard/documents?tab=devis&id=${d.id}`,
       })
     }
   }
@@ -74,7 +74,7 @@ export async function POST() {
     .lte('date_emission', thirtyDaysAgo)
 
   for (const f of facturesImpayes ?? []) {
-    const lien = `/dashboard/comptabilite?tab=factures&id=${f.id}`
+    const lien = `/dashboard/documents?tab=factures&id=${f.id}`
     if (!isDupe('relance_facture', lien)) {
       const jours = Math.floor(
         (Date.now() - new Date(f.date_emission).getTime()) / 86400000

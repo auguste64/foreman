@@ -111,7 +111,7 @@ export default function DevisHonorairesDetailPage() {
     return (
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 12 }}>
         <p style={{ color: '#8A8880', fontFamily: 'var(--font-dm-sans), sans-serif', fontSize: 14 }}>Devis introuvable.</p>
-        <Link href="/dashboard/comptabilite" style={{ color: '#ea580c', textDecoration: 'none', fontFamily: 'var(--font-dm-sans), sans-serif', fontSize: 13 }}>← Retour</Link>
+        <Link href="/dashboard/documents" style={{ color: '#ea580c', textDecoration: 'none', fontFamily: 'var(--font-dm-sans), sans-serif', fontSize: 13 }}>← Retour</Link>
       </div>
     )
   }
@@ -131,7 +131,7 @@ export default function DevisHonorairesDetailPage() {
       {/* ── Left: controls ── */}
       <div style={{ flex: '0 0 280px', minWidth: 280, overflowY: 'auto', padding: '40px 24px', borderRight: '1px solid #1E1E1C', display: 'flex', flexDirection: 'column', gap: 20 }}>
         <div>
-          <Link href="/dashboard/comptabilite" style={{ fontSize: 12, color: '#8A8880', textDecoration: 'none', fontFamily: 'var(--font-dm-sans), sans-serif' }}>
+          <Link href="/dashboard/documents" style={{ fontSize: 12, color: '#8A8880', textDecoration: 'none', fontFamily: 'var(--font-dm-sans), sans-serif' }}>
             ← Retour
           </Link>
           <h1 style={{ fontFamily: 'var(--font-syne), sans-serif', fontSize: 18, fontWeight: 700, color: '#F0EDE6', margin: '14px 0 4px' }}>

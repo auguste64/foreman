@@ -61,7 +61,7 @@ export default function ContratDetailPage() {
     setDeleting(true)
     const supabase = createClient()
     await supabase.from('contrats').delete().eq('id', id)
-    router.push('/dashboard/contrats')
+    router.push('/dashboard/documents')
   }
 
   if (loading) {
@@ -76,7 +76,7 @@ export default function ContratDetailPage() {
     return (
       <div style={{ flex: 1, padding: '40px' }}>
         <p style={{ color: '#8A8880', fontSize: '14px', fontFamily: 'var(--font-dm-sans), sans-serif' }}>Contrat introuvable.</p>
-        <Link href="/dashboard/contrats" style={{ color: '#ea580c', fontSize: '14px', textDecoration: 'none' }}>
+        <Link href="/dashboard/documents" style={{ color: '#ea580c', fontSize: '14px', textDecoration: 'none' }}>
           ← Retour aux contrats
         </Link>
       </div>
@@ -96,7 +96,7 @@ export default function ContratDetailPage() {
       <div style={{ maxWidth: '720px' }}>
 
         {/* Breadcrumb */}
-        <Link href="/dashboard/contrats" style={{ color: '#8A8880', fontSize: '13px', textDecoration: 'none', fontFamily: 'var(--font-dm-sans), sans-serif' }}>
+        <Link href="/dashboard/documents" style={{ color: '#8A8880', fontSize: '13px', textDecoration: 'none', fontFamily: 'var(--font-dm-sans), sans-serif' }}>
           ← Contrats
         </Link>
 

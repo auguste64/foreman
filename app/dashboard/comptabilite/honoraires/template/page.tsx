@@ -169,7 +169,7 @@ export default function HonorairesTemplatePage() {
 
         {/* Header */}
         <div>
-          <Link href="/dashboard/comptabilite" style={{ fontSize: 12, color: '#8A8880', textDecoration: 'none', fontFamily: 'var(--font-dm-sans), sans-serif' }}>
+          <Link href="/dashboard/documents" style={{ fontSize: 12, color: '#8A8880', textDecoration: 'none', fontFamily: 'var(--font-dm-sans), sans-serif' }}>
             ← Retour à la comptabilité
           </Link>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 16 }}>

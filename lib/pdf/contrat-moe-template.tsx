@@ -206,7 +206,7 @@ export function ContratMoeDocument({ profile }: { profile: CgvProfile }) {
             <Text style={S.label}>Montant TTC :</Text>
             <Text style={S.value}>_______________ € TTC</Text>
           </View>
-          <Text style={S.paragraph} style={{ ...S.paragraph, marginTop: 8 }}>
+          <Text style={{ ...S.paragraph, marginTop: 8 }}>
             Les modalités de règlement et l'échéancier détaillé sont définis en annexe.
           </Text>
 

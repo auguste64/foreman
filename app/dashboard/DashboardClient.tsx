@@ -13,7 +13,7 @@ const NAV_ITEMS: { id: string; label: string; icon: string; href: string; separa
   { id: 'dashboard',      label: 'Tableau de bord', icon: '\u{1F3E0}',          href: '/dashboard' },
   { id: 'chantiers',      label: 'Chantiers',        icon: '\u{1F3D7}\uFE0F',   href: '/dashboard/chantiers' },
   { id: 'comptes-rendus', label: 'Comptes rendus',   icon: '\u{1F4CB}',         href: '/dashboard/comptes-rendus' },
-  { id: 'contrats',       label: 'Contrats',           icon: '\u{1F4DC}',         href: '/dashboard/contrats' },
+  { id: 'contrats',       label: 'Contrats',           icon: '\u{1F4DC}',         href: '/dashboard/documents' },
   { id: 'artisans',       label: 'Artisans',          icon: '\u{1F477}',         href: '/dashboard/artisans' },
   { id: 'planning',       label: 'Planning',          icon: '\u{1F4C5}',         href: '/dashboard/planning' },
   { id: 'finances',       label: 'Finances',           icon: '\u{1F4B0}',         href: '/dashboard/finances' },
@@ -250,7 +250,7 @@ export default function DashboardClient({
       color: '#ea580c',
       desc: `${devisAcceptes.count} devis accepté${devisAcceptes.count !== 1 ? 's' : ''}`,
       hint: null,
-      href: '/dashboard/comptabilite?tab=devis&statut=accepte',
+      href: '/dashboard/documents?tab=devis&statut=accepte',
     },
     {
       label: 'IMPAYÉS',

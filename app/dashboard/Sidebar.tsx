@@ -7,7 +7,6 @@ import { Syne } from 'next/font/google'
 import { createClient } from '@/lib/supabase/client'
 import { usePlan } from '@/lib/usePlan'
 import { useIsMobile } from '@/lib/useIsMobile'
-import { FileText } from 'lucide-react'
 import {
   getUnreadNotifications,
   markNotificationRead,
@@ -37,19 +36,17 @@ function GearIconHoverable() {
   )
 }
 
-type NavItem = { href: string; label: string; icon?: React.ReactNode; requiresComplet?: boolean; id?: string }
+type NavItem = { href: string; label: string; requiresComplet?: boolean; id?: string }
 
 const navItems: NavItem[] = [
   { href: '/dashboard', label: 'Tableau de bord' },
   { href: '/dashboard/chantiers', label: 'Chantiers', id: 'nav-chantiers' },
   { href: '/dashboard/comptes-rendus', label: 'Comptes rendus', id: 'nav-comptes-rendus' },
-  { href: '/dashboard/contrats', label: 'Contrats' },
-  { href: '/dashboard/comptabilite', label: 'Comptabilité', requiresComplet: true, id: 'nav-comptabilite' },
+  { href: '/dashboard/documents', label: 'Documents', requiresComplet: true, id: 'nav-documents' },
   { href: '/dashboard/finances', label: 'Analyse', requiresComplet: true },
   { href: '/dashboard/artisans', label: 'Artisans', id: 'nav-artisans' },
   { href: '/dashboard/clients', label: 'Clients' },
   { href: '/dashboard/planning', label: 'Planning', id: 'nav-planning' },
-  { href: '/dashboard/documents', label: 'Documents', icon: <FileText size={14} /> },
   { href: '/dashboard/parametres', label: 'Paramètres' },
 ]
 
@@ -204,12 +201,11 @@ export default function Sidebar({ email }: { email: string }) {
           const active = pathname === item.href || (item.href !== '/dashboard' && pathname.startsWith(item.href))
           return (
             <Link key={item.href} href={item.href} id={item.id}
-              style={{ display: 'flex', alignItems: 'center', gap: item.icon ? 8 : 0, padding: '10px 16px', borderRadius: 8, fontSize: 14, fontWeight: 500, color: active ? '#ea580c' : '#F0EDE6', background: active ? 'rgba(249,115,22,0.08)' : 'transparent', textDecoration: 'none', transition: 'all 0.2s ease', fontFamily: 'var(--font-syne)', borderLeft: active ? '3px solid #ea580c' : '3px solid transparent' }}
+              style={{ display: 'flex', alignItems: 'center', gap: 0, padding: '10px 16px', borderRadius: 8, fontSize: 14, fontWeight: 500, color: active ? '#ea580c' : '#F0EDE6', background: active ? 'rgba(249,115,22,0.08)' : 'transparent', textDecoration: 'none', transition: 'all 0.2s ease', fontFamily: 'var(--font-syne)', borderLeft: active ? '3px solid #ea580c' : '3px solid transparent' }}
               onMouseEnter={e => { if (!active) { e.currentTarget.style.color = '#ea580c'; e.currentTarget.style.background = 'rgba(249,115,22,0.06)'; e.currentTarget.style.paddingLeft = '20px' } }}
               onMouseLeave={e => { if (!active) { e.currentTarget.style.color = '#F0EDE6'; e.currentTarget.style.background = 'transparent'; e.currentTarget.style.paddingLeft = '16px' } }}
             >
-              {item.icon && <span style={{ opacity: active ? 1 : 0.5, flexShrink: 0 }}>{item.icon}</span>}
-              <span style={{ flex: 1 }}>{item.label}</span>
+<span style={{ flex: 1 }}>{item.label}</span>
               {item.requiresComplet && !isComplet && (
                 <span style={{ background: '#1E1E1C', color: '#ea580c', fontSize: '0.6rem', fontWeight: 600, padding: '2px 6px', borderRadius: '4px', flexShrink: 0 }}>Pro</span>
               )}

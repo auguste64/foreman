@@ -90,8 +90,8 @@ function fmtDate(iso: string | null) {
   return new Date(iso).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' })
 }
 
-export default function DocumentsPage() {
-  const [tab, setTab] = useState<Tab>('devis')
+export function ComptabiliteContent({ defaultTab: defaultTabProp = 'devis' }: { defaultTab?: Tab }) {
+  const [tab, setTab] = useState<Tab>(defaultTabProp)
   const [devis, setDevis] = useState<DevisDoc[]>([])
   const [factures, setFactures] = useState<FactureDoc[]>([])
   const [avoirs, setAvoirs] = useState<AvoirDoc[]>([])
@@ -108,6 +108,9 @@ export default function DocumentsPage() {
   const [clientsUniques, setClientsUniques] = useState<string[]>([])
   const [addClientListOpen, setAddClientListOpen] = useState(false)
 
+
+  // Sync inner tab when parent changes outer tab
+  useEffect(() => { setTab(defaultTabProp) }, [defaultTabProp])
 
   useEffect(() => {
     async function load() {
@@ -430,7 +433,7 @@ export default function DocumentsPage() {
 
         {/* Tabs */}
         <div style={{ display: 'flex', gap: 0, marginBottom: 20, borderBottom: '1px solid #1E1E1C', alignItems: 'center' }}>
-          {(['devis', 'factures', 'acomptes', 'honoraires', 'avoirs'] as Tab[]).map(t => {
+          {(['devis', 'factures', 'honoraires', 'acomptes', 'avoirs'] as Tab[]).map(t => {
             const active = tab === t
             return (
               <button
@@ -797,3 +800,6 @@ function StatutSelect({ options, value, onChange }: {
     </div>
   )
 }
+
+// Default export keeps the standalone /dashboard/comptabilite route working
+export default ComptabiliteContent

@@ -243,7 +243,7 @@ export default function NouveauDevisHonorairesPage() {
 
         {/* Header */}
         <div>
-          <Link href="/dashboard/comptabilite?tab=honoraires" style={{ fontSize: 12, color: '#8A8880', textDecoration: 'none', fontFamily: 'var(--font-dm-sans), sans-serif' }}>
+          <Link href="/dashboard/documents?tab=honoraires" style={{ fontSize: 12, color: '#8A8880', textDecoration: 'none', fontFamily: 'var(--font-dm-sans), sans-serif' }}>
             ← Retour
           </Link>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 16 }}>
@@ -433,7 +433,7 @@ export default function NouveauDevisHonorairesPage() {
           <button onClick={handleSave} disabled={saving} style={{ padding: '12px 28px', backgroundColor: '#ea580c', color: '#0D0D0B', border: 'none', borderRadius: 8, fontSize: 14, fontWeight: 700, cursor: saving ? 'wait' : 'pointer', fontFamily: 'var(--font-dm-sans), sans-serif' }}>
             {saving ? 'Enregistrement…' : 'Enregistrer le devis'}
           </button>
-          <Link href="/dashboard/comptabilite" style={{ padding: '12px 20px', backgroundColor: 'transparent', color: '#8A8880', border: '1px solid #1E1E1C', borderRadius: 8, fontSize: 14, textDecoration: 'none', fontFamily: 'var(--font-dm-sans), sans-serif', display: 'inline-flex', alignItems: 'center' }}>
+          <Link href="/dashboard/documents" style={{ padding: '12px 20px', backgroundColor: 'transparent', color: '#8A8880', border: '1px solid #1E1E1C', borderRadius: 8, fontSize: 14, textDecoration: 'none', fontFamily: 'var(--font-dm-sans), sans-serif', display: 'inline-flex', alignItems: 'center' }}>
             Annuler
           </Link>
         </div>
