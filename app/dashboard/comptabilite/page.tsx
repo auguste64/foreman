@@ -6,6 +6,7 @@ import { Settings } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { formatEurDoc } from '@/lib/supabase/documents'
 import type { DevisDoc, FactureDoc, AvoirDoc } from '@/lib/supabase/documents'
+import { clientDisplayName } from '@/lib/supabase/clients'
 import { toast } from '@/components/Toast'
 import CustomSelect from '@/components/CustomSelect'
 import SortPills from '@/components/SortPills'
@@ -22,7 +23,8 @@ type AcompteDoc = {
   statut: string
   client_nom: string
   objet: string | null
-  montant_ttc: number
+  total_ttc: number | null
+  acompte_percent: number | null
   date_emission: string
   chantier_id: string | null
 }
@@ -100,7 +102,7 @@ export default function DocumentsPage() {
   const [hasSiret, setHasSiret] = useState(true)
   const [loading, setLoading] = useState(true)
   const [sort, setSort] = useState<'date_desc' | 'date_asc' | 'montant_desc' | 'montant_asc' | 'statut'>('date_desc')
-  const [addClientModal, setAddClientModal] = useState<{ devisId: string } | null>(null)
+  const [addClientModal, setAddClientModal] = useState<{ docId: string; docType: 'devis' | 'factures' | 'acomptes' | 'honoraires' } | null>(null)
   const [addClientNom, setAddClientNom] = useState('')
   const [savingClient, setSavingClient] = useState(false)
   const [clientsUniques, setClientsUniques] = useState<string[]>([])
@@ -115,9 +117,9 @@ export default function DocumentsPage() {
 
       const [dr, fr, ar, acr, cr, er, hor] = await Promise.all([
         supabase.from('devis').select('*').eq('user_id', user.id).order('created_at', { ascending: false }),
-        supabase.from('factures').select('*').eq('user_id', user.id).order('created_at', { ascending: false }),
+        supabase.from('factures').select('*').eq('user_id', user.id).neq('type', 'acompte').order('created_at', { ascending: false }),
         supabase.from('avoirs').select('*').eq('user_id', user.id).order('created_at', { ascending: false }),
-        supabase.from('acomptes').select('*').eq('user_id', user.id).order('created_at', { ascending: false }),
+        supabase.from('factures').select('*').eq('user_id', user.id).eq('type', 'acompte').order('created_at', { ascending: false }),
         supabase.from('chantiers').select('id, nom').eq('user_id', user.id).order('nom'),
         supabase.from('entreprise_infos').select('siret').eq('user_id', user.id).single(),
         supabase.from('devis_honoraires').select('id, user_id, numero, statut, client_nom, date_devis, total_ht, created_at').eq('user_id', user.id).order('created_at', { ascending: false }),
@@ -140,17 +142,16 @@ export default function DocumentsPage() {
     setAddClientListOpen(false)
     async function fetchClients() {
       const supabase = createClient()
-      const [ch, dv, fa] = await Promise.all([
-        supabase.from('chantiers').select('client').not('client', 'is', null).neq('client', ''),
-        supabase.from('devis').select('client_nom').not('client_nom', 'is', null).neq('client_nom', ''),
-        supabase.from('factures').select('client_nom').not('client_nom', 'is', null).neq('client_nom', ''),
-      ])
-      const all = [
-        ...(ch.data ?? []).map((r: { client: string }) => r.client),
-        ...(dv.data ?? []).map((r: { client_nom: string }) => r.client_nom),
-        ...(fa.data ?? []).map((r: { client_nom: string }) => r.client_nom),
-      ]
-      const uniques = [...new Set(all)].sort()
+      const { data, error } = await supabase
+        .from('clients')
+        .select('type, prenom, nom, entreprise_nom')
+        .order('created_at', { ascending: false })
+      console.log('[addClientModal] clients raw:', data, 'error:', error)
+      const names = (data ?? [])
+        .map(c => clientDisplayName(c as Parameters<typeof clientDisplayName>[0]))
+        .filter(n => n && n !== '—')
+      const uniques = [...new Set(names)].sort()
+      console.log('[addClientModal] clients uniques:', uniques)
       setClientsUniques(uniques)
     }
     fetchClients()
@@ -169,12 +170,12 @@ export default function DocumentsPage() {
     })
   }
   const filteredDevis     = applySort(selectedChantier ? devis.filter(d => d.chantier_id === selectedChantier)     : devis)
-  const filteredFactures  = applySort(selectedChantier ? factures.filter(f => f.chantier_id === selectedChantier)  : factures)
+  const filteredFactures  = applySort((selectedChantier ? factures.filter(f => f.chantier_id === selectedChantier) : factures).filter(f => (f as FactureDoc & { type?: string }).type !== 'acompte'))
   const filteredAvoirs    = applySort(selectedChantier ? avoirs.filter(a => {
     const facture = factures.find(f => f.id === a.facture_id)
     return facture?.chantier_id === selectedChantier
   }) : avoirs)
-  const filteredAcomptes  = applySort(selectedChantier ? acomptes.filter(a => a.chantier_id === selectedChantier)  : acomptes)
+  const filteredAcomptes  = applySort(selectedChantier ? acomptes.filter(a => a.chantier_id === selectedChantier) : acomptes)
 
   // Chantier doc counts (computed from loaded data)
   function chantierCount(id: string) {
@@ -220,8 +221,21 @@ export default function DocumentsPage() {
     setSavingClient(true)
     try {
       const supabase = createClient()
-      await supabase.from('devis').update({ client_nom: addClientNom.trim() }).eq('id', addClientModal.devisId)
-      setDevis(prev => prev.map(d => d.id === addClientModal.devisId ? { ...d, client_nom: addClientNom.trim() } : d))
+      const { docId, docType } = addClientModal
+      const nom = addClientNom.trim()
+      if (docType === 'devis') {
+        await supabase.from('devis').update({ client_nom: nom }).eq('id', docId)
+        setDevis(prev => prev.map(d => d.id === docId ? { ...d, client_nom: nom } : d))
+      } else if (docType === 'factures') {
+        await supabase.from('factures').update({ client_nom: nom }).eq('id', docId)
+        setFactures(prev => prev.map(f => f.id === docId ? { ...f, client_nom: nom } : f))
+      } else if (docType === 'acomptes') {
+        await supabase.from('factures').update({ client_nom: nom }).eq('id', docId)
+        setAcomptes(prev => prev.map(a => a.id === docId ? { ...a, client_nom: nom } : a))
+      } else if (docType === 'honoraires') {
+        await supabase.from('devis_honoraires').update({ client_nom: nom }).eq('id', docId)
+        setHonoraires(prev => prev.map(h => h.id === docId ? { ...h, client_nom: nom } : h))
+      }
       toast.success('Client ajouté')
       setAddClientModal(null)
       setAddClientNom('')
@@ -416,15 +430,17 @@ export default function DocumentsPage() {
 
         {/* Tabs */}
         <div style={{ display: 'flex', gap: 0, marginBottom: 20, borderBottom: '1px solid #1E1E1C', alignItems: 'center' }}>
-          {(['devis', 'factures', 'honoraires', 'avoirs', 'acomptes'] as Tab[]).map(t => {
+          {(['devis', 'factures', 'acomptes', 'honoraires', 'avoirs'] as Tab[]).map(t => {
             const active = tab === t
             return (
               <button
                 key={t}
                 onClick={() => setTab(t)}
-                style={{ padding: '10px 18px', fontSize: 13, fontWeight: 500, fontFamily: 'var(--font-dm-sans), sans-serif', background: 'transparent', border: 'none', borderBottom: active ? '2px solid #ea580c' : '2px solid transparent', color: active ? '#ea580c' : '#8A8880', cursor: 'pointer', marginBottom: -1, transition: 'color 0.15s' }}
+                style={{ padding: '10px 18px', fontSize: active ? 16 : 14, fontWeight: active ? 600 : 500, fontFamily: 'var(--font-dm-sans), sans-serif', background: 'transparent', border: 'none', borderBottom: active ? '2px solid #ea580c' : '2px solid transparent', color: active ? '#ea580c' : '#F0EDE6', opacity: active ? 1 : 0.6, cursor: 'pointer', marginBottom: -1, transition: 'color 0.15s, opacity 0.15s' }}
+                onMouseEnter={e => { if (!active) { e.currentTarget.style.opacity = '1'; e.currentTarget.style.color = '#F0EDE6' } }}
+                onMouseLeave={e => { if (!active) { e.currentTarget.style.opacity = '0.6'; e.currentTarget.style.color = '#F0EDE6' } }}
               >
-                {tabLabels[t]} {!loading && <span style={{ fontSize: 11, opacity: 0.7 }}>({tabCounts[t]})</span>}
+                {tabLabels[t]} {!loading && <span style={{ fontSize: active ? 13 : 12, color: 'inherit' }}>({tabCounts[t]})</span>}
               </button>
             )
           })}
@@ -469,10 +485,12 @@ export default function DocumentsPage() {
                         <td style={tdStyle}>
                           {d.client_nom || (
                             <button
-                              onClick={e => { e.stopPropagation(); setAddClientNom(''); setAddClientModal({ devisId: d.id }) }}
-                              style={{ fontSize: 11, padding: '4px 10px', borderRadius: 6, border: 'none', background: 'rgba(234, 88, 12, 0.12)', color: '#ea580c', cursor: 'pointer', fontFamily: 'var(--font-dm-sans)', fontWeight: 500, letterSpacing: '0.02em', whiteSpace: 'nowrap' }}
+                              onClick={e => { e.stopPropagation(); setAddClientNom(''); setAddClientModal({ docId: d.id, docType: 'devis' }) }}
+                              style={{ fontSize: 12, padding: '2px 10px', borderRadius: 999, border: '1px solid #ea580c', background: 'transparent', color: '#ea580c', cursor: 'pointer', fontFamily: 'var(--font-dm-sans)', fontWeight: 500, whiteSpace: 'nowrap' }}
+                              onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = '#ea580c15' }}
+                              onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'transparent' }}
                             >
-                              + Ajouter client
+                              ＋ Client
                             </button>
                           )}
                         </td>
@@ -523,7 +541,16 @@ export default function DocumentsPage() {
                             )}
                           </div>
                         </td>
-                        <td style={tdStyle}>{f.client_nom || '—'}</td>
+                        <td style={tdStyle}>{f.client_nom || (
+                            <button
+                              onClick={e => { e.stopPropagation(); setAddClientNom(''); setAddClientModal({ docId: f.id, docType: 'factures' }) }}
+                              style={{ fontSize: 12, padding: '2px 10px', borderRadius: 999, border: '1px solid #ea580c', background: 'transparent', color: '#ea580c', cursor: 'pointer', fontFamily: 'var(--font-dm-sans)', fontWeight: 500, whiteSpace: 'nowrap' }}
+                              onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = '#ea580c15' }}
+                              onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'transparent' }}
+                            >
+                              ＋ Client
+                            </button>
+                          )}</td>
                         <td style={{ ...tdStyle, color: '#8A8880', maxWidth: 160, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{f.objet || '—'}</td>
                         <td style={{ ...tdStyle, fontWeight: 600, color: '#ea580c' }}>{formatEurDoc(f.total_ttc ?? 0)}</td>
                         <td style={tdStyle}><Badge map={FACTURE_STATUT} statut={f.statut} /></td>
@@ -596,9 +623,18 @@ export default function DocumentsPage() {
                         onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
                       >
                         <td style={{ ...tdStyle, fontFamily: 'var(--font-syne), sans-serif', fontWeight: 600, fontSize: 12 }}>{a.numero}</td>
-                        <td style={tdStyle}>{a.client_nom || '—'}</td>
+                        <td style={tdStyle}>{a.client_nom || (
+                            <button
+                              onClick={e => { e.stopPropagation(); setAddClientNom(''); setAddClientModal({ docId: a.id, docType: 'acomptes' }) }}
+                              style={{ fontSize: 12, padding: '2px 10px', borderRadius: 999, border: '1px solid #ea580c', background: 'transparent', color: '#ea580c', cursor: 'pointer', fontFamily: 'var(--font-dm-sans)', fontWeight: 500, whiteSpace: 'nowrap' }}
+                              onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = '#ea580c15' }}
+                              onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'transparent' }}
+                            >
+                              ＋ Client
+                            </button>
+                          )}</td>
                         <td style={{ ...tdStyle, color: '#8A8880', maxWidth: 160, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{a.objet || '—'}</td>
-                        <td style={{ ...tdStyle, fontWeight: 600, color: '#60a5fa' }}>{formatEurDoc(a.montant_ttc ?? 0)}</td>
+                        <td style={{ ...tdStyle, fontWeight: 600, color: '#60a5fa' }}>{formatEurDoc(a.total_ttc ?? 0)}</td>
                         <td style={tdStyle}><Badge map={ACOMPTE_STATUT} statut={a.statut} /></td>
                         <td style={{ ...tdStyle, color: '#8A8880' }}>{fmtDate(a.date_emission)}</td>
                         <td style={tdStyle}>
@@ -631,7 +667,16 @@ export default function DocumentsPage() {
                         onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
                       >
                         <td style={{ ...tdStyle, fontFamily: 'var(--font-syne), sans-serif', fontWeight: 600, fontSize: 12 }}>{h.numero}</td>
-                        <td style={tdStyle}>{h.client_nom || '—'}</td>
+                        <td style={tdStyle}>{h.client_nom || (
+                            <button
+                              onClick={e => { e.stopPropagation(); setAddClientNom(''); setAddClientModal({ docId: h.id, docType: 'honoraires' }) }}
+                              style={{ fontSize: 12, padding: '2px 10px', borderRadius: 999, border: '1px solid #ea580c', background: 'transparent', color: '#ea580c', cursor: 'pointer', fontFamily: 'var(--font-dm-sans)', fontWeight: 500, whiteSpace: 'nowrap' }}
+                              onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = '#ea580c15' }}
+                              onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'transparent' }}
+                            >
+                              ＋ Client
+                            </button>
+                          )}</td>
                         <td style={{ ...tdStyle, color: '#8A8880' }}>{fmtDate(h.date_devis)}</td>
                         <td style={{ ...tdStyle, fontWeight: 600, color: '#ea580c' }}>{formatEurDoc(h.total_ht ?? 0)}</td>
                         <td style={tdStyle}><Badge map={HONORAIRE_STATUT} statut={h.statut} /></td>

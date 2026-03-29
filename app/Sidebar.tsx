@@ -2,6 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
+import { FileText, Settings } from 'lucide-react'
 
 const navItems = [
   { href: '/dashboard', label: 'Tableau de bord', emoji: '🏠' },
@@ -63,6 +64,18 @@ export default function Sidebar({ email }: { email: string }) {
         <div className="border-t border-[#1E1E1C] my-2" />
 
         <Link
+          href="/dashboard/documents"
+          className={`group flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200 hover:bg-[rgba(249,115,22,0.08)] hover:text-[#ea580c] hover:translate-x-1 ${
+            pathname === '/dashboard/documents'
+              ? 'bg-[rgba(249,115,22,0.1)] text-[#ea580c] shadow-[inset_3px_0_0_#ea580c]'
+              : 'text-[#7A7870]'
+          }`}
+        >
+          <FileText size={16} className="transition-transform duration-200 group-hover:scale-125" />
+          Documents
+        </Link>
+
+        <Link
           href="/dashboard/parametres"
           className={`group flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200 hover:bg-[rgba(249,115,22,0.08)] hover:text-[#ea580c] hover:translate-x-1 ${
             pathname === '/dashboard/parametres'
@@ -70,7 +83,7 @@ export default function Sidebar({ email }: { email: string }) {
               : 'text-[#7A7870]'
           }`}
         >
-          <span className="text-base transition-transform duration-200 group-hover:scale-125">⚙️</span>
+          <Settings size={16} className="transition-transform duration-200 group-hover:scale-125" />
           Paramètres
         </Link>
       </nav>

@@ -8,6 +8,16 @@ export type Profile = {
   adresse: string
   entreprise: string
   acompte_default_percent?: number | null
+  // Champs identité / CGV
+  societe?: string | null
+  siret?: string | null
+  tva_intracom?: string | null
+  code_ape?: string | null
+  email?: string | null
+  assurance_nom?: string | null
+  assurance_contrat?: string | null
+  ville?: string | null
+  code_postal?: string | null
 }
 
 export type UpsertProfileInput = Omit<Profile, 'id'>

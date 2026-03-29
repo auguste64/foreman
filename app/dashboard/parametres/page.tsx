@@ -51,9 +51,17 @@ export default function ParametresPage() {
     telephone: '',
     adresse: '',
     entreprise: '',
+    societe: '',
+    siret: '',
+    tva_intracom: '',
+    code_ape: '',
+    assurance_nom: '',
+    assurance_contrat: '',
+    ville: '',
+    code_postal: '',
   })
 
-  const [suggestions, setSuggestions] = useState<string[]>([])
+  const [suggestions, setSuggestions] = useState<{ label: string; city: string; postcode: string }[]>([])
   const [showSuggestions, setShowSuggestions] = useState(false)
   const adresseRef = useRef<HTMLDivElement>(null)
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -62,7 +70,6 @@ export default function ParametresPage() {
   const [savingPw, setSavingPw] = useState(false)
   const [pwError, setPwError] = useState<string | null>(null)
 
-  // Ferme la dropdown au clic extérieur
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
       if (adresseRef.current && !adresseRef.current.contains(e.target as Node)) {
@@ -81,9 +88,13 @@ export default function ParametresPage() {
       try {
         const res = await fetch(`https://api-adresse.data.gouv.fr/search/?q=${encodeURIComponent(value)}&limit=5`)
         const json = await res.json()
-        const labels: string[] = (json.features ?? []).map((f: { properties: { label: string } }) => f.properties.label)
-        setSuggestions(labels)
-        setShowSuggestions(labels.length > 0)
+        const items = (json.features ?? []).map((f: { properties: { label: string; city: string; postcode: string } }) => ({
+          label: f.properties.label,
+          city: f.properties.city,
+          postcode: f.properties.postcode,
+        }))
+        setSuggestions(items)
+        setShowSuggestions(items.length > 0)
       } catch {
         setShowSuggestions(false)
       }
@@ -105,6 +116,14 @@ export default function ParametresPage() {
           telephone: profile.telephone ?? '',
           adresse: profile.adresse ?? '',
           entreprise: profile.entreprise ?? '',
+          societe: profile.societe ?? '',
+          siret: profile.siret ?? '',
+          tva_intracom: profile.tva_intracom ?? '',
+          code_ape: profile.code_ape ?? '',
+          assurance_nom: profile.assurance_nom ?? '',
+          assurance_contrat: profile.assurance_contrat ?? '',
+          ville: profile.ville ?? '',
+          code_postal: profile.code_postal ?? '',
         })
       }
       setLoading(false)
@@ -118,7 +137,7 @@ export default function ParametresPage() {
     setSaveError(null)
     try {
       const supabase = createClient()
-      const ops: Promise<unknown>[] = [upsertProfile(userId, form)]
+      const ops: Promise<unknown>[] = [upsertProfile(userId, { ...form, email })]
       if (form.entreprise.trim()) {
         ops.push(
           Promise.resolve(
@@ -165,7 +184,7 @@ export default function ParametresPage() {
     setForm(prev => ({ ...prev, [key]: e.target.value }))
 
   return (
-    <div className="page-enter" style={{ flex: 1, padding: '40px', overflowY: 'auto', maxWidth: '640px' }}>
+    <div className="page-enter" style={{ flex: 1, padding: '40px', overflowY: 'auto', maxWidth: '720px' }}>
       <div style={{ marginBottom: '40px' }}>
         <h1 style={{ fontFamily: 'var(--font-syne), sans-serif', fontSize: '24px', fontWeight: 700, color: '#F0EDE6', margin: 0 }}>
           Paramètres
@@ -195,13 +214,43 @@ export default function ParametresPage() {
                 <input type="text" value={form.nom} onChange={field('nom')} style={inputStyle} onFocus={focus} onBlur={blur} placeholder="Dupont" />
               </div>
               <div>
+                <label style={labelStyle}>Société / Cabinet</label>
+                <input type="text" value={form.societe} onChange={field('societe')} style={inputStyle} onFocus={focus} onBlur={blur} placeholder="Atelier Dupont Architecture" />
+              </div>
+              <div>
                 <label style={labelStyle}>Téléphone</label>
                 <input type="text" value={form.telephone} onChange={field('telephone')} style={inputStyle} onFocus={focus} onBlur={blur} placeholder="+33 6 00 00 00 00" />
               </div>
+            </div>
+
+            {/* Séparateur */}
+            <div style={{ borderTop: '1px solid #1E1E1C', margin: '20px 0' }} />
+            <p style={{ fontSize: '11px', fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase' as const, color: '#8A8880', fontFamily: 'var(--font-dm-sans), sans-serif', margin: '0 0 16px' }}>
+              Identité juridique
+            </p>
+
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
               <div>
-                <label style={labelStyle}>Entreprise / Cabinet</label>
-                <input type="text" value={form.entreprise} onChange={field('entreprise')} style={inputStyle} onFocus={focus} onBlur={blur} placeholder="Architectes & Associés" />
+                <label style={labelStyle}>SIRET</label>
+                <input type="text" value={form.siret} onChange={field('siret')} style={inputStyle} onFocus={focus} onBlur={blur} placeholder="123 456 789 00012" />
               </div>
+              <div>
+                <label style={labelStyle}>Code APE</label>
+                <input type="text" value={form.code_ape} onChange={field('code_ape')} style={inputStyle} onFocus={focus} onBlur={blur} placeholder="7111Z" />
+              </div>
+              <div style={{ gridColumn: '1 / -1' }}>
+                <label style={labelStyle}>TVA intracommunautaire</label>
+                <input type="text" value={form.tva_intracom} onChange={field('tva_intracom')} style={inputStyle} onFocus={focus} onBlur={blur} placeholder="FR 12 345678900" />
+              </div>
+            </div>
+
+            {/* Séparateur */}
+            <div style={{ borderTop: '1px solid #1E1E1C', margin: '20px 0' }} />
+            <p style={{ fontSize: '11px', fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase' as const, color: '#8A8880', fontFamily: 'var(--font-dm-sans), sans-serif', margin: '0 0 16px' }}>
+              Coordonnées
+            </p>
+
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
               <div style={{ gridColumn: '1 / -1', position: 'relative' }} ref={adresseRef}>
                 <label style={labelStyle}>Adresse</label>
                 <input
@@ -211,7 +260,7 @@ export default function ParametresPage() {
                   style={inputStyle}
                   onFocus={focus}
                   onBlur={blur}
-                  placeholder="12 rue des Bâtisseurs, 75001 Paris"
+                  placeholder="12 rue des Bâtisseurs"
                   autoComplete="off"
                 />
                 {showSuggestions && suggestions.length > 0 && (
@@ -219,16 +268,27 @@ export default function ParametresPage() {
                     {suggestions.map((s, i) => (
                       <div
                         key={i}
-                        onMouseDown={() => { setForm(prev => ({ ...prev, adresse: s })); setShowSuggestions(false) }}
+                        onMouseDown={() => {
+                          setForm(prev => ({ ...prev, adresse: s.label, ville: s.city, code_postal: s.postcode }))
+                          setShowSuggestions(false)
+                        }}
                         style={{ padding: '10px 16px', fontSize: '14px', color: '#F0EDE6', fontFamily: 'var(--font-dm-sans), sans-serif', cursor: 'pointer', borderBottom: i < suggestions.length - 1 ? '1px solid #1E1E1C' : 'none' }}
                         onMouseEnter={e => { e.currentTarget.style.background = '#1E1E1C' }}
                         onMouseLeave={e => { e.currentTarget.style.background = 'transparent' }}
                       >
-                        {s}
+                        {s.label}
                       </div>
                     ))}
                   </div>
                 )}
+              </div>
+              <div>
+                <label style={labelStyle}>Ville</label>
+                <input type="text" value={form.ville} onChange={field('ville')} style={inputStyle} onFocus={focus} onBlur={blur} placeholder="Paris" />
+              </div>
+              <div>
+                <label style={labelStyle}>Code postal</label>
+                <input type="text" value={form.code_postal} onChange={field('code_postal')} style={inputStyle} onFocus={focus} onBlur={blur} placeholder="75001" />
               </div>
               <div style={{ gridColumn: '1 / -1' }}>
                 <label style={labelStyle}>Email</label>
@@ -238,6 +298,23 @@ export default function ParametresPage() {
                   disabled
                   style={{ ...inputStyle, color: '#7A7870', cursor: 'not-allowed', opacity: 0.7 }}
                 />
+              </div>
+            </div>
+
+            {/* Séparateur */}
+            <div style={{ borderTop: '1px solid #1E1E1C', margin: '20px 0' }} />
+            <p style={{ fontSize: '11px', fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase' as const, color: '#8A8880', fontFamily: 'var(--font-dm-sans), sans-serif', margin: '0 0 16px' }}>
+              Assurance professionnelle
+            </p>
+
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+              <div>
+                <label style={labelStyle}>Nom de l'assureur</label>
+                <input type="text" value={form.assurance_nom} onChange={field('assurance_nom')} style={inputStyle} onFocus={focus} onBlur={blur} placeholder="AXA, Allianz…" />
+              </div>
+              <div>
+                <label style={labelStyle}>N° de contrat</label>
+                <input type="text" value={form.assurance_contrat} onChange={field('assurance_contrat')} style={inputStyle} onFocus={focus} onBlur={blur} placeholder="RC-2024-XXXXX" />
               </div>
             </div>
 
@@ -254,7 +331,7 @@ export default function ParametresPage() {
                 onMouseEnter={e => { if (!saving) { e.currentTarget.style.transform = 'translateY(-1px)'; e.currentTarget.style.boxShadow = '0 0 20px rgba(249,115,22,0.4)' } }}
                 onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = 'none' }}
               >
-                {saving ? 'Sauvegarde...' : 'Sauvegarder'}
+                {saving ? 'Sauvegarde...' : 'Enregistrer'}
               </button>
             </div>
           </div>
