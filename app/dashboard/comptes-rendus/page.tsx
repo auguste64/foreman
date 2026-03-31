@@ -203,6 +203,11 @@ export default function ComptesRendusPage() {
                               Prochaine réunion : {new Date(cr.date_prochaine_visite).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}
                             </div>
                           )}
+                          {cr.date_prochaine_visite && new Date(cr.date_prochaine_visite) < new Date(new Date().toISOString().split('T')[0]) && (
+                            <span style={{ display: 'inline-block', marginTop: '4px', padding: '1px 7px', backgroundColor: 'rgba(220,38,38,0.15)', color: '#dc2626', borderRadius: '4px', fontSize: '11px', fontWeight: 600, fontFamily: 'var(--font-dm-sans), sans-serif' }}>
+                              En retard
+                            </span>
+                          )}
                         </div>
                         <button
                           onClick={e => handleDuplicate(cr, e)}

@@ -1,9 +1,11 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { createChantier } from '@/lib/supabase/chantiers'
+import { getClients, clientDisplayName } from '@/lib/supabase/clients'
+import type { Client } from '@/lib/supabase/clients'
 import { toast } from '@/components/Toast'
 import { DatePickerOverlay, formatDateDisplay, dateToStr } from '@/components/DatePicker'
 
@@ -18,6 +20,7 @@ const inputStyle: React.CSSProperties = {
   outline: 'none',
   fontFamily: 'var(--font-dm-sans), sans-serif',
   transition: 'border-color 0.15s',
+  boxSizing: 'border-box',
 }
 
 const labelStyle: React.CSSProperties = {
@@ -33,17 +36,25 @@ export default function NouveauChantierPage() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [showDatePicker, setShowDatePicker] = useState(false)
+  const [clients, setClients] = useState<Client[]>([])
+  const [clientMode, setClientMode] = useState<'select' | 'free'>('select')
 
   const [form, setForm] = useState({
     nom: '',
     adresse: '',
     client: '',
     date_debut: '',
-    statut: 'En cours' as const,
+    statut: 'En cours' as 'En cours' | 'En pause' | 'Terminé',
+    budget_estimatif: '' as string,
+    description: '',
   })
 
+  useEffect(() => {
+    getClients().then(setClients).catch(() => {})
+  }, [])
+
   function set(field: keyof typeof form) {
-    return (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) =>
+    return (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) =>
       setForm((prev) => ({ ...prev, [field]: e.target.value }))
   }
 
@@ -52,7 +63,15 @@ export default function NouveauChantierPage() {
     setError(null)
     setLoading(true)
     try {
-      await createChantier(form)
+      await createChantier({
+        nom: form.nom,
+        adresse: form.adresse,
+        client: form.client,
+        date_debut: form.date_debut,
+        statut: form.statut,
+        budget_estimatif: form.budget_estimatif !== '' ? Number(form.budget_estimatif) : null,
+        description: form.description || null,
+      })
       toast.success('Chantier créé')
       router.push('/dashboard/chantiers')
       router.refresh()
@@ -61,6 +80,9 @@ export default function NouveauChantierPage() {
       setLoading(false)
     }
   }
+
+  const focusBorder = (e: React.FocusEvent<HTMLElement>) => { (e.target as HTMLElement).style.borderColor = '#ea580c' }
+  const blurBorder  = (e: React.FocusEvent<HTMLElement>) => { (e.target as HTMLElement).style.borderColor = '#1E1E1C' }
 
   return (
     <div style={{ flex: 1, padding: '40px', overflowY: 'auto' }}>
@@ -99,6 +121,8 @@ export default function NouveauChantierPage() {
         }}
       >
         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+
+          {/* Nom */}
           <div>
             <label style={labelStyle}>Nom du chantier *</label>
             <input
@@ -108,11 +132,12 @@ export default function NouveauChantierPage() {
               required
               placeholder="Ex : Villa Dupont — Rénovation complète"
               style={inputStyle}
-              onFocus={(e) => (e.target.style.borderColor = '#ea580c')}
-              onBlur={(e) => (e.target.style.borderColor = '#1E1E1C')}
+              onFocus={focusBorder}
+              onBlur={blurBorder}
             />
           </div>
 
+          {/* Adresse */}
           <div>
             <label style={labelStyle}>Adresse *</label>
             <input
@@ -122,25 +147,70 @@ export default function NouveauChantierPage() {
               required
               placeholder="Ex : 12 rue de la Paix, 75001 Paris"
               style={inputStyle}
-              onFocus={(e) => (e.target.style.borderColor = '#ea580c')}
-              onBlur={(e) => (e.target.style.borderColor = '#1E1E1C')}
+              onFocus={focusBorder}
+              onBlur={blurBorder}
             />
           </div>
 
+          {/* Client */}
           <div>
             <label style={labelStyle}>Nom du client *</label>
-            <input
-              type="text"
-              value={form.client}
-              onChange={set('client')}
-              required
-              placeholder="Ex : M. et Mme Dupont"
-              style={inputStyle}
-              onFocus={(e) => (e.target.style.borderColor = '#ea580c')}
-              onBlur={(e) => (e.target.style.borderColor = '#1E1E1C')}
-            />
+            {clientMode === 'select' ? (
+              <select
+                value={form.client}
+                required
+                onChange={(e) => {
+                  if (e.target.value === '__new__') {
+                    setClientMode('free')
+                    setForm(prev => ({ ...prev, client: '' }))
+                  } else {
+                    setForm(prev => ({ ...prev, client: e.target.value }))
+                  }
+                }}
+                style={{ ...inputStyle, cursor: 'pointer', appearance: 'none', WebkitAppearance: 'none', colorScheme: 'dark', color: form.client ? '#F0EDE6' : '#8A8880' } as React.CSSProperties}
+                onFocus={focusBorder}
+                onBlur={blurBorder}
+              >
+                <option value="" style={{ backgroundColor: '#0D0D0B' }}>Sélectionner un client…</option>
+                {clients.map(c => {
+                  const name = clientDisplayName(c)
+                  return (
+                    <option key={c.id} value={name} style={{ backgroundColor: '#0D0D0B', color: '#F0EDE6' }}>
+                      {name}
+                    </option>
+                  )
+                })}
+                <option value="__new__" style={{ backgroundColor: '#0D0D0B', color: '#ea580c' }}>
+                  + Nouveau client (saisie libre)
+                </option>
+              </select>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                <input
+                  type="text"
+                  value={form.client}
+                  onChange={set('client')}
+                  required
+                  placeholder="Ex : M. et Mme Dupont"
+                  style={inputStyle}
+                  onFocus={focusBorder}
+                  onBlur={blurBorder}
+                  autoFocus
+                />
+                <button
+                  type="button"
+                  onClick={() => { setClientMode('select'); setForm(prev => ({ ...prev, client: '' })) }}
+                  style={{ alignSelf: 'flex-start', background: 'none', border: 'none', color: '#8A8880', fontSize: 12, cursor: 'pointer', fontFamily: 'var(--font-dm-sans), sans-serif', padding: 0 }}
+                  onMouseEnter={e => { e.currentTarget.style.color = '#ea580c' }}
+                  onMouseLeave={e => { e.currentTarget.style.color = '#8A8880' }}
+                >
+                  ← Choisir depuis la liste
+                </button>
+              </div>
+            )}
           </div>
 
+          {/* Date de début */}
           <div>
             <label style={labelStyle}>Date de début *</label>
             <button
@@ -155,6 +225,52 @@ export default function NouveauChantierPage() {
               </span>
               <span style={{ color: '#ea580c', fontSize: '12px' }}>▼</span>
             </button>
+          </div>
+
+          {/* Statut */}
+          <div>
+            <label style={labelStyle}>Statut initial</label>
+            <select
+              value={form.statut}
+              onChange={set('statut')}
+              style={{ ...inputStyle, cursor: 'pointer', appearance: 'none', WebkitAppearance: 'none', colorScheme: 'dark' } as React.CSSProperties}
+              onFocus={focusBorder}
+              onBlur={blurBorder}
+            >
+              <option value="En cours"  style={{ backgroundColor: '#0D0D0B' }}>En cours</option>
+              <option value="En pause"  style={{ backgroundColor: '#0D0D0B' }}>En pause</option>
+              <option value="Terminé"   style={{ backgroundColor: '#0D0D0B' }}>Terminé</option>
+            </select>
+          </div>
+
+          {/* Budget */}
+          <div>
+            <label style={labelStyle}>Budget estimatif (€)</label>
+            <input
+              type="number"
+              min="0"
+              step="1"
+              value={form.budget_estimatif}
+              onChange={set('budget_estimatif')}
+              placeholder="Ex : 85000"
+              style={inputStyle}
+              onFocus={focusBorder}
+              onBlur={blurBorder}
+            />
+          </div>
+
+          {/* Description */}
+          <div>
+            <label style={labelStyle}>Description</label>
+            <textarea
+              value={form.description}
+              onChange={set('description')}
+              rows={3}
+              placeholder="Nature des travaux, contexte, remarques…"
+              style={{ ...inputStyle, resize: 'vertical', lineHeight: 1.5 }}
+              onFocus={focusBorder}
+              onBlur={blurBorder}
+            />
           </div>
 
           {error && (
@@ -205,6 +321,7 @@ export default function NouveauChantierPage() {
           </div>
         </form>
       </div>
+
       {showDatePicker && (
         <DatePickerOverlay
           label="Date de début"

@@ -34,7 +34,7 @@ export default async function DashboardPage() {
     supabase
       .from('evenements')
       .select('id, titre, date_debut, chantier_id, chantiers(nom)')
-      .gte('date_debut', new Date().toISOString())
+      .gte('date_debut', new Date().toISOString().split('T')[0])
       .order('date_debut', { ascending: true })
       .limit(3),
   ])

@@ -8,6 +8,8 @@ export type Chantier = {
   client: string
   date_debut: string
   statut: 'En cours' | 'Terminé' | 'En pause'
+  budget_estimatif: number | null
+  description: string | null
   created_at: string
 }
 

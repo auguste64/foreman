@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react'
 import { createPortal } from 'react-dom'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import { createCompteRendu } from '@/lib/supabase/comptes-rendus'
@@ -150,8 +150,11 @@ export default function NouveauCompteRenduPage() {
   const [lotDatePicker, setLotDatePicker] = useState<{ lotId: string; field: 'debut' | 'fin' } | null>(null)
   const [reserveDatePicker, setReserveDatePicker] = useState<string | null>(null)
 
+  const searchParams = useSearchParams()
+  const initialChantierId = searchParams.get('chantier_id') ?? ''
+
   const [form, setForm] = useState({
-    chantier_id: '',
+    chantier_id: initialChantierId,
     date_visite: new Date().toISOString().split('T')[0],
     date_prochaine_visite: '',
     progression: 50,

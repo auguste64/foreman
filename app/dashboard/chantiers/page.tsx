@@ -179,11 +179,16 @@ export default function ChantiersPage() {
                     {new Date(c.date_debut).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}
                   </p>
 
-                  <div style={{ background: '#1E1E1C', borderRadius: '4px', height: '4px', overflow: 'hidden' }}>
-                    <div
-                      style={{ height: '100%', background: '#ea580c', borderRadius: '4px', width: '0%', transition: 'width 1s cubic-bezier(0.4, 0, 0.2, 1)' }}
-                      ref={(el) => { if (el) setTimeout(() => { el.style.width = avancement + '%' }, 100 + index * 80) }}
-                    />
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <div style={{ background: '#1E1E1C', borderRadius: '4px', height: '4px', overflow: 'hidden', flex: 1 }}>
+                      <div
+                        style={{ height: '100%', background: '#ea580c', borderRadius: '4px', width: '0%', transition: 'width 1s cubic-bezier(0.4, 0, 0.2, 1)' }}
+                        ref={(el) => { if (el) setTimeout(() => { el.style.width = avancement + '%' }, 100 + index * 80) }}
+                      />
+                    </div>
+                    <span style={{ fontSize: '11px', color: '#8A8880', fontFamily: 'var(--font-dm-sans), sans-serif', flexShrink: 0, minWidth: '28px', textAlign: 'right' }}>
+                      {avancement}%
+                    </span>
                   </div>
 
                 </div>

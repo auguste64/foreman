@@ -257,7 +257,7 @@ type Tab = 'profil' | 'securite' | 'cgv' | 'moe'
 const TABS: { id: Tab; label: string }[] = [
   { id: 'profil', label: 'Profil' },
   { id: 'securite', label: 'Sécurité' },
-  { id: 'cgv', label: 'CGV' },
+  { id: 'cgv', label: 'CGP' },
   { id: 'moe', label: 'Contrat MOE' },
 ]
 
@@ -653,9 +653,9 @@ function ParametresContent() {
                 <button
                   onClick={handleChangePassword}
                   disabled={savingPw}
-                  style={{ padding: '10px 24px', backgroundColor: 'transparent', color: '#F0EDE6', border: '1px solid #1E1E1C', borderRadius: '8px', fontSize: '14px', fontWeight: 500, cursor: savingPw ? 'not-allowed' : 'pointer', fontFamily: 'var(--font-dm-sans), sans-serif', transition: 'all 0.2s ease' }}
-                  onMouseEnter={e => { if (!savingPw) { e.currentTarget.style.borderColor = '#ea580c'; e.currentTarget.style.color = '#ea580c' } }}
-                  onMouseLeave={e => { e.currentTarget.style.borderColor = '#1E1E1C'; e.currentTarget.style.color = '#F0EDE6' }}
+                  style={{ padding: '10px 24px', backgroundColor: '#ea580c', color: '#0D0D0B', border: 'none', borderRadius: '8px', fontSize: '14px', fontWeight: 600, cursor: savingPw ? 'not-allowed' : 'pointer', fontFamily: 'var(--font-dm-sans), sans-serif', transition: 'all 0.2s ease', opacity: savingPw ? 0.7 : 1 }}
+                  onMouseEnter={e => { if (!savingPw) e.currentTarget.style.backgroundColor = '#c2410c' }}
+                  onMouseLeave={e => { e.currentTarget.style.backgroundColor = '#ea580c' }}
                 >
                   {savingPw ? 'Modification...' : 'Changer le mot de passe'}
                 </button>
@@ -669,10 +669,10 @@ function ParametresContent() {
           <div>
             <div style={{ marginBottom: '24px' }}>
               <h2 style={{ fontFamily: 'var(--font-syne), sans-serif', fontSize: '18px', fontWeight: 700, color: '#F0EDE6', margin: '0 0 6px' }}>
-                Conditions Générales de Vente
+                Conditions Générales de Prestation
               </h2>
               <p style={{ color: '#8A8880', fontSize: '13px', margin: 0, fontFamily: 'var(--font-dm-sans), sans-serif' }}>
-                Ces clauses apparaîtront dans vos CGV générées en PDF.
+                Ces clauses apparaîtront dans vos CGP générées en PDF.
               </p>
             </div>
             <ClauseEditor type="cgv" />

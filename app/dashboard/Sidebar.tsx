@@ -24,6 +24,26 @@ const GearIcon = ({ size = 14, color = '#8A8880' }: { size?: number; color?: str
   </svg>
 )
 
+function EmailAvatarTooltip({ email, initial }: { email: string; initial: string }) {
+  const [hovered, setHovered] = useState(false)
+  return (
+    <div
+      style={{ position: 'relative', display: 'flex', alignItems: 'center', padding: '4px 12px' }}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+    >
+      <div style={{ width: 32, height: 32, borderRadius: '50%', backgroundColor: '#ea580c', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'var(--font-syne)', fontWeight: 700, fontSize: 13, color: '#fff', cursor: 'default', flexShrink: 0 }}>
+        {initial}
+      </div>
+      {hovered && (
+        <div style={{ position: 'absolute', bottom: 'calc(100% + 6px)', left: 12, backgroundColor: '#1E1E1C', border: '1px solid #2A2A27', color: '#F0EDE6', fontSize: 11, padding: '6px 10px', borderRadius: 6, whiteSpace: 'nowrap', fontFamily: 'var(--font-dm-sans), sans-serif', zIndex: 100, boxShadow: '0 4px 16px rgba(0,0,0,0.5)', pointerEvents: 'none' }}>
+          {email}
+        </div>
+      )}
+    </div>
+  )
+}
+
 function GearIconHoverable() {
   return (
     <span
@@ -231,7 +251,7 @@ export default function Sidebar({ email }: { email: string }) {
           </span>
           <GearIconHoverable />
         </Link>
-        <div style={{ background: 'rgba(249,115,22,0.04)', border: '1px solid #1E1E1C', borderRadius: 8, padding: '8px 12px', fontSize: 12, color: '#7A7870', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{email}</div>
+        <EmailAvatarTooltip email={email} initial={initial} />
         <form action="/auth/signout" method="post">
           <button type="submit" style={{ width: '100%', textAlign: 'left', fontSize: 12, color: '#7A7870', padding: '8px 12px', borderRadius: 8, border: 'none', background: 'transparent', cursor: 'pointer', transition: 'all 0.2s ease', fontFamily: 'var(--font-syne)' }}
             onMouseEnter={e => { e.currentTarget.style.color = '#ea580c'; e.currentTarget.style.background = 'rgba(249,115,22,0.08)' }}

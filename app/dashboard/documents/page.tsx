@@ -27,7 +27,7 @@ const TAB_CONFIG: { id: DocSection; label: string }[] = [
   { id: 'acomptes', label: 'Acomptes' },
   { id: 'avoirs',   label: 'Avoirs' },
   { id: 'contrats', label: 'Contrats MOE' },
-  { id: 'cgv',      label: 'CGV' },
+  { id: 'cgv',      label: 'CGP' },
   { id: 'suivi',    label: 'Suivi dossiers' },
 ]
 
@@ -43,10 +43,11 @@ export default function DocumentsPage() {
       style={{ flex: 1, display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}
     >
       {/* ── Tab bar ── */}
-      <div style={{
+      <style>{`.doc-tabs-bar::-webkit-scrollbar{display:none}`}</style>
+      <div className="doc-tabs-bar" style={{
         display: 'flex', borderBottom: '1px solid #1E1E1C',
         padding: '0 16px', background: '#0D0D0B', flexShrink: 0,
-        overflowX: 'auto', msOverflowStyle: 'none',
+        overflowX: 'auto', msOverflowStyle: 'none', scrollbarWidth: 'none',
       }}>
         {TAB_CONFIG.map(t => {
           const active = section === t.id
