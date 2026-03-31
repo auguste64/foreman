@@ -1,7 +1,6 @@
 'use client'
 
 import { useState } from 'react'
-import { useRouter } from 'next/navigation'
 
 const PRICE_ESSENTIEL = process.env.NEXT_PUBLIC_STRIPE_PRICE_ESSENTIEL!
 const PRICE_PRO = process.env.NEXT_PUBLIC_STRIPE_PRICE_PRO!
@@ -21,7 +20,6 @@ const CHECK_ICON_ACCENT = (
 )
 
 export default function PricingCards() {
-  const router = useRouter()
   const [loadingPlan, setLoadingPlan] = useState<string | null>(null)
 
   const featuresEssentiel = ['Comptes rendus PDF + email', 'Répertoire artisans & clients', 'Planning / calendrier']
@@ -37,7 +35,7 @@ export default function PricingCards() {
       })
 
       if (res.status === 401) {
-        router.push(`/login?redirect=pricing&plan=${plan}`)
+        window.location.href = '/login'
         return
       }
 
