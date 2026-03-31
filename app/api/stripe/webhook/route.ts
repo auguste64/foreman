@@ -15,7 +15,7 @@ function supabaseAdmin() {
 
 const PRICE_TO_PLAN: Record<string, string> = {
   [process.env.STRIPE_PRICE_ESSENTIEL ?? '']: 'essentiel',
-  [process.env.STRIPE_PRICE_COMPLET   ?? '']: 'complet',
+  [process.env.STRIPE_PRICE_PRO   ?? '']: 'pro',
 }
 
 export async function POST(req: NextRequest) {

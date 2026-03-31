@@ -8,7 +8,7 @@ function getStripe() {
 
 const PRICE_IDS = [
   process.env.STRIPE_PRICE_ESSENTIEL ?? '',
-  process.env.STRIPE_PRICE_COMPLET   ?? '',
+  process.env.STRIPE_PRICE_PRO   ?? '',
 ]
 
 export async function POST(req: NextRequest) {
