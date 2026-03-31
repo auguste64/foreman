@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { Download, Mail, FileText, AlertCircle } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
@@ -9,6 +10,7 @@ import { useIsMobile } from '@/lib/useIsMobile'
 import { ComptabiliteContent } from '../comptabilite/page'
 import type { Contrat } from '@/lib/supabase/contrats'
 import type { CgvProfile } from '@/lib/pdf/cgv'
+import type { Clause } from '@/lib/default-clauses'
 import { formatEurDoc } from '@/lib/supabase/documents'
 
 // ─── Types ───────────────────────────────────────────────────────────────────
@@ -106,6 +108,7 @@ function fmtEur(n: number) {
 }
 
 function ContratsSection() {
+  const router = useRouter()
   const isMobile = useIsMobile()
   const [contrats, setContrats] = useState<Contrat[]>([])
   const [loading, setLoading] = useState(true)
@@ -136,14 +139,24 @@ function ContratsSection() {
             {loading ? '…' : `${contrats.length} contrat${contrats.length !== 1 ? 's' : ''}`}
           </p>
         </div>
-        <Link
-          href="/dashboard/contrats/nouveau"
-          style={{ padding: '10px 20px', backgroundColor: '#ea580c', color: '#0D0D0B', borderRadius: '8px', fontSize: '14px', fontWeight: 600, textDecoration: 'none', fontFamily: 'var(--font-dm-sans), sans-serif', transition: 'all 0.2s ease' }}
-          onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 0 24px rgba(249,115,22,0.5)' }}
-          onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = 'none' }}
-        >
-          + Nouveau contrat
-        </Link>
+        <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+          <button
+            onClick={() => router.push('/dashboard/parametres?tab=contrat-moe')}
+            style={{ padding: '10px 18px', backgroundColor: 'transparent', color: '#F0EDE6', border: '1px solid #1E1E1C', borderRadius: '8px', fontSize: '13px', fontWeight: 500, cursor: 'pointer', fontFamily: 'var(--font-dm-sans), sans-serif', transition: 'all 0.2s ease' }}
+            onMouseEnter={e => { e.currentTarget.style.borderColor = '#ea580c'; e.currentTarget.style.color = '#ea580c' }}
+            onMouseLeave={e => { e.currentTarget.style.borderColor = '#1E1E1C'; e.currentTarget.style.color = '#F0EDE6' }}
+          >
+            Modifier les clauses
+          </button>
+          <Link
+            href="/dashboard/contrats/nouveau"
+            style={{ padding: '10px 20px', backgroundColor: '#ea580c', color: '#0D0D0B', borderRadius: '8px', fontSize: '14px', fontWeight: 600, textDecoration: 'none', fontFamily: 'var(--font-dm-sans), sans-serif', transition: 'all 0.2s ease' }}
+            onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 0 24px rgba(249,115,22,0.5)' }}
+            onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = 'none' }}
+          >
+            + Nouveau contrat
+          </Link>
+        </div>
       </div>
 
       <div style={{ position: 'relative', marginBottom: '32px' }}>
@@ -226,7 +239,9 @@ const CGV_DOCS: CgvDocCard[] = [
 ]
 
 function CgvSection() {
+  const router = useRouter()
   const [profile, setProfile] = useState<CgvProfile | null>(null)
+  const [cgvClauses, setCgvClauses] = useState<Clause[] | undefined>(undefined)
   const [loading, setLoading] = useState(true)
   const [downloading, setDownloading] = useState<string | null>(null)
   const [sending, setSending] = useState<string | null>(null)
@@ -238,7 +253,10 @@ function CgvSection() {
       const supabase = createClient()
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) return
-      const { data } = await supabase.from('profiles').select('*').eq('id', user.id).single()
+      const [{ data }, { data: tpl }] = await Promise.all([
+        supabase.from('profiles').select('*').eq('id', user.id).single(),
+        supabase.from('document_templates').select('clauses').eq('user_id', user.id).eq('type', 'cgv').single(),
+      ])
       if (data) {
         setProfile({
           societe: data.societe || data.entreprise || '',
@@ -251,6 +269,7 @@ function CgvSection() {
         })
         setEmailTo(data.email || user.email || '')
       }
+      if (tpl?.clauses) setCgvClauses(tpl.clauses as Clause[])
       setLoading(false)
     }
     load()
@@ -262,7 +281,7 @@ function CgvSection() {
     try {
       const { pdf } = await import('@react-pdf/renderer')
       const { CgvDocument } = await import('@/lib/pdf/cgv')
-      const element = <CgvDocument profile={profile} />
+      const element = <CgvDocument profile={profile} clauses={cgvClauses} />
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const blob = await pdf(element as any).toBlob()
       const url = URL.createObjectURL(blob)
@@ -362,6 +381,15 @@ function CgvSection() {
                   >
                     <Mail size={14} />
                     Envoyer par mail
+                  </button>
+
+                  <button
+                    onClick={() => router.push('/dashboard/parametres?tab=cgv')}
+                    style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '9px 18px', backgroundColor: 'transparent', color: '#F0EDE6', border: '1px solid #1E1E1C', borderRadius: '8px', fontSize: '13px', fontWeight: 500, cursor: 'pointer', fontFamily: 'var(--font-dm-sans), sans-serif', transition: 'all 0.2s ease' }}
+                    onMouseEnter={e => { e.currentTarget.style.borderColor = '#ea580c'; e.currentTarget.style.color = '#ea580c' }}
+                    onMouseLeave={e => { e.currentTarget.style.borderColor = '#1E1E1C'; e.currentTarget.style.color = '#F0EDE6' }}
+                  >
+                    Modifier
                   </button>
                 </div>
 

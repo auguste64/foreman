@@ -1,5 +1,6 @@
 import React from 'react'
 import { Document, Page, Text, View, StyleSheet } from '@react-pdf/renderer'
+import type { Clause } from '@/lib/default-clauses'
 
 export type CgvProfile = {
   societe: string
@@ -100,10 +101,91 @@ function art(num: number, title: string) {
 
 const n = (v?: string | null) => v || '—'
 
-export function CgvDocument({ profile }: { profile: CgvProfile }) {
+function IdentificationSection({ profile }: { profile: CgvProfile }) {
+  return (
+    <>
+      <View style={S.identRow}>
+        <Text style={S.identLabel}>Raison sociale :</Text>
+        <Text style={S.identValue}>{n(profile.societe)}</Text>
+      </View>
+      {(profile.prenom || profile.nom) && (
+        <View style={S.identRow}>
+          <Text style={S.identLabel}>Représentant :</Text>
+          <Text style={S.identValue}>{[profile.prenom, profile.nom].filter(Boolean).join(' ')}</Text>
+        </View>
+      )}
+      <View style={S.identRow}>
+        <Text style={S.identLabel}>Adresse :</Text>
+        <Text style={S.identValue}>{n(profile.adresse)}{profile.code_postal || profile.ville ? `, ${[profile.code_postal, profile.ville].filter(Boolean).join(' ')}` : ''}</Text>
+      </View>
+      <View style={S.identRow}>
+        <Text style={S.identLabel}>Téléphone :</Text>
+        <Text style={S.identValue}>{n(profile.telephone)}</Text>
+      </View>
+      <View style={S.identRow}>
+        <Text style={S.identLabel}>Email :</Text>
+        <Text style={S.identValue}>{n(profile.email)}</Text>
+      </View>
+      <View style={S.identRow}>
+        <Text style={S.identLabel}>SIRET :</Text>
+        <Text style={S.identValue}>{n(profile.siret)}</Text>
+      </View>
+      <View style={S.identRow}>
+        <Text style={S.identLabel}>Code APE :</Text>
+        <Text style={S.identValue}>{n(profile.code_ape)}</Text>
+      </View>
+      <View style={S.identRow}>
+        <Text style={S.identLabel}>TVA intracommunautaire :</Text>
+        <Text style={S.identValue}>{n(profile.tva_intracom)}</Text>
+      </View>
+      <View style={S.identRow}>
+        <Text style={S.identLabel}>Assurance RC Pro :</Text>
+        <Text style={S.identValue}>{n(profile.assurance_nom)}{profile.assurance_contrat ? ` — Contrat n° ${profile.assurance_contrat}` : ''}</Text>
+      </View>
+    </>
+  )
+}
+
+export function CgvDocument({ profile, clauses }: { profile: CgvProfile; clauses?: Clause[] }) {
   const societe = profile.societe || 'Le Prestataire'
   const today = new Date().toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })
 
+  if (clauses && clauses.length > 0) {
+    const sorted = [...clauses].sort((a, b) => a.ordre - b.ordre)
+    return (
+      <Document>
+        <Page size="A4" style={S.page}>
+          <View style={S.header}>
+            <Text style={S.headerTitle}>
+              Conditions générales de prestation de service de {societe}
+            </Text>
+            <Text style={S.headerSub}>Maîtrise d'œuvre — Version en vigueur au {today}</Text>
+          </View>
+
+          <View style={S.body}>
+            <Text style={S.articleTitle}>Identification du prestataire</Text>
+            <IdentificationSection profile={profile} />
+
+            {sorted.map(clause => (
+              <React.Fragment key={clause.id}>
+                <Text style={S.articleTitle}>{clause.titre}</Text>
+                {clause.contenu.split('\n\n').map((para, i) => (
+                  <Text key={i} style={S.paragraph}>{para.trim()}</Text>
+                ))}
+              </React.Fragment>
+            ))}
+          </View>
+
+          <View style={S.footer} fixed>
+            <Text style={S.footerText}>{societe} — CGP Maîtrise d'œuvre</Text>
+            <Text style={S.footerText} render={({ pageNumber, totalPages }) => `Page ${pageNumber} / ${totalPages}`} />
+          </View>
+        </Page>
+      </Document>
+    )
+  }
+
+  // Fallback : contenu figé original
   return (
     <Document>
       <Page size="A4" style={S.page}>
@@ -127,44 +209,7 @@ export function CgvDocument({ profile }: { profile: CgvProfile }) {
 
           {/* Article 2 */}
           <Text style={S.articleTitle}>{art(2, "Identification du prestataire")}</Text>
-          <View style={S.identRow}>
-            <Text style={S.identLabel}>Raison sociale :</Text>
-            <Text style={S.identValue}>{n(profile.societe)}</Text>
-          </View>
-          {(profile.prenom || profile.nom) && (
-            <View style={S.identRow}>
-              <Text style={S.identLabel}>Représentant :</Text>
-              <Text style={S.identValue}>{[profile.prenom, profile.nom].filter(Boolean).join(' ')}</Text>
-            </View>
-          )}
-          <View style={S.identRow}>
-            <Text style={S.identLabel}>Adresse :</Text>
-            <Text style={S.identValue}>{n(profile.adresse)}{profile.code_postal || profile.ville ? `, ${[profile.code_postal, profile.ville].filter(Boolean).join(' ')}` : ''}</Text>
-          </View>
-          <View style={S.identRow}>
-            <Text style={S.identLabel}>Téléphone :</Text>
-            <Text style={S.identValue}>{n(profile.telephone)}</Text>
-          </View>
-          <View style={S.identRow}>
-            <Text style={S.identLabel}>Email :</Text>
-            <Text style={S.identValue}>{n(profile.email)}</Text>
-          </View>
-          <View style={S.identRow}>
-            <Text style={S.identLabel}>SIRET :</Text>
-            <Text style={S.identValue}>{n(profile.siret)}</Text>
-          </View>
-          <View style={S.identRow}>
-            <Text style={S.identLabel}>Code APE :</Text>
-            <Text style={S.identValue}>{n(profile.code_ape)}</Text>
-          </View>
-          <View style={S.identRow}>
-            <Text style={S.identLabel}>TVA intracommunautaire :</Text>
-            <Text style={S.identValue}>{n(profile.tva_intracom)}</Text>
-          </View>
-          <View style={S.identRow}>
-            <Text style={S.identLabel}>Assurance RC Pro :</Text>
-            <Text style={S.identValue}>{n(profile.assurance_nom)}{profile.assurance_contrat ? ` — Contrat n° ${profile.assurance_contrat}` : ''}</Text>
-          </View>
+          <IdentificationSection profile={profile} />
 
           {/* Article 3 */}
           <Text style={S.articleTitle}>{art(3, 'Définitions')}</Text>

@@ -26,6 +26,13 @@ export async function POST(req: NextRequest) {
 
   if (!profileData) return NextResponse.json({ error: 'Profil introuvable' }, { status: 404 })
 
+  const { data: templateData } = await supabase
+    .from('document_templates')
+    .select('clauses')
+    .eq('user_id', user.id)
+    .eq('type', 'cgv')
+    .single()
+
   const profile: CgvProfile = {
     societe: profileData.societe || profileData.entreprise || 'Le Prestataire',
     prenom: profileData.prenom,
@@ -43,7 +50,8 @@ export async function POST(req: NextRequest) {
   }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const buffer = await renderToBuffer(React.createElement(CgvDocument, { profile }) as any)
+  const clauses = templateData?.clauses ?? undefined
+  const buffer = await renderToBuffer(React.createElement(CgvDocument, { profile, clauses }) as any)
   const societe = profile.societe
 
   const { error: sendError } = await resend.emails.send({
