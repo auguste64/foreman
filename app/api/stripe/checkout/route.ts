@@ -2,18 +2,21 @@ import { NextRequest, NextResponse } from 'next/server'
 import Stripe from 'stripe'
 import { createClient } from '@/lib/supabase/server'
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, { apiVersion: '2026-03-25.dahlia' })
-
-const PRICE_TO_PLAN: Record<string, string> = {
-  [process.env.STRIPE_PRICE_ESSENTIEL ?? '']: 'essentiel',
-  [process.env.STRIPE_PRICE_COMPLET   ?? '']: 'complet',
+function getStripe() {
+  return new Stripe(process.env.STRIPE_SECRET_KEY!, { apiVersion: '2026-03-25.dahlia' })
 }
+
+const PRICE_IDS = [
+  process.env.STRIPE_PRICE_ESSENTIEL ?? '',
+  process.env.STRIPE_PRICE_COMPLET   ?? '',
+]
 
 export async function POST(req: NextRequest) {
   try {
+    const stripe = getStripe()
     const { priceId } = await req.json()
 
-    if (!priceId || !PRICE_TO_PLAN[priceId]) {
+    if (!priceId || !PRICE_IDS.includes(priceId)) {
       return NextResponse.json({ error: 'Price ID invalide' }, { status: 400 })
     }
 
@@ -21,7 +24,6 @@ export async function POST(req: NextRequest) {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return NextResponse.json({ error: 'Non authentifié' }, { status: 401 })
 
-    // Récupérer ou créer le customer Stripe
     const { data: profile } = await supabase
       .from('profiles')
       .select('stripe_customer_id')
@@ -50,7 +52,7 @@ export async function POST(req: NextRequest) {
       payment_method_types: ['card'],
       line_items: [{ price: priceId, quantity: 1 }],
       success_url: `${baseUrl}/dashboard?upgraded=true`,
-      cancel_url: `${baseUrl}/tarifs`,
+      cancel_url:  `${baseUrl}/tarifs`,
       metadata: { supabase_user_id: user.id, price_id: priceId },
       subscription_data: {
         metadata: { supabase_user_id: user.id, price_id: priceId },

@@ -2,12 +2,10 @@ import { NextRequest, NextResponse } from 'next/server'
 import Stripe from 'stripe'
 import { createClient } from '@supabase/supabase-js'
 
-// Webhook must use the raw body — disable body parsing
-export const config = { api: { bodyParser: false } }
+function getStripe() {
+  return new Stripe(process.env.STRIPE_SECRET_KEY!, { apiVersion: '2026-03-25.dahlia' })
+}
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, { apiVersion: '2026-03-25.dahlia' })
-
-// Service-role client (bypasses RLS) for webhook updates
 function supabaseAdmin() {
   return createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -21,6 +19,7 @@ const PRICE_TO_PLAN: Record<string, string> = {
 }
 
 export async function POST(req: NextRequest) {
+  const stripe = getStripe()
   const body = await req.text()
   const sig  = req.headers.get('stripe-signature') ?? ''
 
@@ -49,8 +48,6 @@ export async function POST(req: NextRequest) {
           stripe_subscription_id: session.subscription as string,
         })
         .eq('id', userId)
-
-      console.log(`[stripe/webhook] ${userId} → plan ${plan}`)
     }
   }
 
@@ -63,8 +60,6 @@ export async function POST(req: NextRequest) {
         .from('profiles')
         .update({ plan: 'gratuit', stripe_subscription_id: null })
         .eq('id', userId)
-
-      console.log(`[stripe/webhook] ${userId} → plan gratuit (subscription annulée)`)
     }
   }
 
