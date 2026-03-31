@@ -368,9 +368,9 @@ export default function Home() {
         </div>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '24px', maxWidth: '1100px', margin: '0 auto' }}>
           {[
-            { quote: 'Avant The Builder, je passais 2h à rédiger le CR après chaque visite. Maintenant c'est 20 minutes, PDF envoyé aux artisans avant même de rentrer du chantier.', name: 'Sophie M.', role: 'Architecte DPLG', city: 'Lyon', delay: 'd1' },
-            { quote: 'Les artisans reçoivent leur convocation automatiquement. Zéro oubli, zéro relance manuelle. J'ai récupéré au moins 3h par semaine.', name: 'Marc T.', role: 'Maître d\'œuvre', city: 'Bordeaux', delay: 'd2' },
-            { quote: 'La comptabilité chantier en temps réel m'a évité un impayé de 8 000€. Je vois immédiatement ce qui est dû, par qui, et depuis quand.', name: 'Julie R.', role: 'MOE indépendante', city: 'Paris', delay: 'd3' },
+            { quote: `Avant The Builder, je passais 2h à rédiger le CR après chaque visite. Maintenant c'est 20 minutes, PDF envoyé aux artisans avant même de rentrer du chantier.`, name: 'Sophie M.', role: 'Architecte DPLG', city: 'Lyon', delay: 'd1' },
+            { quote: `Les artisans reçoivent leur convocation automatiquement. Zéro oubli, zéro relance manuelle. J'ai récupéré au moins 3h par semaine.`, name: 'Marc T.', role: "Maître d'œuvre", city: 'Bordeaux', delay: 'd2' },
+            { quote: `La comptabilité chantier en temps réel m'a évité un impayé de 8 000€. Je vois immédiatement ce qui est dû, par qui, et depuis quand.`, name: 'Julie R.', role: 'MOE indépendante', city: 'Paris', delay: 'd3' },
           ].map((t) => (
             <div key={t.name} className={`reveal anim ${t.delay}`} style={{ background: '#111110', border: '1px solid #1E1E1C', borderRadius: '20px', padding: '36px', display: 'flex', flexDirection: 'column', gap: '24px' }}>
               <div style={{ fontSize: '40px', lineHeight: 1, color: '#ea580c', fontFamily: 'Georgia, serif', marginBottom: '-8px' }}>&ldquo;</div>
