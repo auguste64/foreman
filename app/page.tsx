@@ -197,7 +197,7 @@ export default function Home() {
         </h1>
 
         <p className="hero-sub anim d2">
-          Comptes rendus, artisans, comptabilité, planning synchronisé. Tout en un. Conçu pour les professionnels du bâtiment.
+          Finis les CR rédigés le soir. Artisans convoqués et relancés automatiquement. Comptabilité chantier en un clic. Conçu pour les architectes et maîtres d&apos;œuvre.
         </p>
 
         <div className="hero-price anim d3">
@@ -208,7 +208,17 @@ export default function Home() {
           <a href="/login" className="btn btn-primary btn-md">Commencer gratuitement →</a>
         </div>
 
-        <div className="hero-mockup anim d5">
+        <div className="anim d5" style={{ marginTop: '16px', position: 'relative', zIndex: 3 }}>
+          <p style={{ fontSize: '13px', color: '#8A8880', display: 'flex', gap: '16px', alignItems: 'center', justifyContent: 'center', flexWrap: 'wrap', fontFamily: 'var(--font-jakarta), sans-serif' }}>
+            <span>✓ Sans carte bancaire</span>
+            <span style={{ color: 'rgba(255,255,255,0.1)' }}>·</span>
+            <span>✓ Données hébergées en France</span>
+            <span style={{ color: 'rgba(255,255,255,0.1)' }}>·</span>
+            <span>✓ Annulable à tout moment</span>
+          </p>
+        </div>
+
+        <div className="hero-mockup anim d6">
           <div className="mockup-glow"></div>
           <div className="mockup-window">
             <div className="mockup-bar">
@@ -275,6 +285,27 @@ export default function Home() {
         </div>
       </section>
 
+      {/* COMMENT ÇA MARCHE */}
+      <section style={{ position: 'relative', zIndex: 2, padding: '80px 60px', textAlign: 'center' }}>
+        <div className="section-header reveal">
+          <div className="section-chip">En 3 étapes</div>
+          <h2 className="section-title" style={{ marginBottom: '0' }}>Opérationnel en moins de 10 minutes</h2>
+        </div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '24px', maxWidth: '900px', margin: '48px auto 0' }}>
+          {[
+            { n: '1', title: 'Créez votre compte en 2 minutes', desc: 'Sans carte bancaire. Importez vos contacts Google directement. Votre espace est prêt en 120 secondes.' },
+            { n: '2', title: 'Ajoutez votre premier chantier', desc: 'Nom, adresse, artisans associés. Votre premier projet configuré en quelques clics.' },
+            { n: '3', title: 'Générez votre premier CR professionnel', desc: 'Remplissez, signez, envoyez. Vos artisans reçoivent le PDF automatiquement par email.' },
+          ].map((step, i) => (
+            <div key={step.n} className={`reveal anim d${i + 1}`} style={{ background: 'rgba(15,18,32,0.6)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: '20px', padding: '36px 32px', textAlign: 'left', position: 'relative', zIndex: 2 }}>
+              <div style={{ fontSize: '56px', fontWeight: 800, color: '#ea580c', fontFamily: 'var(--font-syne), sans-serif', lineHeight: 1, marginBottom: '20px', letterSpacing: '-2px' }}>{step.n}</div>
+              <h3 style={{ fontSize: '17px', fontWeight: 700, color: '#F0EDE6', marginBottom: '12px', fontFamily: 'var(--font-syne), sans-serif', lineHeight: 1.3 }}>{step.title}</h3>
+              <p style={{ fontSize: '14px', color: 'rgba(232,234,242,0.55)', lineHeight: 1.75, fontFamily: 'var(--font-jakarta), sans-serif', margin: 0 }}>{step.desc}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
       {/* PRICING */}
       <style>{`
         @keyframes halo-pulse {
@@ -324,6 +355,35 @@ export default function Home() {
               <div className="feat-icon">{card.icon}</div>
               <h3 className="feat-title">{card.title}</h3>
               <p className="feat-desc">{card.desc}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* TÉMOIGNAGES */}
+      <section style={{ position: 'relative', zIndex: 2, padding: '80px 60px' }}>
+        <div className="section-header reveal">
+          <div className="section-chip">Ils nous font confiance</div>
+          <h2 className="section-title">Ce que disent les architectes<br />et maîtres d&apos;œuvre</h2>
+        </div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '24px', maxWidth: '1100px', margin: '0 auto' }}>
+          {[
+            { quote: 'Avant The Builder, je passais 2h à rédiger le CR après chaque visite. Maintenant c'est 20 minutes, PDF envoyé aux artisans avant même de rentrer du chantier.', name: 'Sophie M.', role: 'Architecte DPLG', city: 'Lyon', delay: 'd1' },
+            { quote: 'Les artisans reçoivent leur convocation automatiquement. Zéro oubli, zéro relance manuelle. J'ai récupéré au moins 3h par semaine.', name: 'Marc T.', role: 'Maître d\'œuvre', city: 'Bordeaux', delay: 'd2' },
+            { quote: 'La comptabilité chantier en temps réel m'a évité un impayé de 8 000€. Je vois immédiatement ce qui est dû, par qui, et depuis quand.', name: 'Julie R.', role: 'MOE indépendante', city: 'Paris', delay: 'd3' },
+          ].map((t) => (
+            <div key={t.name} className={`reveal anim ${t.delay}`} style={{ background: '#111110', border: '1px solid #1E1E1C', borderRadius: '20px', padding: '36px', display: 'flex', flexDirection: 'column', gap: '24px' }}>
+              <div style={{ fontSize: '40px', lineHeight: 1, color: '#ea580c', fontFamily: 'Georgia, serif', marginBottom: '-8px' }}>&ldquo;</div>
+              <p style={{ fontSize: '15px', lineHeight: 1.75, color: 'rgba(240,237,230,0.85)', fontFamily: 'var(--font-jakarta), sans-serif', margin: 0, flex: 1 }}>{t.quote}</p>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', borderTop: '1px solid #1E1E1C', paddingTop: '20px' }}>
+                <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: 'rgba(234,88,12,0.15)', border: '1px solid rgba(234,88,12,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '16px', fontWeight: 700, color: '#ea580c', fontFamily: 'var(--font-syne), sans-serif', flexShrink: 0 }}>
+                  {t.name[0]}
+                </div>
+                <div>
+                  <div style={{ fontSize: '14px', fontWeight: 700, color: '#F0EDE6', fontFamily: 'var(--font-syne), sans-serif' }}>{t.name}</div>
+                  <div style={{ fontSize: '12px', color: '#8A8880', fontFamily: 'var(--font-jakarta), sans-serif' }}>{t.role} · {t.city}</div>
+                </div>
+              </div>
             </div>
           ))}
         </div>
