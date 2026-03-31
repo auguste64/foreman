@@ -1,0 +1,72 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e3]:
+    - complementary [ref=e4]:
+      - generic [ref=e5]:
+        - link "THE BUILDER" [ref=e6] [cursor=pointer]:
+          - /url: /dashboard
+          - generic [ref=e17]:
+            - generic [ref=e18]: THE
+            - generic [ref=e19]: BUILDER
+        - button "Notifications" [ref=e20] [cursor=pointer]:
+          - img [ref=e21]
+      - navigation [ref=e24]:
+        - link "Tableau de bord" [ref=e25] [cursor=pointer]:
+          - /url: /dashboard
+          - generic [ref=e26]: Tableau de bord
+        - link "Chantiers" [ref=e27] [cursor=pointer]:
+          - /url: /dashboard/chantiers
+          - generic [ref=e28]: Chantiers
+        - link "Comptes rendus" [ref=e29] [cursor=pointer]:
+          - /url: /dashboard/comptes-rendus
+          - generic [ref=e30]: Comptes rendus
+        - link "Documents" [ref=e31] [cursor=pointer]:
+          - /url: /dashboard/documents
+          - generic [ref=e32]: Documents
+        - link "Analyse" [ref=e33] [cursor=pointer]:
+          - /url: /dashboard/finances
+          - generic [ref=e34]: Analyse
+        - link "Artisans" [ref=e35] [cursor=pointer]:
+          - /url: /dashboard/artisans
+          - generic [ref=e36]: Artisans
+        - link "Clients" [ref=e37] [cursor=pointer]:
+          - /url: /dashboard/clients
+          - generic [ref=e38]: Clients
+        - link "Planning" [ref=e39] [cursor=pointer]:
+          - /url: /dashboard/planning
+          - generic [ref=e40]: Planning
+        - link "Paramètres" [ref=e41] [cursor=pointer]:
+          - /url: /dashboard/parametres
+          - generic [ref=e42]: Paramètres
+      - generic [ref=e44]:
+        - link "A auguste.bouvee1" [ref=e45] [cursor=pointer]:
+          - /url: /dashboard/parametres
+          - generic [ref=e46]: A
+          - generic [ref=e47]: auguste.bouvee1
+          - img [ref=e49]
+        - generic [ref=e52]: auguste.bouvee1@gmail.com
+        - button "← Déconnexion" [ref=e54] [cursor=pointer]
+    - main [ref=e55]:
+      - generic [ref=e56]:
+        - generic [ref=e57]:
+          - generic [ref=e58]:
+            - heading "Clients" [level=1] [ref=e59]
+            - paragraph [ref=e60]: …
+          - generic [ref=e61]:
+            - button "↓ Importer des contacts" [ref=e62] [cursor=pointer]
+            - link "+ Nouveau client" [ref=e63] [cursor=pointer]:
+              - /url: /dashboard/clients/nouveau
+        - generic [ref=e64]:
+          - generic [ref=e65]:
+            - img
+            - textbox "Rechercher par nom, email, société…" [ref=e66]
+          - generic [ref=e67]:
+            - button "Tous" [ref=e68] [cursor=pointer]
+            - button "Particuliers" [ref=e69] [cursor=pointer]
+            - button "Entreprises" [ref=e70] [cursor=pointer]
+          - generic [ref=e71]:
+            - generic [ref=e72]: Trier par
+            - button "Nom ↑" [ref=e73] [cursor=pointer]
+            - button "Date" [ref=e74] [cursor=pointer]
+  - button "Open Next.js Dev Tools" [ref=e87] [cursor=pointer]:
+    - img [ref=e88]
+  - alert [ref=e91]

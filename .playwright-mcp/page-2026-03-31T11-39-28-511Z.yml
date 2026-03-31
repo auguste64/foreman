@@ -1,0 +1,79 @@
+- generic [ref=e1]:
+  - generic [ref=e3]:
+    - complementary [ref=e4]:
+      - generic [ref=e5]:
+        - link "THE BUILDER" [ref=e6] [cursor=pointer]:
+          - /url: /dashboard
+          - generic [ref=e17]:
+            - generic [ref=e18]: THE
+            - generic [ref=e19]: BUILDER
+        - button "Notifications" [ref=e20] [cursor=pointer]:
+          - img [ref=e21]
+      - navigation [ref=e24]:
+        - link "Tableau de bord" [ref=e25] [cursor=pointer]:
+          - /url: /dashboard
+          - generic [ref=e26]: Tableau de bord
+        - link "Chantiers" [ref=e27] [cursor=pointer]:
+          - /url: /dashboard/chantiers
+          - generic [ref=e28]: Chantiers
+        - link "Comptes rendus" [ref=e29] [cursor=pointer]:
+          - /url: /dashboard/comptes-rendus
+          - generic [ref=e30]: Comptes rendus
+        - link "Documents" [ref=e31] [cursor=pointer]:
+          - /url: /dashboard/documents
+          - generic [ref=e32]: Documents
+        - link "Analyse" [ref=e33] [cursor=pointer]:
+          - /url: /dashboard/finances
+          - generic [ref=e34]: Analyse
+        - link "Artisans" [ref=e35] [cursor=pointer]:
+          - /url: /dashboard/artisans
+          - generic [ref=e36]: Artisans
+        - link "Clients" [ref=e37] [cursor=pointer]:
+          - /url: /dashboard/clients
+          - generic [ref=e38]: Clients
+        - link "Planning" [ref=e39] [cursor=pointer]:
+          - /url: /dashboard/planning
+          - generic [ref=e40]: Planning
+        - link "Paramètres" [ref=e41] [cursor=pointer]:
+          - /url: /dashboard/parametres
+          - generic [ref=e42]: Paramètres
+      - generic [ref=e44]:
+        - link "A Atelier JP BOUVEE" [ref=e77] [cursor=pointer]:
+          - /url: /dashboard/parametres
+          - generic [ref=e46]: A
+          - generic [ref=e47]: Atelier JP BOUVEE
+          - img [ref=e49]
+        - generic [ref=e52]: auguste.bouvee1@gmail.com
+        - button "← Déconnexion" [ref=e54] [cursor=pointer]
+    - main [ref=e55]:
+      - generic [ref=e56]:
+        - generic [ref=e57]:
+          - button "Devis" [ref=e58] [cursor=pointer]
+          - button "Factures" [ref=e59] [cursor=pointer]
+          - button "Honoraires" [ref=e60] [cursor=pointer]
+          - button "Acomptes" [ref=e61] [cursor=pointer]
+          - button "Avoirs" [ref=e62] [cursor=pointer]
+          - button "Contrats MOE" [ref=e63] [cursor=pointer]
+          - button "CGV" [active] [ref=e64] [cursor=pointer]
+          - button "Suivi dossiers" [ref=e65] [cursor=pointer]
+        - generic [ref=e251]:
+          - generic [ref=e252]:
+            - heading "Documents contractuels" [level=1] [ref=e253]
+            - paragraph [ref=e254]: Générez et envoyez vos documents pré-remplis avec les infos de votre profil
+          - generic [ref=e256]:
+            - generic [ref=e257]:
+              - img [ref=e259]
+              - generic [ref=e262]:
+                - heading "Conditions Générales de Prestation" [level=3] [ref=e263]
+                - paragraph [ref=e264]: CGP pré-remplies avec les informations de votre société — Maîtrise d'œuvre
+            - generic [ref=e265]:
+              - button "Télécharger PDF" [ref=e266] [cursor=pointer]:
+                - img [ref=e267]
+                - text: Télécharger PDF
+              - button "Envoyer par mail" [ref=e270] [cursor=pointer]:
+                - img [ref=e271]
+                - text: Envoyer par mail
+              - button "Modifier" [ref=e274] [cursor=pointer]
+  - button "Open Next.js Dev Tools" [ref=e72] [cursor=pointer]:
+    - img [ref=e73]
+  - alert [ref=e76]

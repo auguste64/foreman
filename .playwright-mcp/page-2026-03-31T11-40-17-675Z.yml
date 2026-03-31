@@ -1,0 +1,85 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e3]:
+    - complementary [ref=e4]:
+      - generic [ref=e5]:
+        - link "THE BUILDER" [ref=e6] [cursor=pointer]:
+          - /url: /dashboard
+          - generic [ref=e17]:
+            - generic [ref=e18]: THE
+            - generic [ref=e19]: BUILDER
+        - button "Notifications" [ref=e20] [cursor=pointer]:
+          - img [ref=e21]
+      - navigation [ref=e24]:
+        - link "Tableau de bord" [ref=e25] [cursor=pointer]:
+          - /url: /dashboard
+          - generic [ref=e26]: Tableau de bord
+        - link "Chantiers" [ref=e27] [cursor=pointer]:
+          - /url: /dashboard/chantiers
+          - generic [ref=e28]: Chantiers
+        - link "Comptes rendus" [ref=e29] [cursor=pointer]:
+          - /url: /dashboard/comptes-rendus
+          - generic [ref=e30]: Comptes rendus
+        - link "Documents" [ref=e31] [cursor=pointer]:
+          - /url: /dashboard/documents
+          - generic [ref=e32]: Documents
+        - link "Analyse" [ref=e33] [cursor=pointer]:
+          - /url: /dashboard/finances
+          - generic [ref=e34]: Analyse
+        - link "Artisans" [ref=e35] [cursor=pointer]:
+          - /url: /dashboard/artisans
+          - generic [ref=e36]: Artisans
+        - link "Clients" [ref=e37] [cursor=pointer]:
+          - /url: /dashboard/clients
+          - generic [ref=e38]: Clients
+        - link "Planning" [ref=e39] [cursor=pointer]:
+          - /url: /dashboard/planning
+          - generic [ref=e40]: Planning
+        - link "Paramètres" [ref=e41] [cursor=pointer]:
+          - /url: /dashboard/parametres
+          - generic [ref=e42]: Paramètres
+      - generic [ref=e44]:
+        - link "A auguste.bouvee1" [ref=e45] [cursor=pointer]:
+          - /url: /dashboard/parametres
+          - generic [ref=e46]: A
+          - generic [ref=e47]: auguste.bouvee1
+          - img [ref=e49]
+        - generic [ref=e52]: auguste.bouvee1@gmail.com
+        - button "← Déconnexion" [ref=e54] [cursor=pointer]
+    - main [ref=e55]:
+      - generic [ref=e56]:
+        - generic [ref=e57]:
+          - generic [ref=e58]:
+            - heading "Planning" [level=1] [ref=e59]
+            - paragraph [ref=e60]: 0 événements sur la période
+          - generic [ref=e61]:
+            - generic [ref=e62]:
+              - button "Mois" [ref=e63] [cursor=pointer]
+              - button "Semaine" [ref=e64] [cursor=pointer]
+            - generic [ref=e65]:
+              - button "←" [ref=e66] [cursor=pointer]
+              - generic [ref=e67]: Mars 2026
+              - button "→" [ref=e68] [cursor=pointer]
+            - button "+ Nouvel événement" [ref=e69] [cursor=pointer]
+        - generic [ref=e70]:
+          - generic [ref=e73]: Réunion
+          - generic [ref=e76]: Présence artisan
+          - generic [ref=e79]: Prochaine visite
+        - paragraph [ref=e80]: Chargement…
+        - generic [ref=e81]:
+          - heading "Synchronisation calendrier" [level=2] [ref=e82]
+          - paragraph [ref=e83]: Exportez vos événements vers Apple Calendar, Google Calendar ou tout client compatible iCal.
+          - generic [ref=e84]:
+            - generic [ref=e86]:
+              - generic [ref=e87]:
+                - generic [ref=e88]: Flux iCal (Apple Calendar, Outlook…)
+                - generic [ref=e89]: URL publique en lecture seule — se met à jour automatiquement
+              - button "Chargement…" [disabled] [ref=e90]
+            - generic [ref=e92]:
+              - generic [ref=e93]:
+                - generic [ref=e94]: Google Calendar
+                - generic [ref=e95]: Connectez votre compte Google pour synchroniser les événements
+              - link "Connecter Google Calendar" [ref=e97] [cursor=pointer]:
+                - /url: /api/calendar/google/auth
+  - button "Open Next.js Dev Tools" [ref=e103] [cursor=pointer]:
+    - img [ref=e104]
+  - alert [ref=e107]

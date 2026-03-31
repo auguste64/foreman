@@ -1,0 +1,83 @@
+- generic [ref=e1]:
+  - generic [ref=e3]:
+    - complementary [ref=e4]:
+      - generic [ref=e5]:
+        - link "THE BUILDER" [ref=e6] [cursor=pointer]:
+          - /url: /dashboard
+          - generic [ref=e17]:
+            - generic [ref=e18]: THE
+            - generic [ref=e19]: BUILDER
+        - button "Notifications" [ref=e20] [cursor=pointer]:
+          - img [ref=e21]
+      - navigation [ref=e24]:
+        - link "Tableau de bord" [ref=e25] [cursor=pointer]:
+          - /url: /dashboard
+          - generic [ref=e26]: Tableau de bord
+        - link "Chantiers" [ref=e27] [cursor=pointer]:
+          - /url: /dashboard/chantiers
+          - generic [ref=e28]: Chantiers
+        - link "Comptes rendus" [ref=e29] [cursor=pointer]:
+          - /url: /dashboard/comptes-rendus
+          - generic [ref=e30]: Comptes rendus
+        - link "Documents" [ref=e31] [cursor=pointer]:
+          - /url: /dashboard/documents
+          - generic [ref=e32]: Documents
+        - link "Analyse" [ref=e33] [cursor=pointer]:
+          - /url: /dashboard/finances
+          - generic [ref=e34]: Analyse
+        - link "Artisans" [ref=e35] [cursor=pointer]:
+          - /url: /dashboard/artisans
+          - generic [ref=e36]: Artisans
+        - link "Clients" [ref=e37] [cursor=pointer]:
+          - /url: /dashboard/clients
+          - generic [ref=e38]: Clients
+        - link "Planning" [ref=e39] [cursor=pointer]:
+          - /url: /dashboard/planning
+          - generic [ref=e40]: Planning
+        - link "Paramètres" [ref=e41] [cursor=pointer]:
+          - /url: /dashboard/parametres
+          - generic [ref=e42]: Paramètres
+      - generic [ref=e44]:
+        - link "A Atelier JP BOUVEE" [ref=e77] [cursor=pointer]:
+          - /url: /dashboard/parametres
+          - generic [ref=e46]: A
+          - generic [ref=e47]: Atelier JP BOUVEE
+          - img [ref=e49]
+        - generic [ref=e52]: auguste.bouvee1@gmail.com
+        - button "← Déconnexion" [ref=e54] [cursor=pointer]
+    - main [ref=e55]:
+      - generic [ref=e56]:
+        - generic [ref=e57]:
+          - button "Devis" [ref=e58] [cursor=pointer]
+          - button "Factures" [ref=e59] [cursor=pointer]
+          - button "Honoraires" [ref=e60] [cursor=pointer]
+          - button "Acomptes" [ref=e61] [cursor=pointer]
+          - button "Avoirs" [ref=e62] [cursor=pointer]
+          - button "Contrats MOE" [active] [ref=e63] [cursor=pointer]
+          - button "CGV" [ref=e64] [cursor=pointer]
+          - button "Suivi dossiers" [ref=e65] [cursor=pointer]
+        - generic [ref=e231]:
+          - generic [ref=e232]:
+            - generic [ref=e233]:
+              - heading "Contrats MOE" [level=1] [ref=e234]
+              - paragraph [ref=e235]: 1 contrat
+            - generic [ref=e236]:
+              - button "Modifier les clauses" [ref=e237] [cursor=pointer]
+              - link "+ Nouveau contrat" [ref=e238] [cursor=pointer]:
+                - /url: /dashboard/contrats/nouveau
+          - generic [ref=e239]:
+            - img
+            - textbox "Rechercher un contrat…" [ref=e240]
+          - link "FABOS MOE 1 av etxo 26 mars 2026 40 000 €" [ref=e242] [cursor=pointer]:
+            - /url: /dashboard/contrats/aa1425cf-cb96-4f79-a5f8-f3906e606a45
+            - generic [ref=e243]:
+              - generic [ref=e244]:
+                - heading "FABOS" [level=3] [ref=e245]
+                - generic [ref=e246]: MOE
+              - paragraph [ref=e247]: 1 av etxo
+              - generic [ref=e248]:
+                - paragraph [ref=e249]: 26 mars 2026
+                - paragraph [ref=e250]: 40 000 €
+  - button "Open Next.js Dev Tools" [ref=e72] [cursor=pointer]:
+    - img [ref=e73]
+  - alert [ref=e76]

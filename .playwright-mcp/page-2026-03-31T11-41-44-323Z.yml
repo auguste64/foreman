@@ -1,0 +1,141 @@
+- generic [ref=e1]:
+  - generic [ref=e3]:
+    - complementary [ref=e4]:
+      - generic [ref=e5]:
+        - link "THE BUILDER" [ref=e6] [cursor=pointer]:
+          - /url: /dashboard
+          - generic [ref=e17]:
+            - generic [ref=e18]: THE
+            - generic [ref=e19]: BUILDER
+        - button "Notifications" [ref=e20] [cursor=pointer]:
+          - img [ref=e21]
+      - navigation [ref=e24]:
+        - link "Tableau de bord" [ref=e25] [cursor=pointer]:
+          - /url: /dashboard
+          - generic [ref=e26]: Tableau de bord
+        - link "Chantiers" [ref=e27] [cursor=pointer]:
+          - /url: /dashboard/chantiers
+          - generic [ref=e28]: Chantiers
+        - link "Comptes rendus" [ref=e29] [cursor=pointer]:
+          - /url: /dashboard/comptes-rendus
+          - generic [ref=e30]: Comptes rendus
+        - link "Documents" [ref=e31] [cursor=pointer]:
+          - /url: /dashboard/documents
+          - generic [ref=e32]: Documents
+        - link "Analyse" [ref=e33] [cursor=pointer]:
+          - /url: /dashboard/finances
+          - generic [ref=e34]: Analyse
+        - link "Artisans" [ref=e35] [cursor=pointer]:
+          - /url: /dashboard/artisans
+          - generic [ref=e36]: Artisans
+        - link "Clients" [ref=e37] [cursor=pointer]:
+          - /url: /dashboard/clients
+          - generic [ref=e38]: Clients
+        - link "Planning" [ref=e39] [cursor=pointer]:
+          - /url: /dashboard/planning
+          - generic [ref=e40]: Planning
+        - link "Paramètres" [ref=e41] [cursor=pointer]:
+          - /url: /dashboard/parametres
+          - generic [ref=e42]: Paramètres
+      - generic [ref=e44]:
+        - link "A Atelier JP BOUVEE" [ref=e77] [cursor=pointer]:
+          - /url: /dashboard/parametres
+          - generic [ref=e46]: A
+          - generic [ref=e47]: Atelier JP BOUVEE
+          - img [ref=e49]
+        - generic [ref=e52]: auguste.bouvee1@gmail.com
+        - button "← Déconnexion" [ref=e54] [cursor=pointer]
+    - main [ref=e55]:
+      - generic [ref=e56]:
+        - generic [ref=e57]:
+          - heading "Paramètres" [level=1] [ref=e58]
+          - paragraph [ref=e59]: Gérez votre profil et vos préférences
+        - generic [ref=e60]:
+          - button "Profil" [ref=e61] [cursor=pointer]
+          - button "Sécurité" [ref=e62] [cursor=pointer]
+          - button "CGV" [active] [ref=e63] [cursor=pointer]
+          - button "Contrat MOE" [ref=e64] [cursor=pointer]
+        - generic [ref=e142]:
+          - generic [ref=e143]:
+            - heading "Conditions Générales de Vente" [level=2] [ref=e144]
+            - paragraph [ref=e145]: Ces clauses apparaîtront dans vos CGV générées en PDF.
+          - generic [ref=e146]:
+            - generic [ref=e147]:
+              - generic [ref=e148]: .
+              - button "Réinitialiser aux clauses par défaut" [ref=e149] [cursor=pointer]
+            - generic [ref=e150]:
+              - generic [ref=e151]:
+                - generic [ref=e152]:
+                  - generic [ref=e153]: Titre de la clause
+                  - textbox [ref=e154]: Objet des présentes conditions
+                - generic [ref=e155]:
+                  - button "↑" [disabled] [ref=e156]
+                  - button "↓" [ref=e157] [cursor=pointer]
+                - button "✕" [ref=e158] [cursor=pointer]
+              - generic [ref=e159]:
+                - generic [ref=e160]: Contenu
+                - textbox [ref=e161]: Les présentes conditions générales de prestation de services (ci-après « CGP ») ont pour objet de définir les modalités et conditions dans lesquelles le Prestataire réalise des missions de maîtrise d'œuvre et de conseil en architecture au profit de ses clients (ci-après « le Maître d'Ouvrage »). Toute commande passée auprès du Prestataire implique l'acceptation sans réserve des présentes CGP. Les présentes CGP prévalent sur tout autre document, sauf accord écrit et préalable du Prestataire.
+            - generic [ref=e162]:
+              - generic [ref=e163]:
+                - generic [ref=e164]:
+                  - generic [ref=e165]: Titre de la clause
+                  - textbox [ref=e166]: Honoraires et prix
+                - generic [ref=e167]:
+                  - button "↑" [ref=e168] [cursor=pointer]
+                  - button "↓" [ref=e169] [cursor=pointer]
+                - button "✕" [ref=e170] [cursor=pointer]
+              - generic [ref=e171]:
+                - generic [ref=e172]: Contenu
+                - textbox [ref=e173]: Les honoraires sont fixés dans le devis ou contrat d'honoraires signé entre les parties. Ils sont exprimés en euros hors taxes. La TVA applicable est celle en vigueur au jour de la facturation. Toute prestation supplémentaire non prévue dans le périmètre initial fera l'objet d'un avenant précisant les nouvelles prestations et les honoraires correspondants.
+            - generic [ref=e174]:
+              - generic [ref=e175]:
+                - generic [ref=e176]:
+                  - generic [ref=e177]: Titre de la clause
+                  - textbox [ref=e178]: Modalités de paiement
+                - generic [ref=e179]:
+                  - button "↑" [ref=e180] [cursor=pointer]
+                  - button "↓" [ref=e181] [cursor=pointer]
+                - button "✕" [ref=e182] [cursor=pointer]
+              - generic [ref=e183]:
+                - generic [ref=e184]: Contenu
+                - textbox [ref=e185]: Sauf stipulation contraire, les factures sont payables à réception dans un délai de 30 jours. Le paiement s'effectue par virement bancaire ou chèque. Tout retard de paiement donnera lieu, de plein droit et sans mise en demeure préalable, à des pénalités de retard calculées au taux légal majoré de 3 points, ainsi qu'à une indemnité forfaitaire de recouvrement de 40 €. En cas de retard persistant, le Prestataire se réserve le droit de suspendre l'exécution de la mission.
+            - generic [ref=e186]:
+              - generic [ref=e187]:
+                - generic [ref=e188]:
+                  - generic [ref=e189]: Titre de la clause
+                  - textbox [ref=e190]: Responsabilité
+                - generic [ref=e191]:
+                  - button "↑" [ref=e192] [cursor=pointer]
+                  - button "↓" [ref=e193] [cursor=pointer]
+                - button "✕" [ref=e194] [cursor=pointer]
+              - generic [ref=e195]:
+                - generic [ref=e196]: Contenu
+                - textbox [ref=e197]: La responsabilité du Prestataire est limitée au montant des honoraires perçus au titre de la mission concernée, sauf faute lourde ou dolosive. Le Prestataire ne peut être tenu responsable des dommages indirects ou consécutifs. Le Prestataire dispose d'une assurance responsabilité civile professionnelle couvrant les risques liés à l'exercice de ses activités. Les coordonnées de l'assureur figurent dans la section d'identification du prestataire.
+            - generic [ref=e198]:
+              - generic [ref=e199]:
+                - generic [ref=e200]:
+                  - generic [ref=e201]: Titre de la clause
+                  - textbox [ref=e202]: Protection des données personnelles
+                - generic [ref=e203]:
+                  - button "↑" [ref=e204] [cursor=pointer]
+                  - button "↓" [ref=e205] [cursor=pointer]
+                - button "✕" [ref=e206] [cursor=pointer]
+              - generic [ref=e207]:
+                - generic [ref=e208]: Contenu
+                - textbox [ref=e209]: Les données personnelles collectées dans le cadre de la relation contractuelle sont traitées conformément au Règlement (UE) 2016/679 (RGPD). Elles sont utilisées uniquement pour les besoins de l'exécution de la mission et ne sont pas transmises à des tiers sans accord préalable. Le Maître d'Ouvrage dispose d'un droit d'accès, de rectification et de suppression de ses données personnelles en adressant une demande écrite au Prestataire.
+            - generic [ref=e210]:
+              - generic [ref=e211]:
+                - generic [ref=e212]:
+                  - generic [ref=e213]: Titre de la clause
+                  - textbox [ref=e214]: Médiation et règlement des litiges
+                - generic [ref=e215]:
+                  - button "↑" [ref=e216] [cursor=pointer]
+                  - button "↓" [disabled] [ref=e217]
+                - button "✕" [ref=e218] [cursor=pointer]
+              - generic [ref=e219]:
+                - generic [ref=e220]: Contenu
+                - textbox [ref=e221]: En cas de litige relatif à la formation, l'exécution ou l'interprétation des présentes, les parties s'engagent à rechercher une solution amiable avant tout recours judiciaire. À défaut d'accord dans un délai de 30 jours, elles pourront faire appel à un médiateur agréé. Les présentes CGP sont soumises au droit français. En cas de litige non résolu par voie amiable, les tribunaux français seront seuls compétents.
+            - button "+ Ajouter une clause" [ref=e222] [cursor=pointer]
+  - button "Open Next.js Dev Tools" [ref=e72] [cursor=pointer]:
+    - img [ref=e73]
+  - alert [ref=e76]

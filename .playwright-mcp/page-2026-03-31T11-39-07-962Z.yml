@@ -1,0 +1,181 @@
+- generic [ref=e1]:
+  - generic [ref=e3]:
+    - complementary [ref=e4]:
+      - generic [ref=e5]:
+        - link "THE BUILDER" [ref=e6] [cursor=pointer]:
+          - /url: /dashboard
+          - generic [ref=e17]:
+            - generic [ref=e18]: THE
+            - generic [ref=e19]: BUILDER
+        - button "Notifications" [ref=e20] [cursor=pointer]:
+          - img [ref=e21]
+      - navigation [ref=e24]:
+        - link "Tableau de bord" [ref=e25] [cursor=pointer]:
+          - /url: /dashboard
+          - generic [ref=e26]: Tableau de bord
+        - link "Chantiers" [ref=e27] [cursor=pointer]:
+          - /url: /dashboard/chantiers
+          - generic [ref=e28]: Chantiers
+        - link "Comptes rendus" [ref=e29] [cursor=pointer]:
+          - /url: /dashboard/comptes-rendus
+          - generic [ref=e30]: Comptes rendus
+        - link "Documents" [ref=e31] [cursor=pointer]:
+          - /url: /dashboard/documents
+          - generic [ref=e32]: Documents
+        - link "Analyse" [ref=e33] [cursor=pointer]:
+          - /url: /dashboard/finances
+          - generic [ref=e34]: Analyse
+        - link "Artisans" [ref=e35] [cursor=pointer]:
+          - /url: /dashboard/artisans
+          - generic [ref=e36]: Artisans
+        - link "Clients" [ref=e37] [cursor=pointer]:
+          - /url: /dashboard/clients
+          - generic [ref=e38]: Clients
+        - link "Planning" [ref=e39] [cursor=pointer]:
+          - /url: /dashboard/planning
+          - generic [ref=e40]: Planning
+        - link "Paramètres" [ref=e41] [cursor=pointer]:
+          - /url: /dashboard/parametres
+          - generic [ref=e42]: Paramètres
+      - generic [ref=e44]:
+        - link "A Atelier JP BOUVEE" [ref=e77] [cursor=pointer]:
+          - /url: /dashboard/parametres
+          - generic [ref=e46]: A
+          - generic [ref=e47]: Atelier JP BOUVEE
+          - img [ref=e49]
+        - generic [ref=e52]: auguste.bouvee1@gmail.com
+        - button "← Déconnexion" [ref=e54] [cursor=pointer]
+    - main [ref=e55]:
+      - generic [ref=e56]:
+        - generic [ref=e57]:
+          - button "Devis" [ref=e58] [cursor=pointer]
+          - button "Factures" [active] [ref=e59] [cursor=pointer]
+          - button "Honoraires" [ref=e60] [cursor=pointer]
+          - button "Acomptes" [ref=e61] [cursor=pointer]
+          - button "Avoirs" [ref=e62] [cursor=pointer]
+          - button "Contrats MOE" [ref=e63] [cursor=pointer]
+          - button "CGV" [ref=e64] [cursor=pointer]
+          - button "Suivi dossiers" [ref=e65] [cursor=pointer]
+        - generic [ref=e78]:
+          - generic [ref=e80]:
+            - generic [ref=e81]:
+              - paragraph [ref=e83]: Chantiers
+              - button "Tous les documents 5" [ref=e84] [cursor=pointer]:
+                - generic [ref=e85]: Tous les documents
+                - generic [ref=e86]: "5"
+              - button "ETSOLA 2" [ref=e88] [cursor=pointer]:
+                - generic [ref=e89]: ETSOLA
+                - generic [ref=e90]: "2"
+              - button "FABOS" [ref=e91] [cursor=pointer]:
+                - generic [ref=e92]: FABOS
+            - link "Paramètres documents" [ref=e93] [cursor=pointer]:
+              - /url: /dashboard/comptabilite/parametres
+              - img [ref=e94]
+              - text: Paramètres documents
+          - generic [ref=e97]:
+            - generic [ref=e98]:
+              - generic [ref=e99]:
+                - heading "Comptabilité" [level=1] [ref=e100]
+                - paragraph [ref=e101]: Devis, factures, avoirs et acomptes
+              - generic [ref=e102]:
+                - link "+ Devis" [ref=e103] [cursor=pointer]:
+                  - /url: /dashboard/comptabilite/devis/nouveau
+                - link "+ Facture" [ref=e104] [cursor=pointer]:
+                  - /url: /dashboard/comptabilite/factures/nouveau
+            - generic [ref=e105]:
+              - generic [ref=e106]:
+                - paragraph [ref=e107]: DEVIS EN ATTENTE
+                - paragraph [ref=e108]: 0,00 €
+              - generic [ref=e109]:
+                - paragraph [ref=e110]: CA FACTURÉ
+                - paragraph [ref=e111]: 80 558,40 €
+              - generic [ref=e112]:
+                - paragraph [ref=e113]: CA ENCAISSÉ
+                - paragraph [ref=e114]: 960,00 €
+              - generic [ref=e115]:
+                - paragraph [ref=e116]: IMPAYÉS
+                - paragraph [ref=e117]: 79 598,40 €
+            - generic [ref=e118]:
+              - button "Devis (2)" [ref=e119] [cursor=pointer]:
+                - text: Devis
+                - generic [ref=e120]: (2)
+              - button "Factures (2)" [ref=e121] [cursor=pointer]:
+                - text: Factures
+                - generic [ref=e122]: (2)
+              - button "Honoraires (0)" [ref=e123] [cursor=pointer]:
+                - text: Honoraires
+                - generic [ref=e124]: (0)
+              - button "Acomptes (1)" [ref=e125] [cursor=pointer]:
+                - text: Acomptes
+                - generic [ref=e126]: (1)
+              - button "Avoirs (0)" [ref=e127] [cursor=pointer]:
+                - text: Avoirs
+                - generic [ref=e128]: (0)
+              - generic [ref=e130]:
+                - generic [ref=e131]: Trier par
+                - button "Date ↓" [ref=e132] [cursor=pointer]
+                - button "Montant" [ref=e133] [cursor=pointer]
+                - button "Statut" [ref=e134] [cursor=pointer]
+            - table [ref=e183]:
+              - rowgroup [ref=e184]:
+                - row "Numéro Client Objet Montant TTC Statut Échéance Actions" [ref=e185]:
+                  - columnheader "Numéro" [ref=e186]
+                  - columnheader "Client" [ref=e187]
+                  - columnheader "Objet" [ref=e188]
+                  - columnheader "Montant TTC" [ref=e189]
+                  - columnheader "Statut" [ref=e190]
+                  - columnheader "Échéance" [ref=e191]
+                  - columnheader "Actions" [ref=e192]
+              - rowgroup [ref=e193]:
+                - row "FACT-2026-3 ＋ Client Solde — DEVIS-2026-3 (acompte de 30% déduit) 79 598,40 € Brouillon 25/04/2026 Consulter PDF Brouillon ▾ Brouillon Envoyée Partiel Payée Annulée" [ref=e194]:
+                  - cell "FACT-2026-3" [ref=e195]:
+                    - generic [ref=e196]: FACT-2026-3
+                  - cell "＋ Client" [ref=e197]:
+                    - button "＋ Client" [ref=e198] [cursor=pointer]
+                  - cell "Solde — DEVIS-2026-3 (acompte de 30% déduit)" [ref=e199]
+                  - cell "79 598,40 €" [ref=e200]
+                  - cell "Brouillon" [ref=e201]
+                  - cell "25/04/2026" [ref=e202]
+                  - cell "Consulter PDF Brouillon ▾ Brouillon Envoyée Partiel Payée Annulée" [ref=e203]:
+                    - generic [ref=e204]:
+                      - link "Consulter" [ref=e205] [cursor=pointer]:
+                        - /url: /dashboard/comptabilite/factures/0ec6858e-12eb-4910-bc1c-e4856dcf520b
+                      - link "PDF" [ref=e206] [cursor=pointer]:
+                        - /url: /api/documents-pdf?type=facture&id=0ec6858e-12eb-4910-bc1c-e4856dcf520b
+                      - generic [ref=e208]:
+                        - generic [ref=e209] [cursor=pointer]:
+                          - generic [ref=e211]: Brouillon
+                          - generic [ref=e212]: ▾
+                        - generic:
+                          - generic: Brouillon
+                          - generic: Envoyée
+                          - generic: Partiel
+                          - generic: Payée
+                          - generic: Annulée
+                - row "FACT-2026-1 BOUVEE — 960,00 € Payée 17/04/2026 Consulter PDF Payée ▾ Brouillon Envoyée Partiel Payée Annulée" [ref=e213]:
+                  - cell "FACT-2026-1" [ref=e214]:
+                    - generic [ref=e215]: FACT-2026-1
+                  - cell "BOUVEE" [ref=e216]
+                  - cell "—" [ref=e217]
+                  - cell "960,00 €" [ref=e218]
+                  - cell "Payée" [ref=e219]
+                  - cell "17/04/2026" [ref=e220]
+                  - cell "Consulter PDF Payée ▾ Brouillon Envoyée Partiel Payée Annulée" [ref=e221]:
+                    - generic [ref=e222]:
+                      - link "Consulter" [ref=e223] [cursor=pointer]:
+                        - /url: /dashboard/comptabilite/factures/4bcab25e-99fb-4d54-8b51-175782b26ae4
+                      - link "PDF" [ref=e224] [cursor=pointer]:
+                        - /url: /api/documents-pdf?type=facture&id=4bcab25e-99fb-4d54-8b51-175782b26ae4
+                      - generic [ref=e226]:
+                        - generic [ref=e227] [cursor=pointer]:
+                          - generic [ref=e229]: Payée
+                          - generic [ref=e230]: ▾
+                        - generic:
+                          - generic: Brouillon
+                          - generic: Envoyée
+                          - generic: Partiel
+                          - generic: Payée
+                          - generic: Annulée
+  - button "Open Next.js Dev Tools" [ref=e72] [cursor=pointer]:
+    - img [ref=e73]
+  - alert [ref=e76]

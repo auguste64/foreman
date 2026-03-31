@@ -1,0 +1,115 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e3]:
+    - complementary [ref=e4]:
+      - generic [ref=e5]:
+        - link "THE BUILDER" [ref=e6] [cursor=pointer]:
+          - /url: /dashboard
+          - generic [ref=e17]:
+            - generic [ref=e18]: THE
+            - generic [ref=e19]: BUILDER
+        - button "Notifications" [ref=e20] [cursor=pointer]:
+          - img [ref=e21]
+      - navigation [ref=e24]:
+        - link "Tableau de bord" [ref=e25] [cursor=pointer]:
+          - /url: /dashboard
+          - generic [ref=e26]: Tableau de bord
+        - link "Chantiers" [ref=e27] [cursor=pointer]:
+          - /url: /dashboard/chantiers
+          - generic [ref=e28]: Chantiers
+        - link "Comptes rendus" [ref=e29] [cursor=pointer]:
+          - /url: /dashboard/comptes-rendus
+          - generic [ref=e30]: Comptes rendus
+        - link "Documents" [ref=e31] [cursor=pointer]:
+          - /url: /dashboard/documents
+          - generic [ref=e32]: Documents
+        - link "Analyse" [ref=e33] [cursor=pointer]:
+          - /url: /dashboard/finances
+          - generic [ref=e34]: Analyse
+        - link "Artisans" [ref=e35] [cursor=pointer]:
+          - /url: /dashboard/artisans
+          - generic [ref=e36]: Artisans
+        - link "Clients" [ref=e37] [cursor=pointer]:
+          - /url: /dashboard/clients
+          - generic [ref=e38]: Clients
+        - link "Planning" [ref=e39] [cursor=pointer]:
+          - /url: /dashboard/planning
+          - generic [ref=e40]: Planning
+        - link "Paramètres" [ref=e41] [cursor=pointer]:
+          - /url: /dashboard/parametres
+          - generic [ref=e42]: Paramètres
+      - generic [ref=e44]:
+        - link "A auguste.bouvee1" [ref=e45] [cursor=pointer]:
+          - /url: /dashboard/parametres
+          - generic [ref=e46]: A
+          - generic [ref=e47]: auguste.bouvee1
+          - img [ref=e49]
+        - generic [ref=e52]: auguste.bouvee1@gmail.com
+        - button "← Déconnexion" [ref=e54] [cursor=pointer]
+    - main [ref=e55]:
+      - main [ref=e56]:
+        - generic [ref=e57]:
+          - generic [ref=e58]:
+            - heading "Tableau de bord" [level=1] [ref=e59]
+            - paragraph [ref=e60]: Bon après-midi, Atelier JP BOUVEE — Voici l'état de vos chantiers.
+          - generic [ref=e61]: mardi 31 mars 2026
+        - generic [ref=e62]:
+          - generic [ref=e63]:
+            - paragraph [ref=e64]: CHANTIERS ACTIFS
+            - paragraph [ref=e65]: "0"
+            - paragraph [ref=e66]: en cours actuellement
+            - paragraph [ref=e67]: ● Actif
+          - generic [ref=e68]:
+            - paragraph [ref=e69]: TOTAL CHANTIERS
+            - paragraph [ref=e70]: "0"
+            - paragraph [ref=e71]: depuis le début
+          - generic [ref=e72] [cursor=pointer]:
+            - paragraph [ref=e73]: DEVIS ACCEPTÉS
+            - paragraph [ref=e74]: 0 €
+            - paragraph [ref=e75]: 0 devis acceptés
+          - generic [ref=e76] [cursor=pointer]:
+            - paragraph [ref=e77]: IMPAYÉS
+            - paragraph [ref=e78]: 0 €
+            - paragraph [ref=e79]: 0 factures en attente
+        - generic [ref=e80]:
+          - link "+ Nouveau chantier" [ref=e81] [cursor=pointer]:
+            - /url: /dashboard/chantiers/nouveau
+          - link "+ Nouveau compte rendu" [ref=e82] [cursor=pointer]:
+            - /url: /dashboard/comptes-rendus/nouveau
+          - link "+ Nouveau devis" [ref=e83] [cursor=pointer]:
+            - /url: /dashboard/comptabilite/devis/nouveau
+          - link "+ Nouvelle facture" [ref=e84] [cursor=pointer]:
+            - /url: /dashboard/comptabilite/factures/nouveau
+          - link "+ Ajouter un artisan" [ref=e85] [cursor=pointer]:
+            - /url: /dashboard/artisans/nouveau
+          - link "+ Ajouter un client" [ref=e86] [cursor=pointer]:
+            - /url: /dashboard/clients/nouveau
+        - generic [ref=e87]:
+          - generic [ref=e88]:
+            - generic [ref=e89]:
+              - heading "Chantiers en cours" [level=3] [ref=e90]
+              - link "Voir tous →" [ref=e91] [cursor=pointer]:
+                - /url: /dashboard/chantiers
+            - generic [ref=e93]:
+              - link "FABOS" [ref=e94] [cursor=pointer]:
+                - /url: /dashboard/chantiers/f5d1d5f0-2404-4b5f-9ba6-1a9b2237148e
+                - generic [ref=e95]:
+                  - paragraph [ref=e96]: FABOS
+                  - paragraph
+              - link "ETSOLA 1022 AV DE LA BECASSE, 40140 SOORTS-HOSSEGOR" [ref=e97] [cursor=pointer]:
+                - /url: /dashboard/chantiers/9f309334-e318-43fd-a81b-d0e449051044
+                - generic [ref=e98]:
+                  - paragraph [ref=e99]: ETSOLA
+                  - paragraph [ref=e100]: 1022 AV DE LA BECASSE, 40140 SOORTS-HOSSEGOR
+          - generic [ref=e101]:
+            - generic [ref=e102]:
+              - heading "Prochains événements" [level=3] [ref=e103]
+              - link "Voir tous →" [ref=e104] [cursor=pointer]:
+                - /url: /dashboard/planning
+            - generic [ref=e106]:
+              - img [ref=e107]
+              - paragraph [ref=e111]: Aucun événement prévu
+              - link "+ Planifier" [ref=e112] [cursor=pointer]:
+                - /url: /dashboard/planning
+  - button "Open Next.js Dev Tools" [ref=e118] [cursor=pointer]:
+    - img [ref=e119]
+  - alert [ref=e122]

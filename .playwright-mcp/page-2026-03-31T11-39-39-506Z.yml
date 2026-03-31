@@ -1,0 +1,114 @@
+- generic [ref=e1]:
+  - generic [ref=e3]:
+    - complementary [ref=e4]:
+      - generic [ref=e5]:
+        - link "THE BUILDER" [ref=e6] [cursor=pointer]:
+          - /url: /dashboard
+          - generic [ref=e17]:
+            - generic [ref=e18]: THE
+            - generic [ref=e19]: BUILDER
+        - button "Notifications" [ref=e20] [cursor=pointer]:
+          - img [ref=e21]
+      - navigation [ref=e24]:
+        - link "Tableau de bord" [ref=e25] [cursor=pointer]:
+          - /url: /dashboard
+          - generic [ref=e26]: Tableau de bord
+        - link "Chantiers" [ref=e27] [cursor=pointer]:
+          - /url: /dashboard/chantiers
+          - generic [ref=e28]: Chantiers
+        - link "Comptes rendus" [ref=e29] [cursor=pointer]:
+          - /url: /dashboard/comptes-rendus
+          - generic [ref=e30]: Comptes rendus
+        - link "Documents" [ref=e31] [cursor=pointer]:
+          - /url: /dashboard/documents
+          - generic [ref=e32]: Documents
+        - link "Analyse" [ref=e33] [cursor=pointer]:
+          - /url: /dashboard/finances
+          - generic [ref=e34]: Analyse
+        - link "Artisans" [ref=e35] [cursor=pointer]:
+          - /url: /dashboard/artisans
+          - generic [ref=e36]: Artisans
+        - link "Clients" [ref=e37] [cursor=pointer]:
+          - /url: /dashboard/clients
+          - generic [ref=e38]: Clients
+        - link "Planning" [ref=e39] [cursor=pointer]:
+          - /url: /dashboard/planning
+          - generic [ref=e40]: Planning
+        - link "Paramètres" [ref=e41] [cursor=pointer]:
+          - /url: /dashboard/parametres
+          - generic [ref=e42]: Paramètres
+      - generic [ref=e44]:
+        - link "A Atelier JP BOUVEE" [ref=e77] [cursor=pointer]:
+          - /url: /dashboard/parametres
+          - generic [ref=e46]: A
+          - generic [ref=e47]: Atelier JP BOUVEE
+          - img [ref=e49]
+        - generic [ref=e52]: auguste.bouvee1@gmail.com
+        - button "← Déconnexion" [ref=e54] [cursor=pointer]
+    - main [ref=e55]:
+      - generic [ref=e56]:
+        - generic [ref=e57]:
+          - button "Devis" [ref=e58] [cursor=pointer]
+          - button "Factures" [ref=e59] [cursor=pointer]
+          - button "Honoraires" [ref=e60] [cursor=pointer]
+          - button "Acomptes" [ref=e61] [cursor=pointer]
+          - button "Avoirs" [ref=e62] [cursor=pointer]
+          - button "Contrats MOE" [ref=e63] [cursor=pointer]
+          - button "CGV" [ref=e64] [cursor=pointer]
+          - button "Suivi dossiers" [active] [ref=e65] [cursor=pointer]
+        - generic [ref=e275]:
+          - generic [ref=e276]:
+            - heading "Suivi dossiers" [level=1] [ref=e277]
+            - paragraph [ref=e278]: Vue récapitulative par chantier — devis, factures, honoraires
+          - generic [ref=e279]:
+            - img
+            - textbox "Filtrer par chantier…" [ref=e280]
+          - table [ref=e282]:
+            - rowgroup [ref=e283]:
+              - row "Chantier Devis Factures Honoraires Statut global" [ref=e284]:
+                - columnheader "Chantier" [ref=e285]
+                - columnheader "Devis" [ref=e286]
+                - columnheader "Factures" [ref=e287]
+                - columnheader "Honoraires" [ref=e288]
+                - columnheader "Statut global" [ref=e289]
+            - rowgroup [ref=e290]:
+              - row "ETSOLA 1022 AV DE LA BECASSE, 40140 SOORTS-HOSSEGOR 960,00 € 1 devis 960,00 € 1 facture — En cours" [ref=e291]:
+                - cell "ETSOLA 1022 AV DE LA BECASSE, 40140 SOORTS-HOSSEGOR" [ref=e292]:
+                  - generic [ref=e293]:
+                    - link "ETSOLA" [ref=e295] [cursor=pointer]:
+                      - /url: /dashboard/chantiers/9f309334-e318-43fd-a81b-d0e449051044
+                    - paragraph [ref=e296]: 1022 AV DE LA BECASSE, 40140 SOORTS-HOSSEGOR
+                - cell "960,00 € 1 devis" [ref=e297]:
+                  - generic [ref=e298]:
+                    - text: 960,00 €
+                    - generic [ref=e299]: 1 devis
+                - cell "960,00 € 1 facture" [ref=e300]:
+                  - generic [ref=e301]:
+                    - text: 960,00 €
+                    - generic [ref=e302]: 1 facture
+                - cell "—" [ref=e303]
+                - cell "En cours" [ref=e304]
+              - row "FABOS — — — Vierge" [ref=e305]:
+                - cell "FABOS" [ref=e306]:
+                  - link "FABOS" [ref=e309] [cursor=pointer]:
+                    - /url: /dashboard/chantiers/f5d1d5f0-2404-4b5f-9ba6-1a9b2237148e
+                - cell "—" [ref=e310]
+                - cell "—" [ref=e311]
+                - cell "—" [ref=e312]
+                - cell "Vierge" [ref=e313]
+              - row "Sans chantier 113 712,00 € 1 devis 79 598,40 € 1 facture — En cours" [ref=e314]:
+                - cell "Sans chantier" [ref=e315]:
+                  - generic [ref=e317]: Sans chantier
+                - cell "113 712,00 € 1 devis" [ref=e318]:
+                  - generic [ref=e319]:
+                    - text: 113 712,00 €
+                    - generic [ref=e320]: 1 devis
+                - cell "79 598,40 € 1 facture" [ref=e321]:
+                  - generic [ref=e322]:
+                    - text: 79 598,40 €
+                    - generic [ref=e323]: 1 facture
+                - cell "—" [ref=e324]
+                - cell "En cours" [ref=e325]
+  - button "Open Next.js Dev Tools" [ref=e72] [cursor=pointer]:
+    - img [ref=e73]
+  - alert [ref=e76]
