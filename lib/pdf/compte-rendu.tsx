@@ -365,6 +365,14 @@ const S = StyleSheet.create({
   },
 })
 
+// ── Safe image helper ────────────────────────────────────────────────
+function isSafeImageSrc(src: string): boolean {
+  if (src.startsWith('data:')) {
+    return src.startsWith('data:image') && src.length <= 500000
+  }
+  return true
+}
+
 // ── PDF Component ────────────────────────────────────────────────────
 export function CompteRenduPDF({
   compteRendu,
@@ -468,7 +476,7 @@ export function CompteRenduPDF({
                     ) : null}
                     {r.photos && r.photos.length > 0 && (
                       <View style={S.cardPhotos}>
-                        {r.photos.slice(0, 4).map((src, pi) => (
+                        {r.photos.slice(0, 4).filter(isSafeImageSrc).map((src, pi) => (
                           <Image key={pi} src={src} style={S.cardPhoto} />
                         ))}
                       </View>

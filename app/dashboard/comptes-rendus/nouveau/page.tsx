@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState, useRef } from 'react'
 import { createPortal } from 'react-dom'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
@@ -116,6 +116,48 @@ const blur = (e: React.FocusEvent<HTMLElement>) => {
 function uid() { return Math.random().toString(36).slice(2) }
 const emptyProfile = (): Profile => ({ nom: '', societe: '', adresse: '', telephone: '', email: '', siret: '', logo: '' })
 
+// ─── Chantier dropdown helpers ────────────────────────────────────────────────
+
+function ChantierOption({ label, selected, onClick }: { label: string; selected: boolean; onClick: () => void }) {
+  const [hovered, setHovered] = React.useState(false)
+  return (
+    <div
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      onClick={onClick}
+      style={{
+        padding: '10px 14px', fontSize: '14px', cursor: 'pointer',
+        color: selected ? '#fff' : '#F0EDE6',
+        backgroundColor: selected ? '#ea580c' : hovered ? '#1E1E1C' : 'transparent',
+        fontFamily: 'var(--font-dm-sans), sans-serif',
+        transition: 'background-color 0.1s',
+      }}
+    >
+      {label}
+    </div>
+  )
+}
+
+function ChantierAddOption({ onClick }: { onClick: () => void }) {
+  const [hovered, setHovered] = React.useState(false)
+  return (
+    <div
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      onClick={onClick}
+      style={{
+        padding: '10px 14px', fontSize: '14px', cursor: 'pointer',
+        color: '#ea580c',
+        backgroundColor: hovered ? '#1E1E1C' : 'transparent',
+        fontFamily: 'var(--font-dm-sans), sans-serif',
+        transition: 'background-color 0.1s',
+      }}
+    >
+      ＋ Ajouter un chantier
+    </div>
+  )
+}
+
 // ─── Component ────────────────────────────────────────────────────────────────
 
 export default function NouveauCompteRenduPage() {
@@ -135,6 +177,9 @@ export default function NouveauCompteRenduPage() {
   const [chantierArtisans, setChantierArtisans] = useState<{ id: string; nom: string; metier: string | null }[]>([])
   const [allArtisans, setAllArtisans] = useState<{ id: string; nom: string; metier: string | null }[]>([])
   const [draftSaved, setDraftSaved] = useState(false)
+
+  const [chantierDropdownOpen, setChantierDropdownOpen] = useState(false)
+  const chantierDropdownRef = useRef<HTMLDivElement>(null)
 
   // External intervenant form (Présences tab)
   const [showExternalForm, setShowExternalForm] = useState(false)
@@ -161,6 +206,18 @@ export default function NouveauCompteRenduPage() {
     artisans_presents: [] as string[],
     photos: [] as string[],
   })
+
+  // Close chantier dropdown on outside click
+  useEffect(() => {
+    if (!chantierDropdownOpen) return
+    const handler = (e: MouseEvent) => {
+      if (chantierDropdownRef.current && !chantierDropdownRef.current.contains(e.target as Node)) {
+        setChantierDropdownOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
+  }, [chantierDropdownOpen])
 
   // Load chantiers + all artisans
   useEffect(() => {
@@ -518,14 +575,58 @@ export default function NouveauCompteRenduPage() {
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
                   <div>
                     <label style={labelStyle}>Chantier associé *</label>
-                    <select value={form.chantier_id} onChange={(e) => setField('chantier_id', e.target.value)} required
-                      style={{ width: '100%', padding: '10px 14px', backgroundColor: '#111110', border: '1px solid #1E1E1C', borderRadius: '8px', color: form.chantier_id ? '#F0EDE6' : '#8A8880', fontSize: '14px', outline: 'none', fontFamily: 'var(--font-dm-sans), sans-serif', cursor: 'pointer', appearance: 'none', WebkitAppearance: 'none', colorScheme: 'dark', boxSizing: 'border-box' } as React.CSSProperties}
-                      onFocus={focus} onBlur={blur}>
-                      <option value="" style={{ backgroundColor: '#111110' }}>Sélectionner un chantier…</option>
-                      {chantiers.map((c) => (
-                        <option key={c.id} value={c.id} style={{ backgroundColor: '#111110' }}>{c.nom} — {c.client}</option>
-                      ))}
-                    </select>
+                    <div ref={chantierDropdownRef} style={{ position: 'relative', width: '100%' }}>
+                      {/* Trigger button */}
+                      <button
+                        type="button"
+                        onClick={() => setChantierDropdownOpen(o => !o)}
+                        style={{
+                          width: '100%', padding: '10px 36px 10px 14px',
+                          backgroundColor: '#111110', border: `1px solid ${chantierDropdownOpen ? '#ea580c' : '#1E1E1C'}`,
+                          borderRadius: '8px',
+                          color: form.chantier_id ? '#F0EDE6' : '#8A8880',
+                          fontSize: '14px', fontFamily: 'var(--font-dm-sans), sans-serif',
+                          cursor: 'pointer', textAlign: 'left', outline: 'none',
+                          boxShadow: chantierDropdownOpen ? '0 0 0 2px rgba(249,115,22,0.15)' : 'none',
+                          boxSizing: 'border-box', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                        } as React.CSSProperties}
+                      >
+                        <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                          {form.chantier_id
+                            ? (() => { const c = chantiers.find(x => x.id === form.chantier_id); return c ? `${c.nom} — ${c.client}` : 'Sélectionner un chantier…' })()
+                            : 'Sélectionner un chantier…'}
+                        </span>
+                        <svg width="12" height="12" viewBox="0 0 12 12" fill="none" style={{ flexShrink: 0, color: '#8A8880', transform: chantierDropdownOpen ? 'rotate(180deg)' : 'none', transition: 'transform 0.15s' }}>
+                          <path d="M2 4l4 4 4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                        </svg>
+                      </button>
+
+                      {/* Dropdown list */}
+                      {chantierDropdownOpen && (
+                        <div style={{
+                          position: 'absolute', top: 'calc(100% + 4px)', left: 0, right: 0,
+                          backgroundColor: '#111110', border: '1px solid #1E1E1C', borderRadius: '8px',
+                          boxShadow: '0 4px 12px rgba(0,0,0,0.4)',
+                          zIndex: 50, overflow: 'hidden', maxHeight: '260px', overflowY: 'auto',
+                        }}>
+                          {chantiers.length === 0 && (
+                            <div style={{ padding: '10px 14px', color: '#8A8880', fontSize: '14px' }}>Aucun chantier</div>
+                          )}
+                          {chantiers.map((c) => (
+                            <ChantierOption
+                              key={c.id}
+                              label={`${c.nom} — ${c.client}`}
+                              selected={form.chantier_id === c.id}
+                              onClick={() => { setField('chantier_id', c.id); setChantierDropdownOpen(false) }}
+                            />
+                          ))}
+                          {/* Séparateur */}
+                          <div style={{ borderTop: '1px solid #1E1E1C', margin: '0' }} />
+                          {/* Ajouter un chantier */}
+                          <ChantierAddOption onClick={() => { setChantierDropdownOpen(false); router.push('/dashboard/chantiers/nouveau') }} />
+                        </div>
+                      )}
+                    </div>
                   </div>
 
                   {/* Dates */}

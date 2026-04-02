@@ -7,6 +7,7 @@ import { getProfile, upsertProfile } from '@/lib/supabase/profiles'
 import { toast } from '@/components/Toast'
 import { useDocumentTemplate } from '@/lib/useDocumentTemplate'
 import type { Clause } from '@/lib/default-clauses'
+import { usePlan } from '@/lib/usePlan'
 
 // ─── Styles partagés ──────────────────────────────────────────────────────────
 
@@ -252,13 +253,14 @@ function ClauseEditor({ type }: { type: 'cgv' | 'contrat_moe' }) {
 
 // ─── Page principale ──────────────────────────────────────────────────────────
 
-type Tab = 'profil' | 'securite' | 'cgv' | 'moe'
+type Tab = 'profil' | 'securite' | 'cgv' | 'moe' | 'abonnement'
 
 const TABS: { id: Tab; label: string }[] = [
   { id: 'profil', label: 'Profil' },
   { id: 'securite', label: 'Sécurité' },
   { id: 'cgv', label: 'CGP' },
   { id: 'moe', label: 'Contrat MOE' },
+  { id: 'abonnement', label: 'Abonnement' },
 ]
 
 function tabFromParam(param: string | null): Tab {
@@ -300,6 +302,10 @@ function ParametresContent() {
   const [pwForm, setPwForm] = useState({ password: '', confirm: '' })
   const [savingPw, setSavingPw] = useState(false)
   const [pwError, setPwError] = useState<string | null>(null)
+
+  const { plan, loading: planLoading } = usePlan()
+  const [portalLoading, setPortalLoading] = useState(false)
+  const [portalError, setPortalError] = useState<string | null>(null)
 
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
@@ -408,6 +414,20 @@ function ParametresContent() {
       setPwError(err instanceof Error ? err.message : 'Erreur')
     } finally {
       setSavingPw(false)
+    }
+  }
+
+  async function handlePortal() {
+    setPortalLoading(true)
+    setPortalError(null)
+    try {
+      const res = await fetch('/api/stripe/portal', { method: 'POST' })
+      const json = await res.json()
+      if (!res.ok) throw new Error(json.error ?? 'Erreur')
+      window.location.href = json.url
+    } catch (err: unknown) {
+      setPortalError(err instanceof Error ? err.message : 'Erreur')
+      setPortalLoading(false)
     }
   }
 
@@ -691,6 +711,60 @@ function ParametresContent() {
               </p>
             </div>
             <ClauseEditor type="contrat_moe" />
+          </div>
+        )}
+
+        {/* ── Abonnement ── */}
+        {activeTab === 'abonnement' && (
+          <div style={{ backgroundColor: '#111110', border: '1px solid #1E1E1C', borderRadius: '12px', padding: '28px' }}>
+            <h2 style={{ fontFamily: 'var(--font-syne), sans-serif', fontSize: '16px', fontWeight: 600, color: '#F0EDE6', margin: '0 0 24px' }}>
+              Abonnement
+            </h2>
+
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '24px' }}>
+              <span style={{ fontSize: '13px', color: '#8A8880', fontFamily: 'var(--font-dm-sans), sans-serif' }}>
+                Plan actuel
+              </span>
+              {planLoading ? (
+                <span style={{ fontSize: '13px', color: '#7A7870', fontFamily: 'var(--font-dm-sans), sans-serif' }}>…</span>
+              ) : (
+                <span style={{
+                  padding: '3px 10px',
+                  borderRadius: '6px',
+                  fontSize: '12px',
+                  fontWeight: 700,
+                  letterSpacing: '0.06em',
+                  textTransform: 'uppercase',
+                  fontFamily: 'var(--font-dm-sans), sans-serif',
+                  ...(plan === 'pro'
+                    ? { background: 'rgba(234,88,12,0.15)', color: '#ea580c', border: '1px solid rgba(234,88,12,0.3)' }
+                    : { background: '#1E1E1C', color: '#8A8880', border: '1px solid #2A2A27' }
+                  ),
+                }}>
+                  {plan === 'pro' ? 'PRO' : 'Essentiel'}
+                </span>
+              )}
+            </div>
+
+            <div style={{ borderTop: '1px solid #1E1E1C', paddingTop: '20px' }}>
+              {portalError && (
+                <p style={{ fontSize: '13px', color: '#E85447', marginBottom: '12px', fontFamily: 'var(--font-dm-sans), sans-serif', background: 'rgba(232,84,71,0.08)', border: '1px solid rgba(232,84,71,0.2)', borderRadius: '6px', padding: '10px 14px' }}>
+                  {portalError}
+                </p>
+              )}
+              <button
+                onClick={handlePortal}
+                disabled={portalLoading}
+                style={{ padding: '10px 24px', backgroundColor: portalLoading ? '#c45a10' : '#ea580c', color: '#0D0D0B', border: 'none', borderRadius: '8px', fontSize: '14px', fontWeight: 600, cursor: portalLoading ? 'not-allowed' : 'pointer', fontFamily: 'var(--font-dm-sans), sans-serif', transition: 'all 0.2s ease' }}
+                onMouseEnter={e => { if (!portalLoading) { e.currentTarget.style.transform = 'translateY(-1px)'; e.currentTarget.style.boxShadow = '0 0 20px rgba(249,115,22,0.4)' } }}
+                onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = 'none' }}
+              >
+                {portalLoading ? 'Redirection…' : 'Gérer mon abonnement'}
+              </button>
+              <p style={{ fontSize: '12px', color: '#5A5A58', marginTop: '10px', fontFamily: 'var(--font-dm-sans), sans-serif' }}>
+                Vous serez redirigé vers le portail Stripe pour gérer votre abonnement, vos factures et vos moyens de paiement.
+              </p>
+            </div>
           </div>
         )}
 
