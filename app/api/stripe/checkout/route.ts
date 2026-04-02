@@ -52,7 +52,7 @@ export async function POST(req: NextRequest) {
       payment_method_types: ['card'],
       line_items: [{ price: priceId, quantity: 1 }],
       success_url: `${baseUrl}/dashboard?upgraded=true`,
-      cancel_url:  `${baseUrl}/tarifs`,
+      cancel_url:  `${baseUrl}/`,
       metadata: { supabase_user_id: user.id, price_id: priceId },
       subscription_data: {
         metadata: { supabase_user_id: user.id, price_id: priceId },
@@ -61,7 +61,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ url: session.url })
   } catch (err) {
-    console.error('[stripe/checkout]', err)
+    console.error('[stripe/checkout] ERREUR COMPLÈTE:', JSON.stringify(err, Object.getOwnPropertyNames(err)))
     return NextResponse.json({ error: 'Erreur interne' }, { status: 500 })
   }
 }

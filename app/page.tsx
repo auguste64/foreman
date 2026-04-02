@@ -2,6 +2,9 @@ import './landing.css'
 import LandingAnimations from './LandingAnimations'
 import Image from 'next/image'
 import PricingCards from './PricingCards'
+import { Suspense } from 'react'
+import AbonnementBanner from './AbonnementBanner'
+import CtaButton from './CtaButton'
 
 export const metadata = {
   title: "The Builder — Gestion de chantier pour architectes et MOEs",
@@ -12,6 +15,9 @@ export const metadata = {
 export default function Home() {
   return (
     <div className="lp-wrapper">
+      <Suspense fallback={null}>
+        <AbonnementBanner />
+      </Suspense>
       <LandingAnimations />
 
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify({
@@ -66,7 +72,7 @@ export default function Home() {
         </a>
         <div className="nav-right">
           <a href="/login" className="btn btn-ghost btn-sm">Se connecter</a>
-          <a href="/login" className="btn btn-primary btn-sm">Commencer →</a>
+          <CtaButton className="btn btn-primary btn-sm">Commencer →</CtaButton>
         </div>
       </nav>
 
@@ -91,7 +97,7 @@ export default function Home() {
         </div>
 
         <div className="hero-cta anim d4">
-          <a href="/login" className="btn btn-primary btn-md">Commencer gratuitement →</a>
+          <CtaButton className="btn btn-primary btn-md">Commencer gratuitement →</CtaButton>
         </div>
 
         <div className="anim d5" style={{ marginTop: '16px', position: 'relative', zIndex: 3 }}>
@@ -281,7 +287,7 @@ export default function Home() {
         <p className="closer-sub reveal anim d1">
           Rejoignez les architectes et MOEs qui ont adopté The Builder. Commencez en moins de 2 minutes.
         </p>
-        <a href="/login" className="btn btn-primary btn-lg reveal anim d2">Essayer gratuitement →</a>
+        <CtaButton className="btn btn-primary btn-lg reveal anim d2">Essayer gratuitement →</CtaButton>
       </section>
 
       {/* FOOTER */}

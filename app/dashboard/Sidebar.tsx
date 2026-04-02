@@ -56,18 +56,21 @@ function GearIconHoverable() {
   )
 }
 
-type NavItem = { href: string; label: string; requiresComplet?: boolean; id?: string }
+type NavItem = { href: string; label: string; requiresPro?: boolean; id?: string }
 
 const navItems: NavItem[] = [
   { href: '/dashboard', label: 'Tableau de bord' },
   { href: '/dashboard/chantiers', label: 'Chantiers', id: 'nav-chantiers' },
   { href: '/dashboard/comptes-rendus', label: 'Comptes rendus', id: 'nav-comptes-rendus' },
-  { href: '/dashboard/documents', label: 'Documents', requiresComplet: true, id: 'nav-documents' },
-  { href: '/dashboard/finances', label: 'Analyse', requiresComplet: true },
   { href: '/dashboard/artisans', label: 'Artisans', id: 'nav-artisans' },
-  { href: '/dashboard/clients', label: 'Clients' },
   { href: '/dashboard/planning', label: 'Planning', id: 'nav-planning' },
+  { href: '/dashboard/clients', label: 'Clients' },
   { href: '/dashboard/parametres', label: 'Paramètres' },
+  { href: '/dashboard/comptabilite', label: 'Comptabilité', requiresPro: true },
+  { href: '/dashboard/documents', label: 'Documents', requiresPro: true, id: 'nav-documents' },
+  { href: '/dashboard/contrats', label: 'Contrats', requiresPro: true },
+  { href: '/dashboard/finances', label: 'Analyse', requiresPro: true },
+  { href: '/dashboard/stats', label: 'Statistiques', requiresPro: true },
 ]
 
 const NOTIF_ICONS: Record<string, string> = {
@@ -90,7 +93,7 @@ export default function Sidebar({ email }: { email: string }) {
   const router = useRouter()
   const isMobile = useIsMobile()
   const [mobileOpen, setMobileOpen] = useState(false)
-  const { isComplet } = usePlan()
+  const { isPro } = usePlan()
   const emailFallback = email?.split('@')[0] ?? ''
   const [displayName, setDisplayName] = useState(emailFallback)
   const [initial, setInitial] = useState(email?.[0]?.toUpperCase() ?? '?')
@@ -218,17 +221,40 @@ export default function Sidebar({ email }: { email: string }) {
       {/* Nav */}
       <nav style={{ flex: 1, padding: 16, display: 'flex', flexDirection: 'column', gap: 4, background: '#0D0D0B' }}>
         {navItems.map(item => {
-          const active = pathname === item.href || (item.href !== '/dashboard' && pathname.startsWith(item.href))
+          const locked = !!item.requiresPro && !isPro
+          const active = !locked && (pathname === item.href || (item.href !== '/dashboard' && pathname.startsWith(item.href)))
+          const sharedStyle: React.CSSProperties = {
+            display: 'flex', alignItems: 'center', gap: 0, padding: '10px 16px', borderRadius: 8,
+            fontSize: 14, fontWeight: 500, transition: 'all 0.2s ease', fontFamily: 'var(--font-syne)',
+            borderLeft: active ? '3px solid #ea580c' : '3px solid transparent',
+            color: active ? '#ea580c' : '#F0EDE6',
+            background: active ? 'rgba(249,115,22,0.08)' : 'transparent',
+            cursor: locked ? 'pointer' : undefined,
+            textDecoration: 'none',
+            opacity: locked ? 0.4 : 1,
+          }
+
+          if (locked) {
+            return (
+              <div key={item.href} id={item.id}
+                style={sharedStyle}
+                onClick={() => router.push('/dashboard/upgrade')}
+                onMouseEnter={e => { e.currentTarget.style.opacity = '0.7' }}
+                onMouseLeave={e => { e.currentTarget.style.opacity = '0.4' }}
+              >
+                <span style={{ flex: 1 }}>{item.label}</span>
+                <span style={{ background: '#ea580c', color: '#fff', fontSize: '0.6rem', fontWeight: 700, padding: '2px 6px', borderRadius: '4px', flexShrink: 0, letterSpacing: '0.05em' }}>PRO</span>
+              </div>
+            )
+          }
+
           return (
             <Link key={item.href} href={item.href} id={item.id}
-              style={{ display: 'flex', alignItems: 'center', gap: 0, padding: '10px 16px', borderRadius: 8, fontSize: 14, fontWeight: 500, color: active ? '#ea580c' : '#F0EDE6', background: active ? 'rgba(249,115,22,0.08)' : 'transparent', textDecoration: 'none', transition: 'all 0.2s ease', fontFamily: 'var(--font-syne)', borderLeft: active ? '3px solid #ea580c' : '3px solid transparent' }}
+              style={sharedStyle}
               onMouseEnter={e => { if (!active) { e.currentTarget.style.color = '#ea580c'; e.currentTarget.style.background = 'rgba(249,115,22,0.06)'; e.currentTarget.style.paddingLeft = '20px' } }}
               onMouseLeave={e => { if (!active) { e.currentTarget.style.color = '#F0EDE6'; e.currentTarget.style.background = 'transparent'; e.currentTarget.style.paddingLeft = '16px' } }}
             >
-<span style={{ flex: 1 }}>{item.label}</span>
-              {item.requiresComplet && !isComplet && (
-                <span style={{ background: '#1E1E1C', color: '#ea580c', fontSize: '0.6rem', fontWeight: 600, padding: '2px 6px', borderRadius: '4px', flexShrink: 0 }}>Pro</span>
-              )}
+              <span style={{ flex: 1 }}>{item.label}</span>
             </Link>
           )
         })}
@@ -251,7 +277,6 @@ export default function Sidebar({ email }: { email: string }) {
           </span>
           <GearIconHoverable />
         </Link>
-        <EmailAvatarTooltip email={email} initial={initial} />
         <form action="/auth/signout" method="post">
           <button type="submit" style={{ width: '100%', textAlign: 'left', fontSize: 12, color: '#7A7870', padding: '8px 12px', borderRadius: 8, border: 'none', background: 'transparent', cursor: 'pointer', transition: 'all 0.2s ease', fontFamily: 'var(--font-syne)' }}
             onMouseEnter={e => { e.currentTarget.style.color = '#ea580c'; e.currentTarget.style.background = 'rgba(249,115,22,0.08)' }}

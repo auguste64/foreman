@@ -2,26 +2,33 @@
 
 import { usePlan } from '@/lib/usePlan'
 
-const PLAN_LABELS: Record<'essentiel' | 'complet', string> = {
-  essentiel: 'Essentiel',
-  complet:   'Pro',
-}
-
 export default function UpgradeGate({
-  feature,
   requiredPlan,
   children,
+  message,
+  /** @deprecated kept for backwards compatibility */
+  feature,
 }: {
-  feature: string
-  requiredPlan: 'essentiel' | 'complet'
+  requiredPlan: 'essentiel' | 'pro' | 'complet'
   children?: React.ReactNode
+  message?: string
+  feature?: string
 }) {
-  const { isEssentiel, isComplet, loading } = usePlan()
+  const { isEssentiel, isPro, loading } = usePlan()
 
   if (loading) return null
 
-  const hasAccess = requiredPlan === 'essentiel' ? isEssentiel : isComplet
+  const effectivePlan = requiredPlan === 'complet' ? 'pro' : requiredPlan
+  const hasAccess = effectivePlan === 'essentiel' ? isEssentiel : isPro
   if (hasAccess) return children ? <>{children}</> : null
+
+  const displayMessage = message ?? (
+    effectivePlan === 'pro'
+      ? 'Passez au plan Pro pour accéder à cette fonctionnalité'
+      : 'Passez au plan Essentiel pour accéder à cette fonctionnalité'
+  )
+
+  const label = effectivePlan === 'pro' ? 'Pro' : 'Essentiel'
 
   return (
     <div style={{
@@ -54,7 +61,7 @@ export default function UpgradeGate({
           fontFamily: 'var(--font-syne), sans-serif',
           marginBottom: '10px',
         }}>
-          Fonctionnalité réservée au plan {PLAN_LABELS[requiredPlan]}
+          Fonctionnalité {label}
         </div>
 
         <div style={{
@@ -64,11 +71,11 @@ export default function UpgradeGate({
           marginBottom: '28px',
           fontFamily: 'var(--font-dm-sans), sans-serif',
         }}>
-          {feature} est disponible à partir du plan {PLAN_LABELS[requiredPlan]}.
+          {displayMessage}
         </div>
 
         <a
-          href="/#tarifs"
+          href="/dashboard/upgrade"
           style={{
             display: 'inline-block',
             background: '#ea580c',
@@ -81,7 +88,7 @@ export default function UpgradeGate({
             fontFamily: 'var(--font-syne), sans-serif',
           }}
         >
-          Passer au plan {PLAN_LABELS[requiredPlan]} →
+          Passer au {label} →
         </a>
       </div>
     </div>

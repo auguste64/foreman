@@ -8,6 +8,8 @@ import { createClient } from '@/lib/supabase/client'
 import { toast } from '@/components/Toast'
 import { useIsMobile } from '@/lib/useIsMobile'
 import { ComptabiliteContent } from '../comptabilite/page'
+import { usePlan } from '@/lib/usePlan'
+import UpgradeGate from '@/components/UpgradeGate'
 import type { Contrat } from '@/lib/supabase/contrats'
 import type { CgvProfile } from '@/lib/pdf/cgv'
 import type { Clause } from '@/lib/default-clauses'
@@ -33,9 +35,27 @@ const TAB_CONFIG: { id: DocSection; label: string }[] = [
 
 // ─── Main page ───────────────────────────────────────────────────────────────
 
+function Spinner() {
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh', background: '#0D0D0B' }}>
+      <div style={{ width: 28, height: 28, border: '2px solid #1E1E1C', borderTopColor: '#ea580c', borderRadius: '50%', animation: 'spin 0.7s linear infinite' }} />
+      <style>{`@keyframes spin { to { transform: rotate(360deg) } }`}</style>
+    </div>
+  )
+}
+
 export default function DocumentsPage() {
+  const router = useRouter()
+  const { plan, loading: planLoading } = usePlan()
   const [section, setSection] = useState<DocSection>('devis')
   const isMobile = useIsMobile()
+
+  useEffect(() => {
+    if (!planLoading && plan !== 'pro') router.replace('/dashboard/upgrade')
+  }, [planLoading, plan, router])
+
+  if (planLoading) return <Spinner />
+  if (plan !== 'pro') return null
 
   return (
     <div

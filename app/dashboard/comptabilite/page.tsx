@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { Settings } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { formatEurDoc } from '@/lib/supabase/documents'
@@ -11,6 +12,7 @@ import { toast } from '@/components/Toast'
 import CustomSelect from '@/components/CustomSelect'
 import SortPills from '@/components/SortPills'
 import UpgradeGate from '@/components/UpgradeGate'
+import { usePlan } from '@/lib/usePlan'
 
 type Tab = 'devis' | 'factures' | 'avoirs' | 'acomptes' | 'honoraires'
 
@@ -801,5 +803,25 @@ function StatutSelect({ options, value, onChange }: {
   )
 }
 
-// Default export keeps the standalone /dashboard/comptabilite route working
-export default ComptabiliteContent
+// Default export wraps with plan guard for the standalone /dashboard/comptabilite route
+function Spinner() {
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh', background: '#0D0D0B' }}>
+      <div style={{ width: 28, height: 28, border: '2px solid #1E1E1C', borderTopColor: '#ea580c', borderRadius: '50%', animation: 'spin 0.7s linear infinite' }} />
+      <style>{`@keyframes spin { to { transform: rotate(360deg) } }`}</style>
+    </div>
+  )
+}
+
+export default function ComptabilitePage() {
+  const router = useRouter()
+  const { plan, loading: planLoading } = usePlan()
+
+  useEffect(() => {
+    if (!planLoading && plan !== 'pro') router.replace('/dashboard/upgrade')
+  }, [planLoading, plan, router])
+
+  if (planLoading) return <Spinner />
+  if (plan !== 'pro') return null
+  return <ComptabiliteContent />
+}

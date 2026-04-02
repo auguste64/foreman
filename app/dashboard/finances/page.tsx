@@ -2,7 +2,9 @@
 
 import { useEffect, useState, useMemo } from 'react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
+import { usePlan } from '@/lib/usePlan'
 import UpgradeGate from '@/components/UpgradeGate'
 import {
   AreaChart, Area, BarChart, Bar, PieChart, Pie, Cell,
@@ -81,10 +83,25 @@ type DevisRow = {
 
 // ─── Page ────────────────────────────────────────────────────────────────────
 
+function Spinner() {
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh', background: '#0D0D0B' }}>
+      <div style={{ width: 28, height: 28, border: '2px solid #1E1E1C', borderTopColor: '#ea580c', borderRadius: '50%', animation: 'spin 0.7s linear infinite' }} />
+      <style>{`@keyframes spin { to { transform: rotate(360deg) } }`}</style>
+    </div>
+  )
+}
+
 export default function FinancesPage() {
+  const router = useRouter()
+  const { plan, loading: planLoading } = usePlan()
   const [factures, setFactures] = useState<FactureRow[]>([])
   const [devis, setDevis] = useState<DevisRow[]>([])
   const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    if (!planLoading && plan !== 'pro') router.replace('/dashboard/upgrade')
+  }, [planLoading, plan, router])
   const [objectif, setObjectif] = useState(50000)
   const [editingObjectif, setEditingObjectif] = useState(false)
   const [objectifInput, setObjectifInput] = useState('50000')
@@ -328,6 +345,9 @@ export default function FinancesPage() {
     )
   }
 
+  if (planLoading) return <Spinner />
+  if (plan !== 'pro') return null
+
   if (loading) {
     return (
       <div style={{ flex: 1, padding: '40px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -337,7 +357,7 @@ export default function FinancesPage() {
   }
 
   return (
-    <UpgradeGate requiredPlan="complet" feature="Analyse & statistiques">
+    <UpgradeGate requiredPlan="pro" feature="Analyse & statistiques">
     <div className="page-enter" style={{ flex: 1, padding: '40px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 32 }}>
 
       {/* Header */}

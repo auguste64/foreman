@@ -3,11 +3,23 @@
 import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 
-export type Plan = 'free' | 'essentiel' | 'complet'
+export type Plan = 'essentiel' | 'pro'
 
-export function usePlan() {
-  // Default 'complet' pendant le dev — aucun blocage tant que la colonne n'est pas en prod
-  const [plan, setPlan] = useState<Plan>('complet')
+interface PlanState {
+  plan: Plan | null
+  stripe_customer_id: string | null
+  stripe_subscription_id: string | null
+  loading: boolean
+  isEssentiel: boolean
+  isPro: boolean
+  /** @deprecated alias pour isPro */
+  isComplet: boolean
+}
+
+export function usePlan(): PlanState {
+  const [plan, setPlan] = useState<Plan | null>(null)
+  const [stripeCustomerId, setStripeCustomerId] = useState<string | null>(null)
+  const [stripeSubscriptionId, setStripeSubscriptionId] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -18,22 +30,29 @@ export function usePlan() {
 
       const { data } = await supabase
         .from('profiles')
-        .select('plan')
+        .select('plan, stripe_customer_id, stripe_subscription_id')
         .eq('id', session.user.id)
         .single()
 
-      if (data?.plan) setPlan(data.plan as Plan)
-      // Si plan null/absent → on garde 'complet' (défaut dev)
+      const resolvedPlan: Plan = (data?.plan === 'pro') ? 'pro' : 'essentiel'
+      setPlan(resolvedPlan)
+      setStripeCustomerId(data?.stripe_customer_id ?? null)
+      setStripeSubscriptionId(data?.stripe_subscription_id ?? null)
       setLoading(false)
     }
     fetchPlan()
   }, [])
 
+  const isPro = plan === 'pro'
+  const isEssentiel = plan === 'essentiel' || plan === 'pro'
+
   return {
     plan,
+    stripe_customer_id: stripeCustomerId,
+    stripe_subscription_id: stripeSubscriptionId,
     loading,
-    isFree:      plan === 'free',
-    isEssentiel: plan === 'essentiel' || plan === 'complet',
-    isComplet:   plan === 'complet',
+    isEssentiel,
+    isPro,
+    isComplet: isPro,
   }
 }

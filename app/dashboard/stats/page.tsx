@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import UpgradeGate from '@/components/UpgradeGate'
 import { usePlan } from '@/lib/usePlan'
@@ -32,11 +33,25 @@ type Stats = {
 
 type ChartPoint = { label: string; cr: number }
 
+function Spinner() {
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh', background: '#0D0D0B' }}>
+      <div style={{ width: 28, height: 28, border: '2px solid #1E1E1C', borderTopColor: '#ea580c', borderRadius: '50%', animation: 'spin 0.7s linear infinite' }} />
+      <style>{`@keyframes spin { to { transform: rotate(360deg) } }`}</style>
+    </div>
+  )
+}
+
 export default function StatsPage() {
   const [stats, setStats] = useState<Stats>({ crCeMois: 0, crTotal: 0, chantiersActifs: 0, artisans: 0 })
   const [chartData, setChartData] = useState<ChartPoint[]>([])
   const [loading, setLoading] = useState(true)
-  const { isComplet, loading: planLoading } = usePlan()
+  const router = useRouter()
+  const { plan, loading: planLoading } = usePlan()
+
+  useEffect(() => {
+    if (!planLoading && plan !== 'pro') router.replace('/dashboard/upgrade')
+  }, [planLoading, plan, router])
 
   useEffect(() => {
     async function load() {
@@ -85,8 +100,8 @@ export default function StatsPage() {
     { label: 'ARTISANS', value: stats.artisans, color: '#a78bfa' },
   ]
 
-  if (planLoading) return null
-  if (!isComplet) return <UpgradeGate feature="Analyse & statistiques" requiredPlan="complet" />
+  if (planLoading) return <Spinner />
+  if (plan !== 'pro') return null
 
   return (
     <div className="page-enter" style={{ flex: 1, padding: '40px', overflowY: 'auto' }}>

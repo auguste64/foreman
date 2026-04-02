@@ -5,6 +5,8 @@ import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import type { Contrat } from '@/lib/supabase/contrats'
 import { useIsMobile } from '@/lib/useIsMobile'
+import { usePlan } from '@/lib/usePlan'
+import UpgradeGate from '@/components/UpgradeGate'
 
 function fmtDate(d: string | null) {
   if (!d) return '—'
@@ -17,6 +19,7 @@ function fmtEur(n: number) {
 }
 
 export default function ContratsPage() {
+  const { isComplet } = usePlan()
   const isMobile = useIsMobile()
   const [contrats, setContrats] = useState<Contrat[]>([])
   const [loading, setLoading] = useState(true)
@@ -41,6 +44,8 @@ export default function ContratsPage() {
         c.adresse_chantier.toLowerCase().includes(search.toLowerCase())
       )
     : contrats
+
+  if (!isComplet) return <UpgradeGate feature="Contrats MOE" requiredPlan="pro" />
 
   return (
     <div className="page-enter" style={{ flex: 1, padding: isMobile ? '16px' : '40px', overflowY: 'auto' }}>

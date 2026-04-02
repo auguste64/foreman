@@ -58,7 +58,7 @@ export async function POST(req: NextRequest) {
     if (userId) {
       await supabase
         .from('profiles')
-        .update({ plan: 'gratuit', stripe_subscription_id: null })
+        .update({ plan: 'essentiel', stripe_subscription_id: null })
         .eq('id', userId)
     }
   }

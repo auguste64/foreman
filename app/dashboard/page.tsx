@@ -10,8 +10,12 @@ export default async function DashboardPage() {
 
   const [{ data: entreprise }, { data: profile }] = await Promise.all([
     supabase.from('entreprise_infos').select('raison_sociale').eq('user_id', user.id).single(),
-    supabase.from('profiles').select('prenom, nom, onboarding_done').eq('id', user.id).single(),
+    supabase.from('profiles').select('prenom, nom, onboarding_done, plan').eq('id', user.id).single(),
   ])
+
+  if (!profile?.plan || profile.plan === 'gratuit') {
+    redirect('/?abonnement=requis')
+  }
 
   const emailFallback = (user.email?.split('@')[0] ?? '').replace(/[0-9]/g, '')
   const emailFormate = emailFallback.charAt(0).toUpperCase() + emailFallback.slice(1)
