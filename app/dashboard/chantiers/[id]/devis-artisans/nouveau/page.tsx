@@ -347,7 +347,6 @@ export default function NouveauDevisArtisanPage() {
               type="text"
               value={form.lot}
               onChange={e => { setField('lot', e.target.value); setShowLotSuggestions(true) }}
-              onFocus={() => setShowLotSuggestions(true)}
               placeholder="ex: Électricité, Plomberie…"
               style={inputStyle}
               onFocus={e => { e.target.style.borderColor = '#ea580c'; setShowLotSuggestions(true) }}
