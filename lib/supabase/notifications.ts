@@ -1,6 +1,6 @@
 import { createClient } from './client'
 
-export type NotificationType = 'relance_devis' | 'relance_facture' | 'rappel_reunion'
+export type NotificationType = 'relance_devis' | 'relance_facture' | 'rappel_reunion' | 'rappel_rdv' | 'relance_reserve'
 
 export type Notification = {
   id: string

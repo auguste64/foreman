@@ -11,6 +11,18 @@ type NotifInsert = {
   lien: string | null
 }
 
+type Reserve = {
+  id: string
+  lot: string
+  description: string
+  statut: 'ouverte' | 'levee'
+}
+
+type ObservationsData = {
+  reserves?: Reserve[]
+  [key: string]: unknown
+}
+
 export async function POST() {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
@@ -47,8 +59,8 @@ export async function POST() {
     .lte('date_emission', sevenDaysAgo)
 
   for (const d of devisEnvoyes ?? []) {
-    const lien = `/dashboard/documents?tab=devis`
-    if (!isDupe('relance_devis', lien + `&id=${d.id}`)) {
+    const lien = `/dashboard/documents?tab=devis&id=${d.id}`
+    if (!isDupe('relance_devis', lien)) {
       const jours = Math.floor(
         (Date.now() - new Date(d.date_emission).getTime()) / 86400000
       )
@@ -57,13 +69,13 @@ export async function POST() {
         type: 'relance_devis',
         titre: `Relancer ${d.client_nom} — Devis ${d.numero}`,
         message: `Le devis ${d.numero} envoyé à ${d.client_nom} est sans réponse depuis ${jours} jours.`,
-        lien: `/dashboard/documents?tab=devis&id=${d.id}`,
+        lien,
       })
     }
   }
 
-  // ── 2. Factures impayées depuis >30 jours ─────────────────────────────
-  const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
+  // ── 2. Factures impayées depuis >15 jours ─────────────────────────────
+  const fifteenDaysAgo = new Date(Date.now() - 15 * 24 * 60 * 60 * 1000)
     .toISOString().split('T')[0]
 
   const { data: facturesImpayes } = await supabase
@@ -71,7 +83,7 @@ export async function POST() {
     .select('id, numero, client_nom, date_emission')
     .eq('user_id', userId)
     .in('statut', ['envoyee', 'partiellement_payee'])
-    .lte('date_emission', thirtyDaysAgo)
+    .lte('date_emission', fifteenDaysAgo)
 
   for (const f of facturesImpayes ?? []) {
     const lien = `/dashboard/documents?tab=factures&id=${f.id}`
@@ -89,7 +101,36 @@ export async function POST() {
     }
   }
 
-  // ── 3. Réunions planifiées demain ─────────────────────────────────────
+  // ── 3. RDV dans les 24h à venir (tous types d'événements) ────────────
+  const now = new Date()
+  const in24h = new Date(now.getTime() + 24 * 60 * 60 * 1000)
+
+  const { data: rdvProches } = await supabase
+    .from('evenements')
+    .select('id, titre, type, date_debut, chantiers(nom)')
+    .eq('user_id', userId)
+    .gte('date_debut', now.toISOString())
+    .lte('date_debut', in24h.toISOString())
+
+  for (const ev of rdvProches ?? []) {
+    const lien = `/dashboard/planning`
+    const dedupKey = `rappel_rdv::${lien}::${ev.id}`
+    if (!existingKeys.has(dedupKey)) {
+      const chantierNom = (ev.chantiers as { nom?: string } | null)?.nom ?? null
+      const heure = new Date(ev.date_debut).toLocaleTimeString('fr-FR', {
+        hour: '2-digit', minute: '2-digit',
+      })
+      toInsert.push({
+        user_id: userId,
+        type: 'rappel_rdv',
+        titre: `RDV dans moins de 24h : ${ev.titre}`,
+        message: `"${ev.titre}" prévu aujourd'hui à ${heure}${chantierNom ? ` — ${chantierNom}` : ''}.`,
+        lien,
+      })
+    }
+  }
+
+  // ── 4. Réunions planifiées demain (relance spécifique réunion) ─────────
   const tomorrow = new Date()
   tomorrow.setDate(tomorrow.getDate() + 1)
   const tomorrowDate = tomorrow.toISOString().split('T')[0]
@@ -104,9 +145,9 @@ export async function POST() {
 
   for (const ev of reunions ?? []) {
     const lien = `/dashboard/planning`
-    const chantierNom = (ev.chantiers as { nom?: string } | null)?.nom ?? null
-    const key = `rappel_reunion::${lien}::${ev.id}`
-    if (!existingKeys.has(key)) {
+    const dedupKey = `rappel_reunion::${lien}::${ev.id}`
+    if (!existingKeys.has(dedupKey)) {
+      const chantierNom = (ev.chantiers as { nom?: string } | null)?.nom ?? null
       const heure = new Date(ev.date_debut).toLocaleTimeString('fr-FR', {
         hour: '2-digit', minute: '2-digit',
       })
@@ -115,6 +156,44 @@ export async function POST() {
         type: 'rappel_reunion',
         titre: `Réunion demain : ${ev.titre}`,
         message: `Réunion "${ev.titre}" demain à ${heure}${chantierNom ? ` — chantier ${chantierNom}` : ''}.`,
+        lien,
+      })
+    }
+  }
+
+  // ── 5. Réserves non levées depuis >14 jours ───────────────────────────
+  const fourteenDaysAgo = new Date(Date.now() - 14 * 24 * 60 * 60 * 1000)
+    .toISOString().split('T')[0]
+
+  const { data: compteRendus } = await supabase
+    .from('comptes_rendus')
+    .select('id, date_visite, observations, chantier_id, chantiers(nom)')
+    .eq('user_id', userId)
+    .lte('date_visite', fourteenDaysAgo)
+    .not('observations', 'is', null)
+
+  for (const cr of compteRendus ?? []) {
+    let obs: ObservationsData | null = null
+    try {
+      obs = typeof cr.observations === 'string'
+        ? JSON.parse(cr.observations) as ObservationsData
+        : cr.observations as ObservationsData
+    } catch { continue }
+
+    const reservesOuvertes = (obs?.reserves ?? []).filter(r => r.statut === 'ouverte')
+    if (reservesOuvertes.length === 0) continue
+
+    const lien = `/dashboard/comptes-rendus/${cr.id}`
+    if (!isDupe('relance_reserve', lien)) {
+      const chantierNom = (cr.chantiers as { nom?: string } | null)?.nom ?? 'chantier inconnu'
+      const jours = Math.floor(
+        (Date.now() - new Date(cr.date_visite).getTime()) / 86400000
+      )
+      toInsert.push({
+        user_id: userId,
+        type: 'relance_reserve',
+        titre: `${reservesOuvertes.length} réserve${reservesOuvertes.length > 1 ? 's' : ''} non levée${reservesOuvertes.length > 1 ? 's' : ''} — ${chantierNom}`,
+        message: `${reservesOuvertes.length} réserve${reservesOuvertes.length > 1 ? 's' : ''} ouverte${reservesOuvertes.length > 1 ? 's' : ''} depuis ${jours} jours sur le chantier ${chantierNom}.`,
         lien,
       })
     }

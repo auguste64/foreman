@@ -2,13 +2,13 @@
 
 import { useEffect } from 'react'
 import { useIsMobile } from '@/lib/useIsMobile'
+import { generateRelanceNotifications } from '@/lib/notifications'
 
 export default function MainWrapper({ children }: { children: React.ReactNode }) {
   const isMobile = useIsMobile()
 
   useEffect(() => {
-    // Génère les notifications en arrière-plan, sans bloquer le rendu
-    fetch('/api/notifications/generate', { method: 'POST' }).catch(() => {})
+    generateRelanceNotifications()
   }, [])
 
   return (

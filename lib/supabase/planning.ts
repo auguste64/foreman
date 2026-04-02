@@ -2,6 +2,8 @@ import { createClient } from './client'
 
 export type TypeEvenement = 'visite_architecte' | 'reunion' | 'presence_artisan' | 'prochaine_visite'
 
+export type RappelDelai = '15min' | '1h' | '2h' | '1j' | '2j'
+
 export type Evenement = {
   id: string
   user_id: string
@@ -12,10 +14,12 @@ export type Evenement = {
   date_fin: string | null
   artisan_id: string | null
   notes: string | null
+  rappel: RappelDelai | null
+  rappel_envoye: boolean | null
   created_at: string
 }
 
-export type CreateEvenementInput = Omit<Evenement, 'id' | 'user_id' | 'created_at'>
+export type CreateEvenementInput = Omit<Evenement, 'id' | 'user_id' | 'created_at' | 'rappel_envoye'>
 
 export const TYPE_COLORS: Record<TypeEvenement, { bg: string; text: string }> = {
   visite_architecte: { bg: '#2a240a', text: '#ea580c' },

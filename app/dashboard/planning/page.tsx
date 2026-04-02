@@ -9,7 +9,7 @@ import {
   createEvenement, updateEvenement, deleteEvenement,
   TYPE_COLORS, TYPE_LABELS, TYPES,
 } from '@/lib/supabase/planning'
-import type { Evenement, TypeEvenement, CreateEvenementInput } from '@/lib/supabase/planning'
+import type { Evenement, TypeEvenement, CreateEvenementInput, RappelDelai } from '@/lib/supabase/planning'
 import type { Chantier } from '@/lib/supabase/chantiers'
 import type { Artisan } from '@/lib/supabase/artisans'
 import { DateTimePicker } from '@/components/DateTimePicker'
@@ -159,10 +159,11 @@ type FormState = {
   date_debut_local: string
   date_fin_local: string   // '' → null
   notes: string            // '' → null
+  rappel: string           // '' → null
 }
 
 function emptyForm(): FormState {
-  return { titre: '', type: 'reunion', chantier_id: '', artisan_id: '', date_debut_local: '', date_fin_local: '', notes: '' }
+  return { titre: '', type: 'reunion', chantier_id: '', artisan_id: '', date_debut_local: '', date_fin_local: '', notes: '', rappel: '' }
 }
 
 function formToInput(f: FormState): CreateEvenementInput {
@@ -174,6 +175,7 @@ function formToInput(f: FormState): CreateEvenementInput {
     date_debut: toISO(f.date_debut_local),
     date_fin: f.date_fin_local ? toISO(f.date_fin_local) : null,
     notes: f.notes || null,
+    rappel: (f.rappel || null) as RappelDelai | null,
   }
 }
 
@@ -186,6 +188,7 @@ function eventToForm(ev: Evenement): FormState {
     date_debut_local: toDatetimeLocal(ev.date_debut),
     date_fin_local: toDatetimeLocal(ev.date_fin),
     notes: ev.notes ?? '',
+    rappel: ev.rappel ?? '',
   }
 }
 
@@ -320,6 +323,18 @@ function EventFormFields({
           onFocus={onFocus}
           onBlur={onBlur}
         />
+      </div>
+
+      <div>
+        <label style={lbl}>Rappel email</label>
+        <StyledSelect value={form.rappel} onChange={v => onChange('rappel', v)} placeholder="Aucun rappel">
+          <option value="">Aucun rappel</option>
+          <option value="15min">15 min avant</option>
+          <option value="1h">1h avant</option>
+          <option value="2h">2h avant</option>
+          <option value="1j">1 jour avant</option>
+          <option value="2j">2 jours avant</option>
+        </StyledSelect>
       </div>
     </div>
   )

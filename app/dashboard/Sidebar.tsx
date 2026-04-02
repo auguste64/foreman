@@ -7,12 +7,8 @@ import { Syne } from 'next/font/google'
 import { createClient } from '@/lib/supabase/client'
 import { usePlan } from '@/lib/usePlan'
 import { useIsMobile } from '@/lib/useIsMobile'
-import {
-  getUnreadNotifications,
-  markNotificationRead,
-  markAllNotificationsRead,
-} from '@/lib/supabase/notifications'
-import type { Notification } from '@/lib/supabase/notifications'
+import { useNotifications } from '@/hooks/useNotifications'
+import NotificationPanel from '@/components/NotificationPanel'
 import OnboardingOverlay from '@/components/OnboardingOverlay'
 
 const syne = Syne({ subsets: ['latin'], weight: ['400', '500', '600', '700', '800'] })
@@ -73,20 +69,6 @@ const navItems: NavItem[] = [
   { href: '/dashboard/stats', label: 'Statistiques', requiresPro: true },
 ]
 
-const NOTIF_ICONS: Record<string, string> = {
-  relance_devis: '📄',
-  relance_facture: '💶',
-  rappel_reunion: '📅',
-}
-
-function timeAgo(dateStr: string): string {
-  const diff = Date.now() - new Date(dateStr).getTime()
-  const mins = Math.floor(diff / 60000)
-  if (mins < 60) return `il y a ${mins} min`
-  const hrs = Math.floor(mins / 60)
-  if (hrs < 24) return `il y a ${hrs}h`
-  return `il y a ${Math.floor(hrs / 24)}j`
-}
 
 export default function Sidebar({ email }: { email: string }) {
   const pathname = usePathname()
@@ -99,48 +81,9 @@ export default function Sidebar({ email }: { email: string }) {
   const [initial, setInitial] = useState(email?.[0]?.toUpperCase() ?? '?')
 
   // Notifications
-  const [notifs, setNotifs] = useState<Notification[]>([])
+  const { notifications: notifs, nonLuCount, marquerCommeLu, marquerTousCommeLus } = useNotifications()
   const [showNotifs, setShowNotifs] = useState(false)
   const notifRef = useRef<HTMLDivElement>(null)
-  const unreadCount = notifs.length
-
-  async function loadNotifs() {
-    try {
-      const data = await getUnreadNotifications()
-      setNotifs(data)
-    } catch { /* table may not exist yet */ }
-  }
-
-  async function handleClickNotif(n: Notification) {
-    setShowNotifs(false)
-    try { await markNotificationRead(n.id) } catch { /* ignore */ }
-    setNotifs(prev => prev.filter(x => x.id !== n.id))
-    if (n.lien) router.push(n.lien)
-  }
-
-  async function handleMarkAllRead() {
-    try {
-      const supabase = createClient()
-      const { data: { session } } = await supabase.auth.getSession()
-      if (session?.user?.id) await markAllNotificationsRead(session.user.id)
-    } catch { /* ignore */ }
-    setNotifs([])
-    setShowNotifs(false)
-  }
-
-  // Close notification panel on outside click
-  useEffect(() => {
-    if (!showNotifs) return
-    function handleClick(e: MouseEvent) {
-      if (notifRef.current && !notifRef.current.contains(e.target as Node)) {
-        setShowNotifs(false)
-      }
-    }
-    document.addEventListener('mousedown', handleClick)
-    return () => document.removeEventListener('mousedown', handleClick)
-  }, [showNotifs])
-
-  useEffect(() => { loadNotifs() }, [])
 
   useEffect(() => {
     async function fetchName() {
@@ -203,16 +146,16 @@ export default function Sidebar({ email }: { email: string }) {
         {/* Cloche */}
         <button
           onClick={() => setShowNotifs(v => !v)}
-          style={{ position: 'relative', background: 'none', border: 'none', cursor: 'pointer', padding: '4px', color: unreadCount > 0 ? '#F0EDE6' : '#8A8880', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: 6, transition: 'color 0.15s' }}
+          style={{ position: 'relative', background: 'none', border: 'none', cursor: 'pointer', padding: '4px', color: nonLuCount > 0 ? '#F0EDE6' : '#8A8880', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: 6, transition: 'color 0.15s' }}
           aria-label="Notifications"
         >
           <svg width="18" height="18" viewBox="0 0 20 20" fill="none">
             <path d="M10 2a6 6 0 00-6 6v3l-1.5 2.5A1 1 0 003.5 15h13a1 1 0 00.86-1.5L16 11V8a6 6 0 00-6-6z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round"/>
             <path d="M8 15a2 2 0 004 0" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
           </svg>
-          {unreadCount > 0 && (
+          {nonLuCount > 0 && (
             <span style={{ position: 'absolute', top: -2, right: -2, width: 16, height: 16, borderRadius: '50%', backgroundColor: '#dc2626', color: '#fff', fontSize: 9, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'var(--font-dm-sans), sans-serif' }}>
-              {unreadCount > 9 ? '9+' : unreadCount}
+              {nonLuCount > 9 ? '9+' : nonLuCount}
             </span>
           )}
         </button>
@@ -320,16 +263,16 @@ export default function Sidebar({ email }: { email: string }) {
           {/* Cloche mobile */}
           <button
             onClick={() => setShowNotifs(v => !v)}
-            style={{ position: 'relative', background: 'none', border: 'none', cursor: 'pointer', padding: '8px', color: unreadCount > 0 ? '#F0EDE6' : '#8A8880', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: 6 }}
+            style={{ position: 'relative', background: 'none', border: 'none', cursor: 'pointer', padding: '8px', color: nonLuCount > 0 ? '#F0EDE6' : '#8A8880', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: 6 }}
             aria-label="Notifications"
           >
             <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
               <path d="M10 2a6 6 0 00-6 6v3l-1.5 2.5A1 1 0 003.5 15h13a1 1 0 00.86-1.5L16 11V8a6 6 0 00-6-6z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round"/>
               <path d="M8 15a2 2 0 004 0" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
             </svg>
-            {unreadCount > 0 && (
+            {nonLuCount > 0 && (
               <span style={{ position: 'absolute', top: 4, right: 4, width: 16, height: 16, borderRadius: '50%', backgroundColor: '#dc2626', color: '#fff', fontSize: 9, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                {unreadCount > 9 ? '9+' : unreadCount}
+                {nonLuCount > 9 ? '9+' : nonLuCount}
               </span>
             )}
           </button>
@@ -372,7 +315,13 @@ export default function Sidebar({ email }: { email: string }) {
         </aside>
 
         {/* Panneau notifications — mobile */}
-        {showNotifs && <NotifPanel notifs={notifs} isMobile top={56} left={0} width="100vw" notifRef={notifRef} onClose={() => setShowNotifs(false)} onClickNotif={handleClickNotif} onMarkAll={handleMarkAllRead} />}
+        {showNotifs && (
+          <NotificationPanel
+            notifications={notifs} isMobile top={56} left={0} width="100vw"
+            panelRef={notifRef} onClose={() => setShowNotifs(false)}
+            onMarquerCommeLu={marquerCommeLu} onMarquerTousCommeLus={() => { marquerTousCommeLus(); setShowNotifs(false) }}
+          />
+        )}
       </>
     )
   }
@@ -384,125 +333,16 @@ export default function Sidebar({ email }: { email: string }) {
       </aside>
 
       {/* Panneau notifications — desktop */}
-      {showNotifs && <NotifPanel notifs={notifs} isMobile={false} top={0} left={240} width="360px" notifRef={notifRef} onClose={() => setShowNotifs(false)} onClickNotif={handleClickNotif} onMarkAll={handleMarkAllRead} />}
+      {showNotifs && (
+        <NotificationPanel
+          notifications={notifs} isMobile={false} top={0} left={240} width="360px"
+          panelRef={notifRef} onClose={() => setShowNotifs(false)}
+          onMarquerCommeLu={marquerCommeLu} onMarquerTousCommeLus={() => { marquerTousCommeLus(); setShowNotifs(false) }}
+        />
+      )}
 
       <OnboardingOverlay />
     </>
   )
 }
 
-function NotifPanel({
-  notifs,
-  isMobile,
-  top,
-  left,
-  width,
-  notifRef,
-  onClose,
-  onClickNotif,
-  onMarkAll,
-}: {
-  notifs: Notification[]
-  isMobile: boolean
-  top: number
-  left: number | string
-  width: string
-  notifRef: React.RefObject<HTMLDivElement | null>
-  onClose: () => void
-  onClickNotif: (n: Notification) => void
-  onMarkAll: () => void
-}) {
-  return (
-    <>
-      {/* Backdrop */}
-      <div onClick={onClose} style={{ position: 'fixed', inset: 0, zIndex: 44 }} />
-      {/* Panel */}
-      <div
-        ref={notifRef}
-        style={{
-          position: 'fixed',
-          top,
-          left,
-          width,
-          maxWidth: isMobile ? '100vw' : 360,
-          height: isMobile ? `calc(100vh - ${top}px)` : '100vh',
-          backgroundColor: '#111110',
-          borderRight: '1px solid #1E1E1C',
-          borderLeft: isMobile ? 'none' : '1px solid #1E1E1C',
-          zIndex: 45,
-          display: 'flex',
-          flexDirection: 'column',
-          boxShadow: '4px 0 24px rgba(0,0,0,0.4)',
-        }}
-      >
-        {/* Header */}
-        <div style={{ padding: '20px 20px 16px', borderBottom: '1px solid #1E1E1C', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <span style={{ fontFamily: 'var(--font-syne)', fontWeight: 700, fontSize: 15, color: '#F0EDE6' }}>
-              Notifications
-            </span>
-            {notifs.length > 0 && (
-              <span style={{ backgroundColor: '#dc2626', color: '#fff', fontSize: 10, fontWeight: 700, padding: '1px 6px', borderRadius: 10, fontFamily: 'var(--font-dm-sans), sans-serif' }}>
-                {notifs.length}
-              </span>
-            )}
-          </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            {notifs.length > 0 && (
-              <button
-                onClick={onMarkAll}
-                style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 11, color: '#8A8880', fontFamily: 'var(--font-dm-sans), sans-serif', padding: '4px 8px', borderRadius: 4, transition: 'color 0.15s' }}
-                onMouseEnter={e => { e.currentTarget.style.color = '#ea580c' }}
-                onMouseLeave={e => { e.currentTarget.style.color = '#8A8880' }}
-              >
-                Tout lire
-              </button>
-            )}
-            <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#8A8880', fontSize: 18, lineHeight: 1, padding: 4 }}>✕</button>
-          </div>
-        </div>
-
-        {/* List */}
-        <div style={{ flex: 1, overflowY: 'auto' }}>
-          {notifs.length === 0 ? (
-            <div style={{ padding: '60px 24px', textAlign: 'center' }}>
-              <svg width="40" height="40" viewBox="0 0 20 20" fill="none" style={{ margin: '0 auto 12px', display: 'block', opacity: 0.3 }}>
-                <path d="M10 2a6 6 0 00-6 6v3l-1.5 2.5A1 1 0 003.5 15h13a1 1 0 00.86-1.5L16 11V8a6 6 0 00-6-6z" stroke="#F0EDE6" strokeWidth="1.5" strokeLinejoin="round"/>
-                <path d="M8 15a2 2 0 004 0" stroke="#F0EDE6" strokeWidth="1.5" strokeLinecap="round"/>
-              </svg>
-              <p style={{ color: '#8A8880', fontSize: 13, fontFamily: 'var(--font-dm-sans), sans-serif', margin: 0 }}>
-                Aucune notification
-              </p>
-            </div>
-          ) : (
-            <div>
-              {notifs.map(n => (
-                <button
-                  key={n.id}
-                  onClick={() => onClickNotif(n)}
-                  style={{ width: '100%', background: 'none', border: 'none', borderBottom: '1px solid #1E1E1C', padding: '14px 20px', cursor: 'pointer', textAlign: 'left', display: 'flex', alignItems: 'flex-start', gap: 12, transition: 'background 0.15s' }}
-                  onMouseEnter={e => { e.currentTarget.style.backgroundColor = 'rgba(249,115,22,0.05)' }}
-                  onMouseLeave={e => { e.currentTarget.style.backgroundColor = 'transparent' }}
-                >
-                  <span style={{ fontSize: 20, flexShrink: 0, marginTop: 1 }}>{NOTIF_ICONS[n.type] ?? '🔔'}</span>
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <p style={{ fontSize: 13, fontWeight: 600, color: '#F0EDE6', fontFamily: 'var(--font-dm-sans), sans-serif', margin: '0 0 3px', lineHeight: 1.4 }}>
-                      {n.titre}
-                    </p>
-                    <p style={{ fontSize: 12, color: '#8A8880', fontFamily: 'var(--font-dm-sans), sans-serif', margin: '0 0 4px', lineHeight: 1.4 }}>
-                      {n.message}
-                    </p>
-                    <p style={{ fontSize: 10, color: '#5A5A58', fontFamily: 'var(--font-dm-sans), sans-serif', margin: 0 }}>
-                      {timeAgo(n.created_at)}
-                    </p>
-                  </div>
-                  <div style={{ width: 8, height: 8, borderRadius: '50%', backgroundColor: '#dc2626', flexShrink: 0, marginTop: 4 }} />
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
-      </div>
-    </>
-  )
-}
