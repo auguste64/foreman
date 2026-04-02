@@ -33,9 +33,11 @@ const STATUT_LABELS: Record<string, string> = {
 function ChantierTabs({ chantierId, isComplet }: { chantierId: string; isComplet: boolean }) {
   const pathname = usePathname()
   const tabs = [
-    { label: 'Infos', href: `/dashboard/chantiers/${chantierId}`, pro: false },
-    { label: 'Devis', href: `/dashboard/chantiers/${chantierId}/devis`, pro: true },
-    { label: 'Factures', href: `/dashboard/chantiers/${chantierId}/factures`, pro: true },
+    { label: 'Infos',          href: `/dashboard/chantiers/${chantierId}`,                pro: false },
+    { label: 'Lots & Devis',   href: `/dashboard/chantiers/${chantierId}/lots`,            pro: true },
+    { label: 'Devis',          href: `/dashboard/chantiers/${chantierId}/devis`,           pro: true },
+    { label: 'Factures',       href: `/dashboard/chantiers/${chantierId}/factures`,        pro: true },
+    { label: 'Devis artisans', href: `/dashboard/chantiers/${chantierId}/devis-artisans`, pro: true },
   ]
   return (
     <div style={{ display: 'flex', gap: '4px', marginBottom: '32px', borderBottom: '1px solid #1E1E1C', paddingBottom: '0' }}>

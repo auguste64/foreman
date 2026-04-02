@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import { formatEurDoc } from '@/lib/supabase/documents'
@@ -106,6 +106,7 @@ function defaultPhases(): Phase[] {
 // ── Component ──────────────────────────────────────────────────────────────────
 export default function NouveauDevisHonorairesPage() {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const [saving, setSaving] = useState(false)
   const [numero, setNumero] = useState('HON-…')
   const [entreprise, setEntreprise] = useState<EntrepriseInfo | null>(null)
@@ -119,6 +120,8 @@ export default function NouveauDevisHonorairesPage() {
   const [phases, setPhases] = useState<Phase[]>([])
   const [tvaTaux, setTvaTaux] = useState(10)
   const [clausesSpeciales, setClausesSpeciales] = useState('')
+  const [chantierId, setChantierId] = useState(searchParams.get('chantier_id') ?? '')
+  const [chantiers, setChantiers] = useState<{ id: string; nom: string }[]>([])
 
   useEffect(() => {
     async function load() {
@@ -133,13 +136,15 @@ export default function NouveauDevisHonorairesPage() {
         .eq('user_id', user.id)
       setNumero(`HON-${year}-${String((count ?? 0) + 1).padStart(3, '0')}`)
 
-      const [eiRes, tmplRes] = await Promise.all([
+      const [eiRes, tmplRes, chantiersRes] = await Promise.all([
         supabase.from('entreprise_infos')
           .select('raison_sociale, adresse, code_postal, ville, telephone, email, logo_url')
           .eq('user_id', user.id).maybeSingle(),
         supabase.from('honoraires_templates')
           .select('*').eq('user_id', user.id).maybeSingle(),
+        supabase.from('chantiers').select('id, nom').eq('user_id', user.id).order('nom'),
       ])
+      setChantiers((chantiersRes.data ?? []) as { id: string; nom: string }[])
 
       if (eiRes.data) setEntreprise(eiRes.data as EntrepriseInfo)
 
@@ -220,6 +225,7 @@ export default function NouveauDevisHonorairesPage() {
         tva_taux: tvaTaux,
         total_ht: totalHT,
         clauses_speciales: clausesSpeciales,
+        chantier_id: chantierId || null,
       }).select('id').single()
 
       if (error) throw error
@@ -283,6 +289,20 @@ export default function NouveauDevisHonorairesPage() {
             <div>
               <label style={labelStyle}>Adresse du client</label>
               <textarea value={clientAdresse} onChange={e => setClientAdresse(e.target.value)} placeholder="Adresse complète" rows={2} style={{ ...inputStyle, resize: 'vertical' }} onFocus={focus} onBlur={blur} />
+            </div>
+            <div>
+              <label style={labelStyle}>Chantier associé</label>
+              <select
+                value={chantierId}
+                onChange={e => setChantierId(e.target.value)}
+                style={{ ...inputStyle, appearance: 'none', WebkitAppearance: 'none', backgroundImage: "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 16 16' fill='none'%3E%3Cpath d='M4 6L8 10L12 6' stroke='%23ea580c' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E\")", backgroundRepeat: 'no-repeat', backgroundPosition: 'right 12px center', paddingRight: '36px', cursor: 'pointer' } as React.CSSProperties}
+                onFocus={focus} onBlur={blur}
+              >
+                <option value="">— Aucun chantier —</option>
+                {chantiers.map(c => (
+                  <option key={c.id} value={c.id} style={{ backgroundColor: '#0D0D0B' }}>{c.nom}</option>
+                ))}
+              </select>
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
               <div>

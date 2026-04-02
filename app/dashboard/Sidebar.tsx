@@ -55,18 +55,16 @@ function GearIconHoverable() {
 type NavItem = { href: string; label: string; requiresPro?: boolean; id?: string }
 
 const navItems: NavItem[] = [
-  { href: '/dashboard', label: 'Tableau de bord' },
-  { href: '/dashboard/chantiers', label: 'Chantiers', id: 'nav-chantiers' },
+  { href: '/dashboard',              label: 'Tableau de bord' },
+  { href: '/dashboard/chantiers',    label: 'Chantiers',      id: 'nav-chantiers' },
   { href: '/dashboard/comptes-rendus', label: 'Comptes rendus', id: 'nav-comptes-rendus' },
-  { href: '/dashboard/artisans', label: 'Artisans', id: 'nav-artisans' },
-  { href: '/dashboard/planning', label: 'Planning', id: 'nav-planning' },
-  { href: '/dashboard/clients', label: 'Clients' },
-  { href: '/dashboard/parametres', label: 'Paramètres' },
-  { href: '/dashboard/comptabilite', label: 'Comptabilité', requiresPro: true },
-  { href: '/dashboard/documents', label: 'Documents', requiresPro: true, id: 'nav-documents' },
-  { href: '/dashboard/contrats', label: 'Contrats', requiresPro: true },
-  { href: '/dashboard/finances', label: 'Analyse', requiresPro: true },
-  { href: '/dashboard/stats', label: 'Statistiques', requiresPro: true },
+  { href: '/dashboard/artisans',     label: 'Artisans',       id: 'nav-artisans' },
+  { href: '/dashboard/planning',     label: 'Planning',       id: 'nav-planning' },
+  { href: '/dashboard/clients',      label: 'Clients' },
+  { href: '/dashboard/comptabilite', label: 'Comptabilité',   requiresPro: true },
+  { href: '/dashboard/documents',    label: 'Documents',      requiresPro: true, id: 'nav-documents' },
+  { href: '/dashboard/finances',     label: 'Analyse',        requiresPro: true },
+  { href: '/dashboard/parametres',   label: 'Paramètres' },
 ]
 
 

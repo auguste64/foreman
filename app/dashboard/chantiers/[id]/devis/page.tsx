@@ -30,12 +30,23 @@ const STATUT_LABELS: Record<string, string> = {
 
 type DevisRow = Devis & { devis_lignes: LigneDevis[] }
 
+type HonoraireRow = {
+  id: string
+  numero: string
+  statut: string
+  client_nom: string
+  total_ht: number
+  tva_taux: number
+}
+
 function ChantierTabs({ chantierId, isComplet }: { chantierId: string; isComplet: boolean }) {
   const pathname = usePathname()
   const tabs = [
-    { label: 'Infos', href: `/dashboard/chantiers/${chantierId}`, pro: false },
-    { label: 'Devis', href: `/dashboard/chantiers/${chantierId}/devis`, pro: true },
-    { label: 'Factures', href: `/dashboard/chantiers/${chantierId}/factures`, pro: true },
+    { label: 'Infos',          href: `/dashboard/chantiers/${chantierId}`,                pro: false },
+    { label: 'Lots & Devis',   href: `/dashboard/chantiers/${chantierId}/lots`,            pro: true },
+    { label: 'Devis',          href: `/dashboard/chantiers/${chantierId}/devis`,           pro: true },
+    { label: 'Factures',       href: `/dashboard/chantiers/${chantierId}/factures`,        pro: true },
+    { label: 'Devis artisans', href: `/dashboard/chantiers/${chantierId}/devis-artisans`, pro: true },
   ]
   return (
     <div style={{ display: 'flex', gap: '4px', marginBottom: '32px', borderBottom: '1px solid #1E1E1C' }}>
@@ -63,22 +74,29 @@ export default function DevisListPage() {
   const params = useParams()
   const chantierId = params.id as string
   const [devis, setDevis] = useState<DevisRow[]>([])
+  const [honoraires, setHonoraires] = useState<HonoraireRow[]>([])
   const [loading, setLoading] = useState(true)
   const [chantierNom, setChantierNom] = useState('')
 
   useEffect(() => {
     async function load() {
       const supabase = createClient()
-      const [devisRes, chantierRes] = await Promise.all([
+      const [devisRes, chantierRes, honRes] = await Promise.all([
         supabase
           .from('devis')
           .select('*, devis_lignes(*)')
           .eq('chantier_id', chantierId)
           .order('created_at', { ascending: false }),
         supabase.from('chantiers').select('nom').eq('id', chantierId).single(),
+        supabase
+          .from('devis_honoraires')
+          .select('id, numero, statut, client_nom, total_ht, tva_taux')
+          .eq('chantier_id', chantierId)
+          .order('created_at', { ascending: false }),
       ])
       setDevis((devisRes.data ?? []) as DevisRow[])
       setChantierNom(chantierRes.data?.nom ?? '')
+      setHonoraires((honRes.data ?? []) as HonoraireRow[])
       setLoading(false)
     }
     load()
@@ -112,12 +130,20 @@ export default function DevisListPage() {
             <h2 style={{ fontFamily: 'var(--font-syne), sans-serif', fontSize: '18px', fontWeight: 600, color: '#F0EDE6', margin: 0 }}>
               Devis {!loading && <span style={{ color: '#8A8880', fontSize: '14px', fontWeight: 400 }}>({devis.length})</span>}
             </h2>
-            <Link
-              href={`/dashboard/chantiers/${chantierId}/devis/nouveau`}
-              style={{ padding: '9px 18px', backgroundColor: '#ea580c', color: '#0D0D0B', borderRadius: '8px', fontSize: '13px', fontWeight: 600, textDecoration: 'none', fontFamily: 'var(--font-dm-sans), sans-serif' }}
-            >
-              + Nouveau devis
-            </Link>
+            <div style={{ display: 'flex', gap: '8px' }}>
+              <Link
+                href={`/dashboard/chantiers/${chantierId}/devis/nouveau`}
+                style={{ padding: '9px 18px', backgroundColor: '#ea580c', color: '#0D0D0B', borderRadius: '8px', fontSize: '13px', fontWeight: 600, textDecoration: 'none', fontFamily: 'var(--font-dm-sans), sans-serif' }}
+              >
+                + Devis client
+              </Link>
+              <Link
+                href={`/dashboard/comptabilite/honoraires/nouveau?chantier_id=${chantierId}`}
+                style={{ padding: '9px 18px', backgroundColor: 'transparent', color: '#ea580c', border: '1px solid rgba(249,115,22,0.4)', borderRadius: '8px', fontSize: '13px', fontWeight: 600, textDecoration: 'none', fontFamily: 'var(--font-dm-sans), sans-serif' }}
+              >
+                + Devis honoraires
+              </Link>
+            </div>
           </div>
 
           {loading && <p style={{ color: '#8A8880', fontSize: '14px', fontFamily: 'var(--font-dm-sans), sans-serif' }}>Chargement…</p>}
@@ -162,6 +188,46 @@ export default function DevisListPage() {
                   </Link>
                 )
               })}
+            </div>
+          )}
+
+          {/* Devis d'honoraires associés */}
+          {!loading && honoraires.length > 0 && (
+            <div style={{ marginTop: '32px' }}>
+              <h2 style={{ fontFamily: 'var(--font-syne), sans-serif', fontSize: '18px', fontWeight: 600, color: '#F0EDE6', margin: '0 0 16px' }}>
+                Honoraires <span style={{ color: '#8A8880', fontSize: '14px', fontWeight: 400 }}>({honoraires.length})</span>
+              </h2>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                {honoraires.map(h => {
+                  const sc = STATUT_COLORS[h.statut.toLowerCase()] ?? STATUT_COLORS.brouillon
+                  const ttc = h.total_ht * (1 + (h.tva_taux ?? 0) / 100)
+                  return (
+                    <Link
+                      key={h.id}
+                      href={`/dashboard/comptabilite/honoraires/${h.id}`}
+                      style={{ backgroundColor: '#111110', border: '1px solid #1E1E1C', borderRadius: '10px', padding: '16px 20px', display: 'flex', alignItems: 'center', gap: '14px', textDecoration: 'none', transition: 'all 0.15s ease' }}
+                      onMouseEnter={e => { e.currentTarget.style.transform = 'translateX(4px)'; e.currentTarget.style.borderColor = 'rgba(249,115,22,0.2)' }}
+                      onMouseLeave={e => { e.currentTarget.style.transform = 'translateX(0)'; e.currentTarget.style.borderColor = '#1E1E1C' }}
+                    >
+                      <span style={{ padding: '2px 8px', backgroundColor: 'rgba(249,115,22,0.08)', color: '#ea580c', borderRadius: '4px', fontSize: '11px', fontWeight: 600, fontFamily: 'var(--font-dm-sans), sans-serif', flexShrink: 0 }}>
+                        {h.numero}
+                      </span>
+                      <span style={{ flex: 1, fontSize: '14px', color: h.client_nom ? '#F0EDE6' : '#8A8880', fontFamily: 'var(--font-dm-sans), sans-serif', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontStyle: h.client_nom ? 'normal' : 'italic' }}>
+                        {h.client_nom || 'Sans client'}
+                      </span>
+                      <span style={{ fontSize: '12px', color: '#8A8880', fontFamily: 'var(--font-dm-sans), sans-serif', flexShrink: 0 }}>
+                        Honoraires
+                      </span>
+                      <span style={{ fontSize: '14px', fontWeight: 600, color: '#F0EDE6', fontFamily: 'var(--font-dm-sans), sans-serif', flexShrink: 0 }}>
+                        {formatMontant(ttc)}
+                      </span>
+                      <span style={{ padding: '3px 10px', borderRadius: '20px', fontSize: '11px', fontWeight: 500, fontFamily: 'var(--font-dm-sans), sans-serif', backgroundColor: sc.bg, color: sc.text, flexShrink: 0 }}>
+                        {h.statut}
+                      </span>
+                    </Link>
+                  )
+                })}
+              </div>
             </div>
           )}
         </>

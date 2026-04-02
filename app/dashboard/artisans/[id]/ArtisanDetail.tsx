@@ -70,6 +70,11 @@ export default function ArtisanDetail({ artisan }: { artisan: Artisan }) {
   const [artisanFactures, setArtisanFactures] = useState<DocRow[]>([])
   const [loadingDocs, setLoadingDocs] = useState(true)
 
+  // Devis artisans reçus
+  type DevisArtisanRow = { id: string; chantier_id: string | null; numero: string | null; lot: string | null; montant_ttc: number | null; statut: string; date_reception: string | null; chantier_nom: string | null }
+  const [devisArtisansRecus, setDevisArtisansRecus] = useState<DevisArtisanRow[]>([])
+  const [loadingDevisArtisans, setLoadingDevisArtisans] = useState(true)
+
   // Modal: convocation
   const [showConvocation, setShowConvocation] = useState(false)
   const [convocation, setConvocation] = useState({
@@ -91,8 +96,28 @@ export default function ArtisanDetail({ artisan }: { artisan: Artisan }) {
   useEffect(() => {
     loadChantiersArtisan()
     loadDocs()
+    loadDevisArtisans()
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
+
+  async function loadDevisArtisans() {
+    setLoadingDevisArtisans(true)
+    try {
+      const supabase = createClient()
+      const { data } = await supabase
+        .from('devis_artisans')
+        .select('id, chantier_id, numero, lot, montant_ttc, statut, date_reception, chantiers(nom)')
+        .eq('artisan_id', artisan.id)
+        .order('created_at', { ascending: false })
+      setDevisArtisansRecus(
+        (data ?? []).map((r: { id: string; chantier_id: string | null; numero: string | null; lot: string | null; montant_ttc: number | null; statut: string; date_reception: string | null; chantiers: { nom: string } | null }) => ({
+          ...r,
+          chantier_nom: (r.chantiers as { nom: string } | null)?.nom ?? null,
+        }))
+      )
+    } catch { /* ignore */ }
+    finally { setLoadingDevisArtisans(false) }
+  }
 
   async function loadDocs() {
     setLoadingDocs(true)
@@ -662,6 +687,87 @@ export default function ArtisanDetail({ artisan }: { artisan: Artisan }) {
                   Total TTC : {fmtEur(totalTtc)}
                 </span>
               </div>
+            </div>
+          )
+        })()}
+      </div>
+
+      {/* Devis artisan reçus */}
+      <div style={{ backgroundColor: '#111110', border: '1px solid #1E1E1C', borderRadius: '12px', padding: '28px', marginTop: '24px' }}>
+        <h2 style={{ fontFamily: 'var(--font-syne), sans-serif', fontSize: '16px', fontWeight: 600, color: '#F0EDE6', margin: '0 0 20px' }}>
+          Devis artisan reçus
+        </h2>
+
+        {loadingDevisArtisans && (
+          <p style={{ color: '#8A8880', fontSize: '13px', fontFamily: 'var(--font-dm-sans), sans-serif' }}>Chargement…</p>
+        )}
+
+        {!loadingDevisArtisans && devisArtisansRecus.length === 0 && (
+          <p style={{ color: '#8A8880', fontSize: '13px', fontFamily: 'var(--font-dm-sans), sans-serif', fontStyle: 'italic' }}>
+            Aucun devis reçu de cet artisan.
+          </p>
+        )}
+
+        {!loadingDevisArtisans && devisArtisansRecus.length > 0 && (() => {
+          const STATUT_DA: Record<string, { label: string; bg: string; color: string }> = {
+            recu:    { label: 'Reçu',    bg: 'rgba(138,136,128,0.15)', color: '#8A8880' },
+            accepte: { label: 'Accepté', bg: 'rgba(74,222,128,0.12)',  color: '#4ade80' },
+            refuse:  { label: 'Refusé',  bg: 'rgba(232,84,71,0.15)',   color: '#E85447' },
+          }
+          const fmtEur = (n: number | null) => n == null ? '—' : n.toLocaleString('fr-FR', { style: 'currency', currency: 'EUR' })
+          const fmtDate = (d: string | null) => d ? new Date(d).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' }) : '—'
+
+          return (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              {devisArtisansRecus.map(d => {
+                const s = STATUT_DA[d.statut] ?? STATUT_DA.recu
+                const href = d.chantier_id
+                  ? `/dashboard/chantiers/${d.chantier_id}/devis-artisans`
+                  : undefined
+                return (
+                  <Link
+                    key={d.id}
+                    href={href ?? '#'}
+                    style={{ backgroundColor: '#0D0D0B', border: '1px solid #1E1E1C', borderRadius: '8px', padding: '14px 16px', display: 'flex', alignItems: 'center', gap: '14px', textDecoration: 'none', cursor: 'pointer', transition: 'all 0.15s ease' }}
+                    onMouseEnter={e => { e.currentTarget.style.transform = 'translateX(4px)'; e.currentTarget.style.borderColor = 'rgba(249,115,22,0.35)' }}
+                    onMouseLeave={e => { e.currentTarget.style.transform = 'translateX(0)'; e.currentTarget.style.borderColor = '#1E1E1C' }}
+                  >
+                    {/* Lot + chantier */}
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <p style={{ fontSize: '14px', fontWeight: 600, color: d.lot ? '#ea580c' : '#8A8880', fontFamily: 'var(--font-dm-sans), sans-serif', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        {d.lot ?? '—'}
+                      </p>
+                      {d.chantier_nom && (
+                        <p style={{ fontSize: '12px', color: '#7A7870', fontFamily: 'var(--font-dm-sans), sans-serif', margin: '2px 0 0' }}>
+                          {d.chantier_nom}
+                        </p>
+                      )}
+                    </div>
+
+                    {/* Numéro */}
+                    {d.numero && (
+                      <span style={{ padding: '2px 8px', backgroundColor: 'rgba(249,115,22,0.08)', color: '#ea580c', borderRadius: '4px', fontSize: '11px', fontWeight: 600, fontFamily: 'var(--font-dm-sans), sans-serif', flexShrink: 0 }}>
+                        {d.numero}
+                      </span>
+                    )}
+
+                    {/* Date réception */}
+                    <span style={{ fontSize: '12px', color: '#7A7870', fontFamily: 'var(--font-dm-sans), sans-serif', flexShrink: 0 }}>
+                      {fmtDate(d.date_reception)}
+                    </span>
+
+                    {/* Montant TTC */}
+                    <span style={{ fontSize: '14px', fontWeight: 700, color: '#F0EDE6', fontFamily: 'var(--font-dm-sans), sans-serif', flexShrink: 0 }}>
+                      {fmtEur(d.montant_ttc)}
+                    </span>
+
+                    {/* Statut */}
+                    <span style={{ padding: '3px 10px', borderRadius: '20px', fontSize: '11px', fontWeight: 500, fontFamily: 'var(--font-dm-sans), sans-serif', backgroundColor: s.bg, color: s.color, flexShrink: 0 }}>
+                      {s.label}
+                    </span>
+                  </Link>
+                )
+              })}
             </div>
           )
         })()}

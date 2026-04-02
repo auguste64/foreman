@@ -29,6 +29,7 @@ type DevisHonoraire = {
   tva_taux: number
   total_ht: number
   clauses_speciales: string
+  chantier_id: string | null
   created_at: string
 }
 
@@ -61,6 +62,9 @@ export default function DevisHonorairesDetailPage() {
   const [loading, setLoading] = useState(true)
   const [statut, setStatut] = useState('')
   const [updatingStatut, setUpdatingStatut] = useState(false)
+  const [chantierId, setChantierId] = useState<string>('')
+  const [chantiers, setChantiers] = useState<{ id: string; nom: string }[]>([])
+  const [updatingChantier, setUpdatingChantier] = useState(false)
 
   useEffect(() => {
     async function load() {
@@ -68,17 +72,20 @@ export default function DevisHonorairesDetailPage() {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) return
 
-      const [docRes, eiRes] = await Promise.all([
+      const [docRes, eiRes, chantiersRes] = await Promise.all([
         supabase.from('devis_honoraires').select('*').eq('id', id).eq('user_id', user.id).single(),
         supabase.from('entreprise_infos').select('raison_sociale, adresse, code_postal, ville, telephone, email, logo_url').eq('user_id', user.id).maybeSingle(),
+        supabase.from('chantiers').select('id, nom').eq('user_id', user.id).order('nom'),
       ])
 
       if (docRes.data) {
         const d = docRes.data as DevisHonoraire
         setDoc(d)
         setStatut(d.statut)
+        setChantierId(d.chantier_id ?? '')
       }
       if (eiRes.data) setEntreprise(eiRes.data as EntrepriseInfo)
+      setChantiers((chantiersRes.data ?? []) as { id: string; nom: string }[])
       setLoading(false)
     }
     load()
@@ -96,6 +103,24 @@ export default function DevisHonorairesDetailPage() {
       toast.error('Erreur lors de la mise à jour')
     } finally {
       setUpdatingStatut(false)
+    }
+  }
+
+  async function handleChantierChange(newChantierId: string) {
+    setUpdatingChantier(true)
+    try {
+      const supabase = createClient()
+      const { error } = await supabase
+        .from('devis_honoraires')
+        .update({ chantier_id: newChantierId || null })
+        .eq('id', id)
+      if (error) throw error
+      setChantierId(newChantierId)
+      toast.success('Chantier mis à jour')
+    } catch {
+      toast.error('Erreur lors de la mise à jour')
+    } finally {
+      setUpdatingChantier(false)
     }
   }
 
@@ -189,6 +214,41 @@ export default function DevisHonorairesDetailPage() {
             <p style={{ fontSize: 13, color: '#F0EDE6', fontFamily: 'var(--font-dm-sans), sans-serif', margin: 0, fontWeight: 600 }}>{formatEurDoc(doc.budget_travaux)} HT</p>
           </div>
         )}
+
+        {/* Chantier associé */}
+        <div style={{ backgroundColor: '#111110', border: '1px solid #1E1E1C', borderRadius: 10, padding: 16 }}>
+          <p style={{ fontSize: 10, fontWeight: 600, color: '#7A7870', fontFamily: 'var(--font-dm-sans), sans-serif', textTransform: 'uppercase', letterSpacing: '0.08em', margin: '0 0 10px' }}>Chantier associé</p>
+          <select
+            value={chantierId}
+            onChange={e => handleChantierChange(e.target.value)}
+            disabled={updatingChantier}
+            style={{
+              width: '100%', padding: '8px 32px 8px 10px',
+              backgroundColor: '#0D0D0B', border: '1px solid #1E1E1C', borderRadius: 7,
+              color: chantierId ? '#F0EDE6' : '#8A8880', fontSize: 12,
+              fontFamily: 'var(--font-dm-sans), sans-serif', outline: 'none', cursor: 'pointer',
+              appearance: 'none', WebkitAppearance: 'none',
+              backgroundImage: "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 16 16' fill='none'%3E%3Cpath d='M4 6L8 10L12 6' stroke='%23ea580c' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E\")",
+              backgroundRepeat: 'no-repeat', backgroundPosition: 'right 8px center',
+              opacity: updatingChantier ? 0.6 : 1,
+            } as React.CSSProperties}
+          >
+            <option value="">— Aucun chantier —</option>
+            {chantiers.map(c => (
+              <option key={c.id} value={c.id} style={{ backgroundColor: '#0D0D0B' }}>{c.nom}</option>
+            ))}
+          </select>
+          {chantierId && (
+            <Link
+              href={`/dashboard/chantiers/${chantierId}/devis`}
+              style={{ display: 'block', marginTop: 8, fontSize: 11, color: '#ea580c', textDecoration: 'none', fontFamily: 'var(--font-dm-sans), sans-serif' }}
+              onMouseEnter={e => { e.currentTarget.style.textDecoration = 'underline' }}
+              onMouseLeave={e => { e.currentTarget.style.textDecoration = 'none' }}
+            >
+              Voir les devis du chantier →
+            </Link>
+          )}
+        </div>
       </div>
 
       {/* ── Right: PDF preview ── */}
