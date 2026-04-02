@@ -69,7 +69,7 @@ export default function MiniCalendrier({ chantierId }: Props) {
   const [showCreate, setShowCreate] = useState(false)
   const [form, setForm] = useState<CreateEvenementInput & { date_debut_local: string; date_fin_local: string }>({
     chantier_id: chantierId, titre: '', type: 'visite_architecte',
-    date_debut: '', date_fin: null, artisan_id: null, notes: null,
+    date_debut: '', date_fin: null, artisan_id: null, notes: null, rappel: null,
     date_debut_local: '', date_fin_local: '',
   })
   const [creating, setCreating] = useState(false)
@@ -115,7 +115,7 @@ export default function MiniCalendrier({ chantierId }: Props) {
   function openCreate(prefillDate?: string) {
     setForm({
       chantier_id: chantierId, titre: '', type: 'visite_architecte',
-      date_debut: '', date_fin: null, artisan_id: null, notes: null,
+      date_debut: '', date_fin: null, artisan_id: null, notes: null, rappel: null,
       date_debut_local: prefillDate ?? '', date_fin_local: '',
     })
     setCreateError(null)
