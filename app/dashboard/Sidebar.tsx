@@ -243,7 +243,7 @@ export default function Sidebar({ email }: { email: string }) {
                 onMouseLeave={e => { e.currentTarget.style.opacity = '0.4' }}
               >
                 <span style={{ flex: 1 }}>{item.label}</span>
-                <span style={{ background: '#ea580c', color: '#fff', fontSize: '0.6rem', fontWeight: 700, padding: '2px 6px', borderRadius: '4px', flexShrink: 0, letterSpacing: '0.05em' }}>PRO</span>
+                <span style={{ background: '#ea580c', color: '#fff', fontSize: '0.6rem', fontWeight: 700, padding: '2px 6px', borderRadius: '4px', flexShrink: 0, letterSpacing: '0.05em', marginLeft: 6 }}>PRO</span>
               </div>
             )
           }
