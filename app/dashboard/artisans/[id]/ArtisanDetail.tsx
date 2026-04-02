@@ -110,9 +110,9 @@ export default function ArtisanDetail({ artisan }: { artisan: Artisan }) {
         .eq('artisan_id', artisan.id)
         .order('created_at', { ascending: false })
       setDevisArtisansRecus(
-        (data ?? []).map((r: { id: string; chantier_id: string | null; numero: string | null; lot: string | null; montant_ttc: number | null; statut: string; date_reception: string | null; chantiers: { nom: string } | null }) => ({
+        (data ?? []).map((r: { id: string; chantier_id: string | null; numero: string | null; lot: string | null; montant_ttc: number | null; statut: string; date_reception: string | null; chantiers: { nom: any }[] }) => ({
           ...r,
-          chantier_nom: (r.chantiers as { nom: string } | null)?.nom ?? null,
+          chantier_nom: r.chantiers[0]?.nom ?? null,
         }))
       )
     } catch { /* ignore */ }
