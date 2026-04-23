@@ -6,15 +6,15 @@ import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { updateCompteRendu, deleteCompteRendu } from '@/lib/supabase/comptes-rendus'
 import { toast } from '@/components/Toast'
-import type { CompteRenduWithChantier, ObservationsData } from '@/lib/supabase/comptes-rendus'
+import type { CompteRenduWithChantier, ObservationsData, LotSuiviEntry } from '@/lib/supabase/comptes-rendus'
 import MetierSelect from '@/components/MetierSelect'
 
 function parseObservations(raw: string | null): ObservationsData {
-  const empty: ObservationsData = { texte: '', presences: [], reserves: [], decisions: [], lots: [] }
+  const empty: ObservationsData = { texte: '', presences: [], reserves: [], decisions: [], lots: [], lotSuivi: {} }
   if (!raw) return empty
   try {
     const parsed = JSON.parse(raw)
-    // Nouveau format : { texte, presences, reserves, decisions, lots }
+    // Nouveau format : { texte, presences, reserves, decisions, lots, lotSuivi }
     if (parsed && typeof parsed === 'object' && 'texte' in parsed) {
       return {
         texte: parsed.texte ?? '',
@@ -22,9 +22,10 @@ function parseObservations(raw: string | null): ObservationsData {
         reserves: parsed.reserves ?? [],
         decisions: parsed.decisions ?? [],
         lots: parsed.lots ?? [],
+        lotSuivi: parsed.lotSuivi ?? {},
       }
     }
-    // Nouveau format sans `texte` : { observations, presences, reserves, decisions, lots, travaux_a_faire }
+    // Ancien format sans `texte`
     if (parsed && typeof parsed === 'object' && 'observations' in parsed) {
       return {
         texte: parsed.observations ?? '',
@@ -32,12 +33,11 @@ function parseObservations(raw: string | null): ObservationsData {
         reserves: parsed.reserves ?? [],
         decisions: parsed.decisions ?? [],
         lots: parsed.lots ?? [],
+        lotSuivi: parsed.lotSuivi ?? {},
       }
     }
-    // Ancien format JSON sans structure attendue → traiter comme texte brut
-    return { ...empty, texte: raw }
+    return { ...empty }
   } catch {
-    // Pas du JSON → ancienne string plain text
     return { ...empty, texte: raw }
   }
 }
@@ -406,11 +406,11 @@ export default function CompteRenduDetail({ compteRendu: initial }: { compteRend
             </div>
           )}
 
-          {/* Observations */}
+          {/* Remarques générales */}
           <div style={{ backgroundColor: '#111110', border: '1px solid #1E1E1C', borderRadius: '12px', padding: '24px' }}>
-            <span style={labelStyle}>Observations</span>
+            <span style={labelStyle}>Remarques générales</span>
             <p style={{ color: parsed.texte ? '#F0EDE6' : '#8A8880', fontSize: '14px', fontFamily: 'var(--font-dm-sans), sans-serif', margin: '8px 0 0', lineHeight: '1.7', fontStyle: parsed.texte ? 'normal' : 'italic', whiteSpace: 'pre-wrap' }}>
-              {parsed.texte || 'Aucune observation.'}
+              {parsed.texte || 'Aucune remarque.'}
             </p>
           </div>
 
@@ -439,10 +439,10 @@ export default function CompteRenduDetail({ compteRendu: initial }: { compteRend
             </div>
           )}
 
-          {/* Réserves */}
+          {/* Observations / Points de suivi */}
           {parsed.reserves.length > 0 && (
             <div style={{ backgroundColor: '#111110', border: '1px solid #1E1E1C', borderRadius: '12px', padding: '24px' }}>
-              <span style={labelStyle}>Réserves ({parsed.reserves.length})</span>
+              <span style={labelStyle}>Observations / Points de suivi ({parsed.reserves.length})</span>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '10px' }}>
                 {parsed.reserves.map((r, i) => (
                   <div key={i} style={{ padding: '12px', backgroundColor: '#0D0D0B', borderRadius: '8px', borderLeft: `3px solid ${r.statut === 'levee' ? '#48ba78' : '#E85447'}` }}>
@@ -496,6 +496,45 @@ export default function CompteRenduDetail({ compteRendu: initial }: { compteRend
             </div>
           )}
 
+          {/* Suivi par lot */}
+          {Object.keys(parsed.lotSuivi).length > 0 && Object.values(parsed.lotSuivi as Record<string, LotSuiviEntry>).some((e) => e.observations || e.photos?.length) && (
+            <div style={{ backgroundColor: '#111110', border: '1px solid #1E1E1C', borderRadius: '12px', padding: '24px' }}>
+              <span style={labelStyle}>Suivi par lot</span>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginTop: '10px' }}>
+                {Object.entries(parsed.lotSuivi as Record<string, LotSuiviEntry>)
+                  .filter(([, e]) => e.observations || e.photos?.length)
+                  .map(([lotId, entry]) => {
+                    const lot = parsed.lots.find((l) => l.id === lotId)
+                    const lotLabel = lot?.nom
+                      ? [lot.nom, lot.intervenant].filter(Boolean).join(' — ')
+                      : lotId
+                    return (
+                      <div key={lotId} style={{ padding: '12px', backgroundColor: '#0D0D0B', borderRadius: '8px', borderLeft: '3px solid #ea580c' }}>
+                        <span style={{ fontSize: '13px', fontWeight: 600, color: '#ea580c', fontFamily: 'var(--font-syne), sans-serif', display: 'block', marginBottom: entry.observations ? '6px' : 0 }}>
+                          {lotLabel}
+                        </span>
+                        {entry.observations && (
+                          <p style={{ margin: '0 0 8px', fontSize: '13px', color: '#F0EDE6', fontFamily: 'var(--font-dm-sans), sans-serif', lineHeight: 1.6, whiteSpace: 'pre-wrap' }}>
+                            {entry.observations}
+                          </p>
+                        )}
+                        {entry.photos && entry.photos.length > 0 && (
+                          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '8px', marginTop: '8px' }}>
+                            {entry.photos.map((url, pi) => (
+                              <a key={pi} href={url} target="_blank" rel="noopener noreferrer" style={{ display: 'block', borderRadius: '6px', overflow: 'hidden', aspectRatio: '1' }}>
+                                {/* eslint-disable-next-line @next/next/no-img-element */}
+                                <img src={url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                              </a>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    )
+                  })}
+              </div>
+            </div>
+          )}
+
           {/* Photos */}
           {cr.photos?.length > 0 && (
             <div style={{ backgroundColor: '#111110', border: '1px solid #1E1E1C', borderRadius: '12px', padding: '24px' }}>
@@ -538,7 +577,7 @@ export default function CompteRenduDetail({ compteRendu: initial }: { compteRend
             </div>
 
             <div>
-              <label style={labelStyle}>Observations</label>
+              <label style={labelStyle}>Remarques générales</label>
               <textarea value={form.observations} onChange={(e) => setField('observations', e.target.value)} rows={4} style={{ ...inputStyle, resize: 'vertical', lineHeight: '1.6' }} onFocus={focus} onBlur={blur} />
             </div>
 

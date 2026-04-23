@@ -142,7 +142,7 @@ export default function NouveauDevisPage() {
   const [selectedClientId, setSelectedClientId] = useState('')
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const { isComplet, loading: planLoading } = usePlan()
+  const { isPro, loading: planLoading } = usePlan()
   const [datePickerField, setDatePickerField] = useState<'date_emission' | 'date_validite' | null>(null)
 
   useEffect(() => {
@@ -256,7 +256,7 @@ export default function NouveauDevisPage() {
   }
 
   if (planLoading) return null
-  if (!isComplet) return <UpgradeGate feature="Comptabilité (devis & factures)" requiredPlan="complet" />
+  if (!isPro) return <UpgradeGate feature="Comptabilité (devis & factures)" requiredPlan="pro" />
 
   return (
     <div className="page-enter" style={{ flex: 1, padding: '40px', overflowY: 'auto' }}>

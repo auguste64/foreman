@@ -35,7 +35,7 @@ export default function FactureDetailPage() {
   const [confirmDelete, setConfirmDelete] = useState(false)
   const [deleting, setDeleting] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const { isComplet, loading: planLoading } = usePlan()
+  const { isPro, loading: planLoading } = usePlan()
 
   useEffect(() => {
     getFacture(factureId)
@@ -79,7 +79,7 @@ export default function FactureDetailPage() {
   }
 
   if (planLoading) return null
-  if (!isComplet) return <UpgradeGate feature="Comptabilité" requiredPlan="complet" />
+  if (!isPro) return <UpgradeGate feature="Comptabilité" requiredPlan="pro" />
 
   const sc = STATUT_COLORS[facture.statut] ?? STATUT_COLORS['En attente']
   const totaux = calcTotaux(facture.lignes, facture.tva_pct)

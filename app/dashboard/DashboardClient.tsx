@@ -193,7 +193,7 @@ export default function DashboardClient({
   const router = useRouter()
   const isMobile = useIsMobile()
   const [onboardingOpen, setOnboardingOpen] = useState(showOnboarding ?? false)
-  const { isComplet } = usePlan()
+  const { isPro } = usePlan()
   const [greeting, setGreeting] = useState('')
   const [dateStr, setDateStr] = useState('')
   const [hoveredCard, setHoveredCard] = useState<number | null>(null)
@@ -355,7 +355,7 @@ export default function DashboardClient({
         >
           + Nouveau compte rendu
         </Link>
-        {isComplet && (
+        {isPro && (
           <Link
             href="/dashboard/comptabilite/devis/nouveau"
             onClick={addRipple}
@@ -366,7 +366,7 @@ export default function DashboardClient({
             + Nouveau devis
           </Link>
         )}
-        {isComplet && (
+        {isPro && (
           <Link
             href="/dashboard/comptabilite/factures/nouveau"
             onClick={addRipple}

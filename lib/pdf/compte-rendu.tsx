@@ -50,17 +50,23 @@ interface Lot {
   notes?: string
 }
 
+interface LotSuiviEntry {
+  observations: string
+  photos: string[]
+}
+
 interface ParsedObservations {
   texte: string
   presences: PresenceRow[]
   reserves: Reserve[]
   decisions: Decision[]
   lots: Lot[]
+  lotSuivi: Record<string, LotSuiviEntry>
 }
 
 // ── Parser JSON observations ─────────────────────────────────────────
 function parseObservations(raw: string | null): ParsedObservations {
-  const empty: ParsedObservations = { texte: '', presences: [], reserves: [], decisions: [], lots: [] }
+  const empty: ParsedObservations = { texte: '', presences: [], reserves: [], decisions: [], lots: [], lotSuivi: {} }
   if (!raw) return empty
   try {
     const parsed = JSON.parse(raw)
@@ -71,6 +77,7 @@ function parseObservations(raw: string | null): ParsedObservations {
         reserves:  parsed.reserves  ?? [],
         decisions: parsed.decisions ?? [],
         lots:      parsed.lots      ?? [],
+        lotSuivi:  parsed.lotSuivi  ?? {},
       }
     }
     return { ...empty, texte: raw }
@@ -310,10 +317,10 @@ const S = StyleSheet.create({
     fontSize: 7, color: '#777777', marginTop: 2,
   },
   cardPhotos: {
-    flexDirection: 'row', gap: 4, marginTop: 4,
+    flexDirection: 'row', flexWrap: 'wrap', gap: 4, marginTop: 6,
   },
   cardPhoto: {
-    width: 36, height: 36, objectFit: 'cover', borderRadius: 2,
+    width: 120, height: 90, objectFit: 'cover', borderRadius: 2,
   },
 
   // Decisions
@@ -338,10 +345,10 @@ const S = StyleSheet.create({
     flexDirection: 'row', flexWrap: 'wrap', gap: 4,
   },
   photoWrap: {
-    width: '32%',
+    width: '48%',
   },
   photoImg: {
-    width: '100%', height: 110, objectFit: 'cover', borderRadius: 2,
+    width: '100%', height: 90, objectFit: 'cover', borderRadius: 2,
   },
 
   // Footer
@@ -434,30 +441,47 @@ export function CompteRenduPDF({
           {obs.presences.length > 0 && (
             <View style={S.section}>
               <Text style={S.sectionTitle}>Présences</Text>
+              {/* Légende statuts */}
+              <View style={{ flexDirection: 'row', gap: 10, marginBottom: 5 }}>
+                {([
+                  { code: 'P', label: 'Présent',  color: '#16a34a' },
+                  { code: 'A', label: 'Absent',   color: '#dc2626' },
+                  { code: 'E', label: 'Excusé',   color: '#ea580c' },
+                  { code: 'C', label: 'Convoqué', color: '#2563eb' },
+                ] as const).map(({ code, label, color }) => (
+                  <View key={code} style={{ flexDirection: 'row', alignItems: 'center' }}>
+                    <Text style={{ fontSize: 7, fontFamily: 'Helvetica-Bold', color, marginRight: 3 }}>{code}</Text>
+                    <Text style={{ fontSize: 7, color: '#777777' }}>= {label}</Text>
+                  </View>
+                ))}
+              </View>
               <View style={S.tHead}>
                 <Text style={[S.th, { flex: 2 }]}>Nom</Text>
                 <Text style={[S.th, { flex: 2 }]}>Société</Text>
                 <Text style={[S.th, { flex: 1, textAlign: 'center' }]}>Statut</Text>
                 <Text style={[S.th, { flex: 1.5, textAlign: 'center', borderRightWidth: 0 }]}>Convoqué prochaine réunion</Text>
               </View>
-              {obs.presences.map((p, i) => (
-                <View key={i} style={S.tRow}>
-                  <Text style={[S.td, { flex: 2 }]}>{p.nom || '—'}</Text>
-                  <Text style={[S.td, S.tdGray, { flex: 2 }]}>{p.societe || '—'}</Text>
-                  <Text style={[S.td, { flex: 1, textAlign: 'center' }]}>{p.statut || '—'}</Text>
-                  <Text style={[S.td, { flex: 1.5, textAlign: 'center', borderRightWidth: 0 }]}>
-                    {p.convoque ? '✓' : ''}
-                  </Text>
-                </View>
-              ))}
+              {obs.presences.map((p, i) => {
+                const statutColor = p.statut === 'P' ? '#16a34a' : p.statut === 'A' ? '#dc2626' : p.statut === 'E' ? '#ea580c' : p.statut === 'C' ? '#2563eb' : '#333333'
+                return (
+                  <View key={i} style={S.tRow}>
+                    <Text style={[S.td, { flex: 2 }]}>{p.nom || '—'}</Text>
+                    <Text style={[S.td, S.tdGray, { flex: 2 }]}>{p.societe || '—'}</Text>
+                    <Text style={[S.td, { flex: 1, textAlign: 'center', color: statutColor, fontFamily: 'Helvetica-Bold' }]}>{p.statut || '—'}</Text>
+                    <Text style={[S.td, { flex: 1.5, textAlign: 'center', borderRightWidth: 0 }]}>
+                      {p.convoque ? '✓' : '—'}
+                    </Text>
+                  </View>
+                )
+              })}
             </View>
           )}
 
-          {/* Réserves */}
+          {/* Observations / Points de suivi */}
           {obs.reserves.length > 0 && (
             <View style={S.section}>
               <Text style={S.sectionTitle}>
-                Réserves — {reservesOuvertes} ouverte{reservesOuvertes !== 1 ? 's' : ''}
+                Observations / Points de suivi — {reservesOuvertes} ouverte{reservesOuvertes !== 1 ? 's' : ''}
               </Text>
               {obs.reserves.map((r, i) => {
                 const isOuvert = r.statut === 'Ouvert' || r.statut === 'ouverte'
@@ -466,7 +490,7 @@ export function CompteRenduPDF({
                   <View key={i} style={S.card}>
                     <View style={S.cardHeader}>
                       <Text style={S.cardTitle}>
-                        Réserve 1.{i + 1}{r.lot ? ` — ${r.lot}` : ''}
+                        Observation 1.{i + 1}{r.lot ? ` — ${r.lot}` : ''}
                       </Text>
                       <Text style={isOuvert ? S.badgeOuvert : S.badgeLeve}>{statutLabel}</Text>
                     </View>
@@ -504,9 +528,12 @@ export function CompteRenduPDF({
                   <Text style={[S.td, S.tdGray, { flex: 2 }]}>{l.intervenant || '—'}</Text>
                   <Text style={[S.td, S.tdGray, { flex: 1 }]}>{fmtShort(l.dateDemarrage)}</Text>
                   <Text style={[S.td, S.tdGray, { flex: 1 }]}>{fmtShort(l.dateFin)}</Text>
-                  <Text style={[S.td, S.tdOrange, { flex: 1, borderRightWidth: 0 }]}>
-                    {l.avancement ?? 0}%
-                  </Text>
+                  <View style={[S.td, { flex: 1, borderRightWidth: 0, flexDirection: 'row', alignItems: 'center', gap: 6 }]}>
+                    <View style={{ flex: 1, height: 6, backgroundColor: '#e5e7eb', borderRadius: 3, overflow: 'hidden' }}>
+                      <View style={{ width: `${l.avancement ?? 0}%`, height: 6, backgroundColor: '#ea580c', borderRadius: 3 }} />
+                    </View>
+                    <Text style={{ fontSize: 8, color: '#ea580c', fontFamily: 'Helvetica-Bold', minWidth: 24, textAlign: 'right' }}>{l.avancement ?? 0}%</Text>
+                  </View>
                 </View>
               ))}
             </View>
@@ -533,10 +560,46 @@ export function CompteRenduPDF({
             </View>
           )}
 
-          {/* Observations */}
+          {/* Suivi par lot */}
+          {(() => {
+            const entries = Object.entries(obs.lotSuivi).filter(
+              ([, e]) => e.observations || (e.photos && e.photos.length > 0)
+            )
+            if (entries.length === 0) return null
+            return (
+              <View style={S.section}>
+                <Text style={S.sectionTitle}>Suivi par lot</Text>
+                {entries.map(([lotId, entry]) => {
+                  const lot = obs.lots.find((l) => l.id === lotId)
+                  const lotLabel = lot?.nom
+                    ? lot.nom + (lot.intervenant ? ` — ${lot.intervenant}` : '')
+                    : lotId
+                  return (
+                    <View key={lotId} style={[S.card, { marginBottom: 8 }]}>
+                      <Text style={[S.cardTitle, { marginBottom: entry.observations || entry.photos?.length ? 4 : 0 }]}>
+                        {lotLabel}
+                      </Text>
+                      {entry.observations ? (
+                        <Text style={S.cardDesc}>{entry.observations}</Text>
+                      ) : null}
+                      {entry.photos && entry.photos.length > 0 && (
+                        <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 4, marginTop: 6 }}>
+                          {entry.photos.filter(isSafeImageSrc).map((src, pi) => (
+                            <Image key={pi} src={src} style={S.cardPhoto} />
+                          ))}
+                        </View>
+                      )}
+                    </View>
+                  )
+                })}
+              </View>
+            )
+          })()}
+
+          {/* Remarques générales */}
           {obs.texte ? (
             <View style={S.section}>
-              <Text style={S.sectionTitle}>Observations</Text>
+              <Text style={S.sectionTitle}>Remarques générales</Text>
               <Text style={S.sectionText}>{obs.texte}</Text>
             </View>
           ) : null}
@@ -554,7 +617,7 @@ export function CompteRenduPDF({
             <View style={S.section}>
               <Text style={S.sectionTitle}>Photos ({compteRendu.photos.length})</Text>
               <View style={S.photosGrid}>
-                {compteRendu.photos.map((url, i) => (
+                {compteRendu.photos.filter(isSafeImageSrc).map((url, i) => (
                   <View key={i} style={S.photoWrap}>
                     <Image src={url} style={S.photoImg} />
                   </View>

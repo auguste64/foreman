@@ -277,7 +277,7 @@ export function ComptabiliteContent({ defaultTab: defaultTabProp = 'devis' }: { 
   }
 
   return (
-    <UpgradeGate requiredPlan="complet" feature="Comptabilité (devis & factures)">
+    <UpgradeGate requiredPlan="pro" feature="Comptabilité (devis & factures)">
     <div className="page-enter" style={{ flex: 1, display: 'flex', overflow: 'hidden' }}>
 
       {/* ── Left sidebar: chantiers ── */}

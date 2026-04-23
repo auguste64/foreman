@@ -6,10 +6,9 @@ export default function UpgradeGate({
   requiredPlan,
   children,
   message,
-  /** @deprecated kept for backwards compatibility */
   feature,
 }: {
-  requiredPlan: 'essentiel' | 'pro' | 'complet'
+  requiredPlan: 'essentiel' | 'pro'
   children?: React.ReactNode
   message?: string
   feature?: string
@@ -18,7 +17,7 @@ export default function UpgradeGate({
 
   if (loading) return null
 
-  const effectivePlan = requiredPlan === 'complet' ? 'pro' : requiredPlan
+  const effectivePlan = requiredPlan
   const hasAccess = effectivePlan === 'essentiel' ? isEssentiel : isPro
   if (hasAccess) return children ? <>{children}</> : null
 

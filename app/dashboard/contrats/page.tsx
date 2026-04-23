@@ -19,7 +19,7 @@ function fmtEur(n: number) {
 }
 
 export default function ContratsPage() {
-  const { isComplet } = usePlan()
+  const { isPro } = usePlan()
   const isMobile = useIsMobile()
   const [contrats, setContrats] = useState<Contrat[]>([])
   const [loading, setLoading] = useState(true)
@@ -45,7 +45,7 @@ export default function ContratsPage() {
       )
     : contrats
 
-  if (!isComplet) return <UpgradeGate feature="Contrats MOE" requiredPlan="pro" />
+  if (!isPro) return <UpgradeGate feature="Contrats MOE" requiredPlan="pro" />
 
   return (
     <div className="page-enter" style={{ flex: 1, padding: isMobile ? '16px' : '40px', overflowY: 'auto' }}>

@@ -5,9 +5,14 @@ import type { Chantier } from './chantiers'
 // id, chantier_id, user_id, date_visite, date_prochaine_visite, progression,
 // observations (TEXT — stocke un JSON structuré), travaux_a_faire, artisans_presents (text[]), photos (text[]), created_at
 //
-// Colonnes ABSENTES du schéma DB : presences, reserves, decisions, lots
+// Colonnes ABSENTES du schéma DB : presences, reserves, decisions, lots, lotSuivi
 // → Ces données sont sérialisées dans observations sous la forme :
-//   { texte: string, presences: [], reserves: [], decisions: [], lots: [] }
+//   { texte, presences, reserves, decisions, lots, lotSuivi }
+
+export type LotSuiviEntry = {
+  observations: string
+  photos: string[]
+}
 
 export type ObservationsData = {
   texte: string
@@ -15,6 +20,7 @@ export type ObservationsData = {
   reserves: Reserve[]
   decisions: Decision[]
   lots: Lot[]
+  lotSuivi: Record<string, LotSuiviEntry>
 }
 
 export type PresenceRow = {
@@ -43,6 +49,7 @@ export type Decision = {
 export type Lot = {
   id: string
   nom: string
+  intervenant?: string
   avancement: number
   notes: string
 }

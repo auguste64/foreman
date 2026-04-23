@@ -74,7 +74,7 @@ export default function NouveauDevisPage() {
   const [error, setError] = useState<string | null>(null)
   const [statutOpen, setStatutOpen] = useState(false)
   const statutRef = useRef<HTMLDivElement>(null)
-  const { isComplet, loading: planLoading } = usePlan()
+  const { isPro, loading: planLoading } = usePlan()
 
   useEffect(() => {
     function handleClick(e: MouseEvent) {
@@ -148,7 +148,7 @@ export default function NouveauDevisPage() {
   }
 
   if (planLoading) return null
-  if (!isComplet) return <UpgradeGate feature="Comptabilité" requiredPlan="complet" />
+  if (!isPro) return <UpgradeGate feature="Comptabilité" requiredPlan="pro" />
 
   return (
     <div className="page-enter" style={{ flex: 1, padding: '40px', overflowY: 'auto', maxWidth: '800px' }}>

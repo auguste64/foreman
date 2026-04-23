@@ -34,7 +34,9 @@ export function usePlan(): PlanState {
         .eq('id', session.user.id)
         .single()
 
-      const resolvedPlan: Plan = (data?.plan === 'pro') ? 'pro' : 'essentiel'
+      const resolvedPlan: Plan = process.env.NODE_ENV === 'development'
+        ? 'pro'
+        : (data?.plan === 'pro') ? 'pro' : 'essentiel'
       setPlan(resolvedPlan)
       setStripeCustomerId(data?.stripe_customer_id ?? null)
       setStripeSubscriptionId(data?.stripe_subscription_id ?? null)

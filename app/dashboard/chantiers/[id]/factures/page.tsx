@@ -30,7 +30,7 @@ const STATUT_LABELS: Record<string, string> = {
   annulee:             'Annulée',
 }
 
-function ChantierTabs({ chantierId, isComplet }: { chantierId: string; isComplet: boolean }) {
+function ChantierTabs({ chantierId, isPro }: { chantierId: string; isPro: boolean }) {
   const pathname = usePathname()
   const tabs = [
     { label: 'Infos',          href: `/dashboard/chantiers/${chantierId}`,                pro: false },
@@ -50,7 +50,7 @@ function ChantierTabs({ chantierId, isComplet }: { chantierId: string; isComplet
             style={{ padding: '10px 20px', fontSize: '13px', fontWeight: 500, fontFamily: 'var(--font-dm-sans), sans-serif', textDecoration: 'none', color: active ? '#ea580c' : '#8A8880', borderBottom: active ? '2px solid #ea580c' : '2px solid transparent', marginBottom: '-1px', transition: 'color 0.15s', display: 'inline-flex', alignItems: 'center', gap: 5 }}
           >
             {tab.label}
-            {tab.pro && !isComplet && (
+            {tab.pro && !isPro && (
               <span style={{ background: '#1E1E1C', color: '#ea580c', fontSize: '9px', fontWeight: 600, padding: '2px 5px', borderRadius: '4px' }}>Pro</span>
             )}
           </Link>
@@ -61,7 +61,7 @@ function ChantierTabs({ chantierId, isComplet }: { chantierId: string; isComplet
 }
 
 export default function FacturesListPage() {
-  const { isComplet } = usePlan()
+  const { isPro } = usePlan()
   const params = useParams()
   const chantierId = params.id as string
   const [factures, setFactures] = useState<Facture[]>([])
@@ -100,10 +100,10 @@ export default function FacturesListPage() {
         </h1>
       </div>
 
-      <ChantierTabs chantierId={chantierId} isComplet={isComplet} />
+      <ChantierTabs chantierId={chantierId} isPro={isPro} />
 
-      {!isComplet ? (
-        <UpgradeGate feature="Comptabilité" requiredPlan="complet" />
+      {!isPro ? (
+        <UpgradeGate feature="Comptabilité" requiredPlan="pro" />
       ) : (
         <>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '24px' }}>

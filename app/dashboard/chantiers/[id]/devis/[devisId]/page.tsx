@@ -40,7 +40,7 @@ export default function DevisDetailPage() {
   const [confirmDelete, setConfirmDelete] = useState(false)
   const [deleting, setDeleting] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const { isComplet, loading: planLoading } = usePlan()
+  const { isPro, loading: planLoading } = usePlan()
 
   useEffect(() => {
     getDevis(devisId)
@@ -83,7 +83,7 @@ export default function DevisDetailPage() {
   }
 
   if (planLoading) return null
-  if (!isComplet) return <UpgradeGate feature="Comptabilité" requiredPlan="complet" />
+  if (!isPro) return <UpgradeGate feature="Comptabilité" requiredPlan="pro" />
 
   const sc = STATUT_COLORS[devis.statut] ?? STATUT_COLORS.brouillon
   const totaux = calcTotaux(devis.lignes, devis.tva_pct)

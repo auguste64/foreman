@@ -240,7 +240,7 @@ export default function ChantierDetail({ chantier }: { chantier: Chantier }) {
   }
 
   const pathname = usePathname()
-  const { isComplet } = usePlan()
+  const { isPro } = usePlan()
   const colors = STATUT_COLORS[chantier.statut] ?? STATUT_COLORS['En cours']
   const progression = chantier.statut === 'Terminé' ? 100 : chantier.statut === 'En pause' ? 30 : 65
 
@@ -310,7 +310,7 @@ export default function ChantierDetail({ chantier }: { chantier: Chantier }) {
               onMouseLeave={e => { if (!active) e.currentTarget.style.color = '#8A8880' }}
             >
               {tab.label}
-              {tab.pro && !isComplet && (
+              {tab.pro && !isPro && (
                 <span style={{ marginLeft: 5, background: '#1E1E1C', color: '#ea580c', fontSize: '9px', fontWeight: 600, padding: '2px 5px', borderRadius: '4px' }}>Pro</span>
               )}
             </Link>

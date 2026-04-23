@@ -43,7 +43,7 @@ export default function NouvelAvoirPage() {
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
-  const { isComplet, loading: planLoading } = usePlan()
+  const { isPro, loading: planLoading } = usePlan()
 
   useEffect(() => {
     async function init() {
@@ -113,7 +113,7 @@ export default function NouvelAvoirPage() {
 
   if (loading) return <div style={{ flex: 1, padding: 40 }}><p style={{ color: '#8A8880', fontFamily: 'var(--font-dm-sans), sans-serif' }}>Chargement…</p></div>
   if (planLoading) return null
-  if (!isComplet) return <UpgradeGate feature="Comptabilité (devis & factures)" requiredPlan="complet" />
+  if (!isPro) return <UpgradeGate feature="Comptabilité (devis & factures)" requiredPlan="pro" />
 
   return (
     <div className="page-enter" style={{ flex: 1, padding: '40px', overflowY: 'auto', maxWidth: 800 }}>

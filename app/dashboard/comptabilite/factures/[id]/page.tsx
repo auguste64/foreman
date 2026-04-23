@@ -36,7 +36,7 @@ export default function FactureDetailPage() {
   const [sending, setSending] = useState(false)
   const [paiementForm, setPaiementForm] = useState({ date_paiement: new Date().toISOString().split('T')[0], montant: '', mode_paiement: 'virement' })
   const [savingPaiement, setSavingPaiement] = useState(false)
-  const { isComplet, loading: planLoading } = usePlan()
+  const { isPro, loading: planLoading } = usePlan()
 
   useEffect(() => {
     getFactureDoc(id).then(f => {
@@ -117,7 +117,7 @@ export default function FactureDetailPage() {
 
   if (loading) return <div style={{ flex: 1, padding: 40 }}><p style={{ color: '#8A8880', fontFamily: 'var(--font-dm-sans), sans-serif' }}>Chargement…</p></div>
   if (planLoading) return null
-  if (!isComplet) return <UpgradeGate feature="Comptabilité (devis & factures)" requiredPlan="complet" />
+  if (!isPro) return <UpgradeGate feature="Comptabilité (devis & factures)" requiredPlan="pro" />
   if (!facture) return <div style={{ flex: 1, padding: 40 }}><p style={{ color: '#E85447', fontFamily: 'var(--font-dm-sans), sans-serif' }}>Facture introuvable.</p></div>
 
   const statut = FACTURE_STATUT[facture.statut] ?? { label: facture.statut, bg: 'rgba(138,136,128,0.15)', color: '#8A8880' }

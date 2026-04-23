@@ -32,7 +32,7 @@ export default function DevisDetailPage() {
   const [showConfirmDelete, setShowConfirmDelete] = useState(false)
   const [emailForm, setEmailForm] = useState({ to: '', subject: '', body: '' })
   const [sending, setSending] = useState(false)
-  const { isComplet, loading: planLoading } = usePlan()
+  const { isPro, loading: planLoading } = usePlan()
 
   const [showAcompteModal, setShowAcompteModal] = useState(false)
   const [showFactureFinaleModal, setShowFactureFinaleModal] = useState(false)
@@ -233,7 +233,7 @@ export default function DevisDetailPage() {
 
   if (loading) return <div style={{ flex: 1, padding: 40 }}><p style={{ color: '#8A8880', fontFamily: 'var(--font-dm-sans), sans-serif' }}>Chargement…</p></div>
   if (planLoading) return null
-  if (!isComplet) return <UpgradeGate feature="Comptabilité (devis & factures)" requiredPlan="complet" />
+  if (!isPro) return <UpgradeGate feature="Comptabilité (devis & factures)" requiredPlan="pro" />
   if (!devis) return <div style={{ flex: 1, padding: 40 }}><p style={{ color: '#E85447', fontFamily: 'var(--font-dm-sans), sans-serif' }}>Devis introuvable.</p></div>
 
   const statut = DEVIS_STATUT[devis.statut] ?? { label: devis.statut, bg: 'rgba(138,136,128,0.15)', color: '#8A8880' }

@@ -22,7 +22,6 @@ function Portal({ children }: { children: React.ReactNode }) {
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-type Tab = 'general' | 'presences' | 'reserves' | 'decisions' | 'lots' | 'photos'
 type StatutPresence = 'P' | 'A' | 'E' | 'C'
 
 interface PresenceRow {
@@ -60,6 +59,12 @@ interface Decision {
   description: string
   responsable: string
   echeance: string
+}
+
+interface LotSuiviEntry {
+  observations: string
+  photoFiles: File[]
+  photoPreviews: string[]
 }
 
 interface Profile {
@@ -162,7 +167,6 @@ function ChantierAddOption({ onClick }: { onClick: () => void }) {
 
 export default function NouveauCompteRenduPage() {
   const router = useRouter()
-  const [tab, setTab] = useState<Tab>('general')
   const [chantiers, setChantiers] = useState<Chantier[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -177,6 +181,8 @@ export default function NouveauCompteRenduPage() {
   const [chantierArtisans, setChantierArtisans] = useState<{ id: string; nom: string; metier: string | null }[]>([])
   const [allArtisans, setAllArtisans] = useState<{ id: string; nom: string; metier: string | null }[]>([])
   const [draftSaved, setDraftSaved] = useState(false)
+  const [reportedPhotoUrls, setReportedPhotoUrls] = useState<string[]>([])
+  const [lotSuivi, setLotSuivi] = useState<Record<string, LotSuiviEntry>>({})
 
   const [chantierDropdownOpen, setChantierDropdownOpen] = useState(false)
   const chantierDropdownRef = useRef<HTMLDivElement>(null)
@@ -203,6 +209,7 @@ export default function NouveauCompteRenduPage() {
     date_visite: new Date().toISOString().split('T')[0],
     date_prochaine_visite: '',
     progression: 50,
+    texte: '',
     artisans_presents: [] as string[],
     photos: [] as string[],
   })
@@ -387,13 +394,118 @@ export default function NouveauCompteRenduPage() {
     try {
       const parsed = JSON.parse(data.observations)
       const ouvertes = ((parsed.reserves ?? []) as Reserve[]).filter((r) => r.statut === 'Ouvert')
-      if (ouvertes.length === 0) { toast.success('Aucune réserve ouverte à reporter.'); return }
+      if (ouvertes.length === 0) { toast.success('Aucune observation ouverte à reporter.'); return }
       setReserves((prev) => [
         ...prev,
         ...ouvertes.map((r) => ({ ...r, id: uid(), dateCreation: new Date().toISOString().split('T')[0], photos: [] })),
       ])
-      toast.success(`${ouvertes.length} réserve(s) reportée(s)`)
+      toast.success(`${ouvertes.length} observation(s) reportée(s)`)
     } catch {}
+  }
+
+  async function reporterPresencesPrecedentes() {
+    if (!form.chantier_id) return
+    const supabase = createClient()
+    const { data } = await supabase
+      .from('comptes_rendus')
+      .select('observations')
+      .eq('chantier_id', form.chantier_id)
+      .order('date_visite', { ascending: false })
+      .limit(1)
+      .maybeSingle()
+    if (!data?.observations) { toast.success('Aucun CR précédent trouvé.'); return }
+    try {
+      const parsed = JSON.parse(data.observations)
+      const prev = (parsed.presences ?? []) as PresenceRow[]
+      if (prev.length === 0) { toast.success('Aucune présence à reporter.'); return }
+      setPresences((existing) => {
+        const noms = new Set(existing.map((p) => p.nom))
+        const nouvelles = prev.filter((p) => !noms.has(p.nom)).map((p) => ({
+          ...p,
+          artisanId: p.artisanId || `ext_${uid()}`,
+        }))
+        if (nouvelles.length === 0) { toast.success('Tous les participants sont déjà présents.'); return existing }
+        toast.success(`${nouvelles.length} présence(s) reportée(s)`)
+        return [...existing, ...nouvelles]
+      })
+    } catch {}
+  }
+
+  async function reporterLotsPrecedents() {
+    if (!form.chantier_id) return
+    const supabase = createClient()
+    const { data } = await supabase
+      .from('comptes_rendus')
+      .select('observations')
+      .eq('chantier_id', form.chantier_id)
+      .order('date_visite', { ascending: false })
+      .limit(1)
+      .maybeSingle()
+    if (!data?.observations) { toast.success('Aucun CR précédent trouvé.'); return }
+    try {
+      const parsed = JSON.parse(data.observations)
+      const prev = (parsed.lots ?? []) as Lot[]
+      if (prev.length === 0) { toast.success('Aucun lot à reporter.'); return }
+      setLots((existing) => {
+        const noms = new Set(existing.map((l) => l.nom))
+        const nouveaux = prev.filter((l) => !noms.has(l.nom)).map((l) => ({ ...l, id: uid(), photos: [] }))
+        if (nouveaux.length === 0) { toast.success('Tous les lots sont déjà présents.'); return existing }
+        toast.success(`${nouveaux.length} lot(s) reporté(s)`)
+        return [...existing, ...nouveaux]
+      })
+    } catch {}
+  }
+
+  async function reporterDecisionsPrecedentes() {
+    if (!form.chantier_id) return
+    const supabase = createClient()
+    const { data } = await supabase
+      .from('comptes_rendus')
+      .select('observations')
+      .eq('chantier_id', form.chantier_id)
+      .order('date_visite', { ascending: false })
+      .limit(1)
+      .maybeSingle()
+    if (!data?.observations) { toast.success('Aucun CR précédent trouvé.'); return }
+    try {
+      const parsed = JSON.parse(data.observations)
+      const prev = (parsed.decisions ?? []) as (Decision & { statut?: string })[]
+      const nonExecutees = prev.filter((d) => {
+        const s = (d.statut ?? '').toLowerCase()
+        return s !== 'exécutée' && s !== 'executee' && s !== 'exécuté' && s !== 'executé' && s !== 'done' && s !== 'terminé'
+      })
+      if (nonExecutees.length === 0) { toast.success('Aucune décision non exécutée à reporter.'); return }
+      setDecisions((existing) => [
+        ...existing,
+        ...nonExecutees.map((d) => ({ id: uid(), description: d.description || '', responsable: d.responsable || '', echeance: '' })),
+      ])
+      toast.success(`${nonExecutees.length} décision(s) reportée(s)`)
+    } catch {}
+  }
+
+  async function reporterPhotosPrecedentes() {
+    if (!form.chantier_id) return
+    const supabase = createClient()
+    const { data } = await supabase
+      .from('comptes_rendus')
+      .select('photos')
+      .eq('chantier_id', form.chantier_id)
+      .order('date_visite', { ascending: false })
+      .limit(1)
+      .maybeSingle()
+    const urls = ((data as { photos?: string[] } | null)?.photos ?? []).filter(Boolean)
+    if (urls.length === 0) { toast.success('Aucune photo à reporter.'); return }
+    setReportedPhotoUrls((existing) => {
+      const existingSet = new Set(existing)
+      const nouvelles = urls.filter((u) => !existingSet.has(u))
+      if (nouvelles.length === 0) { toast.success('Ces photos sont déjà reportées.'); return existing }
+      toast.success(`${nouvelles.length} photo(s) reportée(s)`)
+      return [...existing, ...nouvelles]
+    })
+  }
+
+  function removeReportedPhoto(url: string) {
+    setReportedPhotoUrls((prev) => prev.filter((u) => u !== url))
   }
 
   // ── Decisions ──
@@ -419,6 +531,29 @@ export default function NouveauCompteRenduPage() {
   }
   function removeLotPhoto(lotId: string, idx: number) {
     setLots((prev) => prev.map((l) => l.id === lotId ? { ...l, photos: l.photos.filter((_, i) => i !== idx) } : l))
+  }
+
+  // ── Suivi par lot ──
+  function updateLotSuiviObs(lotId: string, value: string) {
+    setLotSuivi((prev) => {
+      const entry = prev[lotId] ?? { observations: '', photoFiles: [], photoPreviews: [] }
+      return { ...prev, [lotId]: { ...entry, observations: value } }
+    })
+  }
+  function addLotSuiviPhoto(lotId: string, file: File) {
+    const preview = URL.createObjectURL(file)
+    setLotSuivi((prev) => {
+      const entry = prev[lotId] ?? { observations: '', photoFiles: [], photoPreviews: [] }
+      return { ...prev, [lotId]: { ...entry, photoFiles: [...entry.photoFiles, file], photoPreviews: [...entry.photoPreviews, preview] } }
+    })
+  }
+  function removeLotSuiviPhoto(lotId: string, idx: number) {
+    setLotSuivi((prev) => {
+      const entry = prev[lotId]
+      if (!entry) return prev
+      URL.revokeObjectURL(entry.photoPreviews[idx])
+      return { ...prev, [lotId]: { ...entry, photoFiles: entry.photoFiles.filter((_, i) => i !== idx), photoPreviews: entry.photoPreviews.filter((_, i) => i !== idx) } }
+    })
   }
 
   // ── Photos (onglet Photos) ──
@@ -447,6 +582,25 @@ export default function NouveauCompteRenduPage() {
     return urls
   }
 
+  async function uploadLotSuiviPhotos(): Promise<Record<string, { observations: string; photos: string[] }>> {
+    const supabase = createClient()
+    const result: Record<string, { observations: string; photos: string[] }> = {}
+    for (const [lotId, entry] of Object.entries(lotSuivi)) {
+      if (!entry.observations && !entry.photoFiles.length) continue
+      const urls: string[] = []
+      for (const file of entry.photoFiles) {
+        const ext = file.name.split('.').pop()
+        const path = `${form.chantier_id}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`
+        const { error } = await supabase.storage.from('photos-chantier').upload(path, file)
+        if (error) throw new Error(`Upload suivi lot : ${error.message}`)
+        const { data: urlData } = supabase.storage.from('photos-chantier').getPublicUrl(path)
+        urls.push(urlData.publicUrl)
+      }
+      result[lotId] = { observations: entry.observations, photos: urls }
+    }
+    return result
+  }
+
   // ── Submit ──
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -454,14 +608,18 @@ export default function NouveauCompteRenduPage() {
     setError(null)
     setLoading(true)
     try {
-      const photoUrls = await uploadPhotos()
+      const uploadedUrls = await uploadPhotos()
+      const lotSuiviData = await uploadLotSuiviPhotos()
+      const photoUrls = [...reportedPhotoUrls, ...uploadedUrls]
       const artisansPresentsList = presences.filter((p) => p.statut === 'P').map((p) => p.nom)
 
       const observationsData = {
+        texte: form.texte,
         presences,
         reserves,
         decisions,
         lots,
+        lotSuivi: lotSuiviData,
       }
 
       const insertPayload = {
@@ -509,16 +667,6 @@ export default function NouveauCompteRenduPage() {
     }
   }
 
-  // ── Tab definitions ──
-  const TABS: { id: Tab; label: string }[] = [
-    { id: 'general',   label: 'Général' },
-    { id: 'presences', label: 'Présences' },
-    { id: 'lots',      label: 'Lots' },
-    { id: 'reserves',  label: reserves.length  ? `Réserves (${reserves.length})`   : 'Réserves'  },
-    { id: 'decisions', label: decisions.length ? `Décisions (${decisions.length})` : 'Décisions' },
-    { id: 'photos',    label: photoPreviews.length ? `Photos (${photoPreviews.length})` : 'Photos' },
-  ]
-
   // ── Artisans pour les selects (tous les artisans DB + externes ajoutés manuellement) ──
   const allIntervenants = [
     ...allArtisans.map(a => ({ value: a.nom, label: `${a.nom}${a.metier ? ` — ${a.metier}` : ''}` })),
@@ -550,28 +698,14 @@ export default function NouveauCompteRenduPage() {
 
         {/* ── Left : tabbed form ── */}
         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-          <div style={{ backgroundColor: '#111110', border: '1px solid #1E1E1C', borderRadius: '12px', overflow: 'visible' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
 
-            {/* Tab bar */}
-            <div style={{ display: 'flex', borderBottom: '1px solid #1E1E1C', overflowX: 'auto', padding: '0 4px' }}>
-              {TABS.map((t) => (
-                <button key={t.id} type="button" onClick={() => setTab(t.id)} style={{
-                  padding: '12px 16px', fontSize: '13px', background: 'none', border: 'none',
-                  borderBottom: tab === t.id ? '2px solid #ea580c' : '2px solid transparent',
-                  color: tab === t.id ? '#ea580c' : '#7A7870',
-                  fontFamily: 'var(--font-dm-sans), sans-serif', fontWeight: tab === t.id ? 600 : 400,
-                  cursor: 'pointer', whiteSpace: 'nowrap', marginBottom: '-1px', transition: 'color 0.15s',
-                }}>
-                  {t.label}
-                </button>
-              ))}
-            </div>
-
-            {/* Tab content */}
-            <div style={{ padding: '28px' }}>
-
-              {/* ── GÉNÉRAL ── */}
-              {tab === 'general' && (
+            {/* ── GÉNÉRAL ── */}
+            <div>
+              <div style={{ borderLeft: '3px solid #ea580c', paddingLeft: '12px', marginBottom: '16px' }}>
+                <span style={{ fontFamily: 'var(--font-syne), sans-serif', fontWeight: 700, fontSize: '14px', color: '#F0EDE6' }}>Général</span>
+              </div>
+              <div style={{ backgroundColor: '#111110', border: '1px solid #1E1E1C', borderRadius: '12px', padding: '28px' }}>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
                   <div>
                     <label style={labelStyle}>Chantier associé *</label>
@@ -687,14 +821,32 @@ export default function NouveauCompteRenduPage() {
                     </div>
                   </div>
                 </div>
-              )}
+              </div>
+            </div>
 
-              {/* ── PRÉSENCES ── */}
-              {tab === 'presences' && (
+            {/* ── PRÉSENCES ── */}
+            <div>
+              <div style={{ borderLeft: '3px solid #ea580c', paddingLeft: '12px', marginBottom: '16px' }}>
+                <span style={{ fontFamily: 'var(--font-syne), sans-serif', fontWeight: 700, fontSize: '14px', color: '#F0EDE6' }}>Présences</span>
+              </div>
+              <div style={{ backgroundColor: '#111110', border: '1px solid #1E1E1C', borderRadius: '12px', padding: '28px' }}>
                 <div>
+                  {form.chantier_id && (
+                    <button type="button" onClick={reporterPresencesPrecedentes}
+                      style={{
+                        padding: '10px 16px', backgroundColor: 'rgba(249,115,22,0.08)', border: '1px solid rgba(249,115,22,0.25)',
+                        borderRadius: '8px', color: '#ea580c', fontSize: '13px', cursor: 'pointer',
+                        fontFamily: 'var(--font-dm-sans), sans-serif', textAlign: 'left', transition: 'all 0.15s',
+                        marginBottom: '16px', display: 'block', width: '100%',
+                      }}
+                      onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = 'rgba(249,115,22,0.15)' }}
+                      onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'rgba(249,115,22,0.08)' }}>
+                      📋 Reporter les présences du CR précédent
+                    </button>
+                  )}
                   {!form.chantier_id ? (
                     <p style={{ color: '#8A8880', fontSize: '14px', fontFamily: 'var(--font-dm-sans), sans-serif', fontStyle: 'italic' }}>
-                      Sélectionnez d&apos;abord un chantier dans l&apos;onglet Général.
+                      Sélectionnez d&apos;abord un chantier dans la section Général.
                     </p>
                   ) : presences.length > 0 ? (
                     <table style={{ width: '100%', borderCollapse: 'collapse' }}>
@@ -811,11 +963,28 @@ export default function NouveauCompteRenduPage() {
                     </div>
                   )}
                 </div>
-              )}
+              </div>
+            </div>
 
-              {/* ── LOTS ── */}
-              {tab === 'lots' && (
+            {/* ── LOTS ── */}
+            <div>
+              <div style={{ borderLeft: '3px solid #ea580c', paddingLeft: '12px', marginBottom: '16px' }}>
+                <span style={{ fontFamily: 'var(--font-syne), sans-serif', fontWeight: 700, fontSize: '14px', color: '#F0EDE6' }}>Avancement des lots</span>
+              </div>
+              <div style={{ backgroundColor: '#111110', border: '1px solid #1E1E1C', borderRadius: '12px', padding: '28px' }}>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                  {form.chantier_id && (
+                    <button type="button" onClick={reporterLotsPrecedents}
+                      style={{
+                        padding: '10px 16px', backgroundColor: 'rgba(249,115,22,0.08)', border: '1px solid rgba(249,115,22,0.25)',
+                        borderRadius: '8px', color: '#ea580c', fontSize: '13px', cursor: 'pointer',
+                        fontFamily: 'var(--font-dm-sans), sans-serif', textAlign: 'left', transition: 'all 0.15s',
+                      }}
+                      onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = 'rgba(249,115,22,0.15)' }}
+                      onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'rgba(249,115,22,0.08)' }}>
+                      📋 Reporter les lots du CR précédent
+                    </button>
+                  )}
                   {lots.map((l, idx) => (
                     <div key={l.id} style={{ backgroundColor: '#0D0D0B', border: '1px solid #1E1E1C', borderRadius: '10px', padding: '20px' }}>
                       {/* Lot header */}
@@ -945,10 +1114,119 @@ export default function NouveauCompteRenduPage() {
                     + Ajouter un lot
                   </button>
                 </div>
-              )}
+              </div>
+            </div>
 
-              {/* ── RÉSERVES ── */}
-              {tab === 'reserves' && (
+            {/* ── SUIVI PAR LOT ── */}
+            <div>
+              <div style={{ borderLeft: '3px solid #ea580c', paddingLeft: '12px', marginBottom: '16px' }}>
+                <span style={{ fontFamily: 'var(--font-syne), sans-serif', fontWeight: 700, fontSize: '14px', color: '#F0EDE6' }}>Suivi par lot</span>
+              </div>
+              <div style={{ backgroundColor: '#111110', border: '1px solid #1E1E1C', borderRadius: '12px', padding: '28px' }}>
+                {!form.chantier_id || lots.length === 0 ? (
+                  <p style={{ color: '#8A8880', fontSize: '14px', fontFamily: 'var(--font-dm-sans), sans-serif', fontStyle: 'italic', margin: 0 }}>
+                    {!form.chantier_id
+                      ? 'Sélectionnez un chantier avec des lots pour accéder au suivi par lot.'
+                      : 'Sélectionnez un chantier avec des lots pour accéder au suivi par lot.'}
+                  </p>
+                ) : (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                    {lots.map((l) => {
+                      const entry = lotSuivi[l.id] ?? { observations: '', photoFiles: [], photoPreviews: [] }
+                      return (
+                        <div key={l.id} style={{ backgroundColor: '#0D0D0B', border: '1px solid #1E1E1C', borderRadius: '10px', padding: '20px' }}>
+                          {/* Lot title */}
+                          <div style={{ marginBottom: '14px' }}>
+                            <span style={{ fontFamily: 'var(--font-syne), sans-serif', fontWeight: 700, fontSize: '14px', color: '#ea580c' }}>
+                              {l.nom || 'Lot sans nom'}
+                            </span>
+                            {l.intervenant && (
+                              <span style={{ fontSize: '13px', color: '#8A8880', fontFamily: 'var(--font-dm-sans), sans-serif', marginLeft: '8px' }}>
+                                — {l.intervenant}
+                              </span>
+                            )}
+                          </div>
+
+                          {/* Observations textarea */}
+                          <div style={{ marginBottom: '14px' }}>
+                            <label style={labelStyle}>Observations</label>
+                            <textarea
+                              value={entry.observations}
+                              onChange={(e) => updateLotSuiviObs(l.id, e.target.value)}
+                              rows={3}
+                              placeholder="Notes, points en cours, éléments à surveiller..."
+                              style={{ ...inputStyle, resize: 'vertical', lineHeight: '1.5', fontSize: '13px' }}
+                              onFocus={focus} onBlur={blur}
+                            />
+                          </div>
+
+                          {/* Photos */}
+                          <div>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px' }}>
+                              <span style={{ ...labelStyle, marginBottom: 0 }}>Photos</span>
+                              <label style={{ cursor: 'pointer' }}>
+                                <span style={{
+                                  padding: '3px 10px', backgroundColor: 'rgba(249,115,22,0.1)', color: '#ea580c',
+                                  borderRadius: '6px', fontSize: '12px', fontWeight: 500,
+                                  fontFamily: 'var(--font-dm-sans), sans-serif',
+                                }}>
+                                  📷 Ajouter des photos
+                                </span>
+                                <input
+                                  type="file" accept="image/*" multiple style={{ display: 'none' }}
+                                  onChange={(e) => {
+                                    Array.from(e.target.files ?? []).forEach((file) => addLotSuiviPhoto(l.id, file))
+                                    e.target.value = ''
+                                  }}
+                                />
+                              </label>
+                            </div>
+                            {entry.photoPreviews.length > 0 && (
+                              <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                                {entry.photoPreviews.map((src, pi) => (
+                                  <div key={pi} style={{ position: 'relative', display: 'inline-block' }}>
+                                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                                    <img src={src} alt="" style={{ width: '80px', height: '80px', objectFit: 'cover', borderRadius: '6px', border: '1px solid #1E1E1C', display: 'block' }} />
+                                    <button type="button" onClick={() => removeLotSuiviPhoto(l.id, pi)}
+                                      style={{ position: 'absolute', top: '-6px', right: '-6px', width: '18px', height: '18px', borderRadius: '50%', backgroundColor: '#EF4444', color: '#fff', border: 'none', cursor: 'pointer', fontSize: '11px', fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 10, lineHeight: 1 }}>
+                                      ×
+                                    </button>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      )
+                    })}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* ── REMARQUES GÉNÉRALES ── */}
+            <div>
+              <div style={{ borderLeft: '3px solid #ea580c', paddingLeft: '12px', marginBottom: '16px' }}>
+                <span style={{ fontFamily: 'var(--font-syne), sans-serif', fontWeight: 700, fontSize: '14px', color: '#F0EDE6' }}>Remarques générales</span>
+              </div>
+              <div style={{ backgroundColor: '#111110', border: '1px solid #1E1E1C', borderRadius: '12px', padding: '28px' }}>
+                <textarea
+                  value={form.texte}
+                  onChange={(e) => setField('texte', e.target.value)}
+                  rows={5}
+                  placeholder="Observations générales sur l'état du chantier, points importants…"
+                  style={{ ...inputStyle, resize: 'vertical', lineHeight: '1.6', width: '100%', boxSizing: 'border-box' } as React.CSSProperties}
+                  onFocus={focus} onBlur={blur}
+                />
+              </div>
+            </div>
+
+            {/* ── RÉSERVES ── */}
+            <div>
+              <div style={{ borderLeft: '3px solid #ea580c', paddingLeft: '12px', marginBottom: '16px' }}>
+                <span style={{ fontFamily: 'var(--font-syne), sans-serif', fontWeight: 700, fontSize: '14px', color: '#F0EDE6' }}>Observations / Points de suivi</span>
+              </div>
+              <div style={{ backgroundColor: '#111110', border: '1px solid #1E1E1C', borderRadius: '12px', padding: '28px' }}>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                   {form.chantier_id && (
                     <button type="button" onClick={reporterReservesPrecedentes}
@@ -959,7 +1237,7 @@ export default function NouveauCompteRenduPage() {
                       }}
                       onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = 'rgba(249,115,22,0.15)' }}
                       onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'rgba(249,115,22,0.08)' }}>
-                      📋 Reporter les réserves ouvertes du CR précédent
+                      📋 Reporter les observations ouvertes du CR précédent
                     </button>
                   )}
 
@@ -967,7 +1245,7 @@ export default function NouveauCompteRenduPage() {
                     <div key={r.id} style={{ backgroundColor: '#0D0D0B', border: '1px solid #1E1E1C', borderRadius: '10px', padding: '20px' }}>
                       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
                         <span style={{ fontFamily: 'var(--font-syne), sans-serif', fontWeight: 700, fontSize: '14px', color: '#ea580c' }}>
-                          Réserve 1.{idx + 1}
+                          Observation 1.{idx + 1}
                         </span>
                         <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
                           <button type="button"
@@ -992,7 +1270,7 @@ export default function NouveauCompteRenduPage() {
                         <div style={{ gridColumn: '1 / -1' }}>
                           <label style={labelStyle}>Description</label>
                           <textarea value={r.description} onChange={(e) => updateReserve(r.id, 'description', e.target.value)}
-                            rows={2} placeholder="Décrire la réserve..."
+                            rows={2} placeholder="Décrire l'observation..."
                             style={{ ...inputStyle, resize: 'vertical', lineHeight: '1.5', fontSize: '13px' }}
                             onFocus={focus} onBlur={blur} />
                         </div>
@@ -1068,14 +1346,31 @@ export default function NouveauCompteRenduPage() {
                     style={{ padding: '14px', border: '1px dashed #1E1E1C', borderRadius: '10px', backgroundColor: 'transparent', color: '#8A8880', fontSize: '13px', fontFamily: 'var(--font-dm-sans), sans-serif', cursor: 'pointer', transition: 'all 0.15s' }}
                     onMouseEnter={(e) => { e.currentTarget.style.borderColor = 'rgba(249,115,22,0.4)'; e.currentTarget.style.color = '#ea580c' }}
                     onMouseLeave={(e) => { e.currentTarget.style.borderColor = '#1E1E1C'; e.currentTarget.style.color = '#8A8880' }}>
-                    + Ajouter une réserve
+                    + Ajouter une observation
                   </button>
                 </div>
-              )}
+              </div>
+            </div>
 
-              {/* ── DÉCISIONS ── */}
-              {tab === 'decisions' && (
+            {/* ── DÉCISIONS ── */}
+            <div>
+              <div style={{ borderLeft: '3px solid #ea580c', paddingLeft: '12px', marginBottom: '16px' }}>
+                <span style={{ fontFamily: 'var(--font-syne), sans-serif', fontWeight: 700, fontSize: '14px', color: '#F0EDE6' }}>Décisions</span>
+              </div>
+              <div style={{ backgroundColor: '#111110', border: '1px solid #1E1E1C', borderRadius: '12px', padding: '28px' }}>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                  {form.chantier_id && (
+                    <button type="button" onClick={reporterDecisionsPrecedentes}
+                      style={{
+                        padding: '10px 16px', backgroundColor: 'rgba(249,115,22,0.08)', border: '1px solid rgba(249,115,22,0.25)',
+                        borderRadius: '8px', color: '#ea580c', fontSize: '13px', cursor: 'pointer',
+                        fontFamily: 'var(--font-dm-sans), sans-serif', textAlign: 'left', transition: 'all 0.15s',
+                      }}
+                      onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = 'rgba(249,115,22,0.15)' }}
+                      onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'rgba(249,115,22,0.08)' }}>
+                      📋 Reporter les décisions non exécutées du CR précédent
+                    </button>
+                  )}
                   {decisions.map((d, idx) => (
                     <div key={d.id} style={{ display: 'grid', gridTemplateColumns: '1fr 160px 140px 28px', gap: '10px', alignItems: 'end', backgroundColor: '#0D0D0B', border: '1px solid #1E1E1C', borderRadius: '8px', padding: '16px' }}>
                       <div>
@@ -1117,16 +1412,33 @@ export default function NouveauCompteRenduPage() {
                     + Ajouter une décision
                   </button>
                 </div>
-              )}
+              </div>
+            </div>
 
-              {/* ── PHOTOS ── */}
-              {tab === 'photos' && (
-                <div>
+            {/* ── PHOTOS ── */}
+            <div>
+              <div style={{ borderLeft: '3px solid #ea580c', paddingLeft: '12px', marginBottom: '16px' }}>
+                <span style={{ fontFamily: 'var(--font-syne), sans-serif', fontWeight: 700, fontSize: '14px', color: '#F0EDE6' }}>Photos</span>
+              </div>
+              <div style={{ backgroundColor: '#111110', border: '1px solid #1E1E1C', borderRadius: '12px', padding: '28px' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                  {form.chantier_id && (
+                    <button type="button" onClick={reporterPhotosPrecedentes}
+                      style={{
+                        padding: '10px 16px', backgroundColor: 'rgba(249,115,22,0.08)', border: '1px solid rgba(249,115,22,0.25)',
+                        borderRadius: '8px', color: '#ea580c', fontSize: '13px', cursor: 'pointer',
+                        fontFamily: 'var(--font-dm-sans), sans-serif', textAlign: 'left', transition: 'all 0.15s',
+                      }}
+                      onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = 'rgba(249,115,22,0.15)' }}
+                      onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'rgba(249,115,22,0.08)' }}>
+                      📋 Reporter les photos du CR précédent
+                    </button>
+                  )}
                   <label style={{
                     display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px',
                     padding: '28px', border: '1px dashed #1E1E1C', borderRadius: '8px', cursor: 'pointer',
                     color: '#8A8880', fontSize: '13px', fontFamily: 'var(--font-dm-sans), sans-serif',
-                    marginBottom: photoPreviews.length ? '16px' : 0, transition: 'border-color 0.15s',
+                    transition: 'border-color 0.15s',
                   }}
                     onMouseEnter={(e) => (e.currentTarget.style.borderColor = 'rgba(249,115,22,0.3)')}
                     onMouseLeave={(e) => (e.currentTarget.style.borderColor = '#1E1E1C')}>
@@ -1135,8 +1447,21 @@ export default function NouveauCompteRenduPage() {
                     <span style={{ fontSize: '12px' }}>JPG, PNG, WEBP — plusieurs fichiers acceptés</span>
                     <input type="file" accept="image/*" multiple onChange={handlePhotoChange} style={{ display: 'none' }} />
                   </label>
-                  {photoPreviews.length > 0 && (
+                  {(photoPreviews.length > 0 || reportedPhotoUrls.length > 0) && (
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '10px' }}>
+                      {reportedPhotoUrls.map((url) => (
+                        <div key={url} style={{ position: 'relative', borderRadius: '6px', overflow: 'hidden', aspectRatio: '1' }}>
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img src={url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                          <div style={{ position: 'absolute', top: '4px', left: '4px', backgroundColor: 'rgba(234,88,12,0.85)', borderRadius: '3px', fontSize: '9px', color: '#fff', padding: '2px 5px', fontFamily: 'var(--font-dm-sans), sans-serif', fontWeight: 600 }}>
+                            Reportée
+                          </div>
+                          <button type="button" onClick={() => removeReportedPhoto(url)}
+                            style={{ position: 'absolute', top: '4px', right: '4px', width: '20px', height: '20px', borderRadius: '50%', border: 'none', backgroundColor: 'rgba(0,0,0,0.75)', color: '#fff', cursor: 'pointer', fontSize: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                            ×
+                          </button>
+                        </div>
+                      ))}
                       {photoPreviews.map((src, i) => (
                         <div key={i} style={{ position: 'relative', borderRadius: '6px', overflow: 'hidden', aspectRatio: '1' }}>
                           {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -1150,9 +1475,9 @@ export default function NouveauCompteRenduPage() {
                     </div>
                   )}
                 </div>
-              )}
-
+              </div>
             </div>
+
           </div>
 
           {/* Error + Submit */}
@@ -1172,7 +1497,7 @@ export default function NouveauCompteRenduPage() {
         </form>
 
         {/* ── Right : PDF preview ── */}
-        <div style={{ position: 'sticky', top: '0' }}>
+        <div style={{ position: 'sticky', top: '1rem' }}>
           <p style={{ fontFamily: 'var(--font-syne), sans-serif', fontWeight: 700, fontSize: '11px', letterSpacing: '0.1em', textTransform: 'uppercase', color: '#7A7870', margin: '0 0 12px' }}>
             Aperçu PDF
           </p>
@@ -1300,16 +1625,54 @@ export default function NouveauCompteRenduPage() {
               </div>
             )}
 
+            {/* PDF suivi par lot */}
+            {Object.entries(lotSuivi).some(([, e]) => e.observations || e.photoPreviews.length > 0) && (
+              <div style={{ marginBottom: '12px' }}>
+                <div style={pdfSectionTitle}>Suivi par lot</div>
+                {Object.entries(lotSuivi).map(([lotId, entry]) => {
+                  if (!entry.observations && !entry.photoPreviews.length) return null
+                  const lot = lots.find((l) => l.id === lotId)
+                  const lotLabel = lot?.nom
+                    ? lot.nom + (lot.intervenant ? ` — ${lot.intervenant}` : '')
+                    : lotId
+                  return (
+                    <div key={lotId} style={{ marginBottom: '6px', padding: '5px 7px', border: '1px solid #e0e0e0', borderRadius: '3px' }}>
+                      <div style={{ fontWeight: 700, fontSize: '8px', marginBottom: entry.observations || entry.photoPreviews.length ? '3px' : 0 }}>{lotLabel}</div>
+                      {entry.observations && (
+                        <p style={{ fontSize: '8px', color: '#333', lineHeight: 1.5, margin: '0 0 4px', whiteSpace: 'pre-wrap' }}>{entry.observations}</p>
+                      )}
+                      {entry.photoPreviews.length > 0 && (
+                        <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap', marginTop: '4px' }}>
+                          {entry.photoPreviews.map((src, pi) => (
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img key={pi} src={src} alt="" style={{ width: '38px', height: '38px', objectFit: 'cover', borderRadius: '2px', border: '1px solid #ddd' }} />
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )
+                })}
+              </div>
+            )}
+
+            {/* PDF remarques générales */}
+            {form.texte && (
+              <div style={{ marginBottom: '12px' }}>
+                <div style={pdfSectionTitle}>Remarques générales</div>
+                <p style={{ fontSize: '8px', color: '#333', lineHeight: 1.6, margin: 0, whiteSpace: 'pre-wrap' }}>{form.texte}</p>
+              </div>
+            )}
+
             {/* PDF reserves */}
             {reserves.length > 0 && (
               <div style={{ marginBottom: '12px' }}>
                 <div style={pdfSectionTitle}>
-                  Réserves — {reserves.filter((r) => r.statut === 'Ouvert').length} ouverte{reserves.filter((r) => r.statut === 'Ouvert').length !== 1 ? 's' : ''}
+                  Obs. / Suivi — {reserves.filter((r) => r.statut === 'Ouvert').length} ouverte{reserves.filter((r) => r.statut === 'Ouvert').length !== 1 ? 's' : ''}
                 </div>
                 {reserves.map((r, i) => (
                   <div key={r.id} style={{ marginBottom: '6px', padding: '6px', border: '1px solid #e0e0e0', borderRadius: '3px' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '3px' }}>
-                      <span style={{ fontWeight: 700, fontSize: '8px' }}>Réserve 1.{i + 1}{r.lot ? ` — ${r.lot}` : ''}</span>
+                      <span style={{ fontWeight: 700, fontSize: '8px' }}>Observation 1.{i + 1}{r.lot ? ` — ${r.lot}` : ''}</span>
                       <span style={{
                         fontSize: '7px', padding: '1px 5px', borderRadius: '3px', fontWeight: 600,
                         backgroundColor: r.statut === 'Ouvert' ? '#fee2e2' : '#dcfce7',

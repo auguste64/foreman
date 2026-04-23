@@ -61,8 +61,7 @@ const navItems: NavItem[] = [
   { href: '/dashboard/artisans',     label: 'Artisans',       id: 'nav-artisans' },
   { href: '/dashboard/planning',     label: 'Planning',       id: 'nav-planning' },
   { href: '/dashboard/clients',      label: 'Clients' },
-  { href: '/dashboard/comptabilite', label: 'Comptabilité',   requiresPro: true },
-  { href: '/dashboard/documents',    label: 'Documents',      requiresPro: true, id: 'nav-documents' },
+  { href: '/dashboard/documents',    label: 'Comptabilité / Documents', requiresPro: true, id: 'nav-documents' },
   { href: '/dashboard/finances',     label: 'Analyse',        requiresPro: true },
   { href: '/dashboard/parametres',   label: 'Paramètres' },
 ]
@@ -73,7 +72,7 @@ export default function Sidebar({ email }: { email: string }) {
   const router = useRouter()
   const isMobile = useIsMobile()
   const [mobileOpen, setMobileOpen] = useState(false)
-  const { isPro } = usePlan()
+  const { isPro, plan } = usePlan()
   const emailFallback = email?.split('@')[0] ?? ''
   const [displayName, setDisplayName] = useState(emailFallback)
   const [initial, setInitial] = useState(email?.[0]?.toUpperCase() ?? '?')
@@ -215,6 +214,20 @@ export default function Sidebar({ email }: { email: string }) {
           </div>
           <span style={{ fontSize: 13, color: '#F0EDE6', fontFamily: 'var(--font-dm-sans), sans-serif', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1 }}>
             {displayName}
+          </span>
+          <span style={{
+            fontSize: 10,
+            fontWeight: 600,
+            padding: '2px 6px',
+            borderRadius: 4,
+            flexShrink: 0,
+            fontFamily: 'var(--font-syne), sans-serif',
+            letterSpacing: '0.04em',
+            color: plan === 'pro' ? '#ea580c' : '#8A8880',
+            background: plan === 'pro' ? 'rgba(234,88,12,0.15)' : 'rgba(138,136,128,0.12)',
+            border: `1px solid ${plan === 'pro' ? 'rgba(234,88,12,0.3)' : 'rgba(138,136,128,0.2)'}`,
+          }}>
+            {plan === 'pro' ? 'Pro' : plan === 'essentiel' ? 'Essentiel' : 'Gratuit'}
           </span>
           <GearIconHoverable />
         </Link>

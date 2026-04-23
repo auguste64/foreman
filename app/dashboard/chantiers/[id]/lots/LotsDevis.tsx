@@ -49,7 +49,7 @@ const labelStyle: React.CSSProperties = {
 
 export default function LotsDevis({ chantier }: { chantier: Chantier }) {
   const pathname = usePathname()
-  const { isComplet } = usePlan()
+  const { isPro } = usePlan()
   const [devis, setDevis] = useState<DevisRow[]>([])
   const [loading, setLoading] = useState(true)
   const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({})
@@ -185,7 +185,7 @@ export default function LotsDevis({ chantier }: { chantier: Chantier }) {
               onMouseLeave={e => { if (!active) e.currentTarget.style.color = '#8A8880' }}
             >
               {tab.label}
-              {tab.pro && !isComplet && (
+              {tab.pro && !isPro && (
                 <span style={{ marginLeft: 5, background: '#1E1E1C', color: '#ea580c', fontSize: '9px', fontWeight: 600, padding: '2px 5px', borderRadius: '4px' }}>Pro</span>
               )}
             </Link>
