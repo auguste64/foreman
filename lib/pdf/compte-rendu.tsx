@@ -8,6 +8,7 @@ export type PdfProfile = {
   societe?: string
   nom?: string
   adresse?: string
+  ville?: string
   telephone?: string
   email?: string
   siret?: string

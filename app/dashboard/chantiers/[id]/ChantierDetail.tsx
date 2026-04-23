@@ -245,11 +245,12 @@ export default function ChantierDetail({ chantier }: { chantier: Chantier }) {
   const progression = chantier.statut === 'Terminé' ? 100 : chantier.statut === 'En pause' ? 30 : 65
 
   const tabItems = [
-    { label: 'Infos',          href: `/dashboard/chantiers/${chantier.id}`,                pro: false },
-    { label: 'Lots & Devis',   href: `/dashboard/chantiers/${chantier.id}/lots`,            pro: true },
-    { label: 'Devis',          href: `/dashboard/chantiers/${chantier.id}/devis`,           pro: true },
-    { label: 'Factures',       href: `/dashboard/chantiers/${chantier.id}/factures`,        pro: true },
-    { label: 'Devis artisans', href: `/dashboard/chantiers/${chantier.id}/devis-artisans`, pro: true },
+    { label: 'Infos',          href: `/dashboard/chantiers/${chantier.id}`,                 pro: false },
+    { label: 'Lots & Devis',   href: `/dashboard/chantiers/${chantier.id}/lots`,             pro: true },
+    { label: 'Devis',          href: `/dashboard/chantiers/${chantier.id}/devis`,            pro: true },
+    { label: 'Factures',       href: `/dashboard/chantiers/${chantier.id}/factures`,         pro: true },
+    { label: 'Devis artisans', href: `/dashboard/chantiers/${chantier.id}/devis-artisans`,  pro: true },
+    { label: 'Livraisons',     href: `/dashboard/chantiers/${chantier.id}/livraisons`,       pro: false },
   ]
 
   return (

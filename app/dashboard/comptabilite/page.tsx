@@ -14,7 +14,15 @@ import SortPills from '@/components/SortPills'
 import UpgradeGate from '@/components/UpgradeGate'
 import { usePlan } from '@/lib/usePlan'
 
-type Tab = 'devis' | 'factures' | 'avoirs' | 'acomptes' | 'honoraires'
+type Tab = 'devis' | 'factures' | 'avoirs' | 'acomptes' | 'honoraires' | 'livraisons'
+
+type LivraisonRow = {
+  id: string
+  chantier_id: string
+  numero: string | null
+  date_reception: string
+  statut: string
+}
 
 type Chantier = { id: string; nom: string }
 
@@ -99,6 +107,7 @@ export function ComptabiliteContent({ defaultTab: defaultTabProp = 'devis' }: { 
   const [avoirs, setAvoirs] = useState<AvoirDoc[]>([])
   const [acomptes, setAcomptes] = useState<AcompteDoc[]>([])
   const [honoraires, setHonoraires] = useState<HonoraireDoc[]>([])
+  const [livraisons, setLivraisons] = useState<LivraisonRow[]>([])
   const [chantiers, setChantiers] = useState<Chantier[]>([])
   const [selectedChantier, setSelectedChantier] = useState<string | null>(null)
   const [hasSiret, setHasSiret] = useState(true)
@@ -120,7 +129,7 @@ export function ComptabiliteContent({ defaultTab: defaultTabProp = 'devis' }: { 
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) return
 
-      const [dr, fr, ar, acr, cr, er, hor] = await Promise.all([
+      const [dr, fr, ar, acr, cr, er, hor, lvr] = await Promise.all([
         supabase.from('devis').select('*').eq('user_id', user.id).order('created_at', { ascending: false }),
         supabase.from('factures').select('*').eq('user_id', user.id).neq('type', 'acompte').order('created_at', { ascending: false }),
         supabase.from('avoirs').select('*').eq('user_id', user.id).order('created_at', { ascending: false }),
@@ -128,12 +137,15 @@ export function ComptabiliteContent({ defaultTab: defaultTabProp = 'devis' }: { 
         supabase.from('chantiers').select('id, nom').eq('user_id', user.id).order('nom'),
         supabase.from('entreprise_infos').select('siret').eq('user_id', user.id).single(),
         supabase.from('devis_honoraires').select('id, user_id, numero, statut, client_nom, date_devis, total_ht, created_at').eq('user_id', user.id).order('created_at', { ascending: false }),
+        supabase.from('livraisons').select('id, chantier_id, numero, date_reception, statut').eq('user_id', user.id).order('date_reception', { ascending: false }),
       ])
+      console.log('[comptabilite] livraisons:', lvr.data, 'error:', lvr.error)
       setDevis((dr.data ?? []) as DevisDoc[])
       setFactures((fr.data ?? []) as FactureDoc[])
       setAvoirs((ar.data ?? []) as AvoirDoc[])
       setAcomptes((acr.data ?? []) as AcompteDoc[])
       setHonoraires((hor.data ?? []) as HonoraireDoc[])
+      setLivraisons((lvr.data ?? []) as unknown as LivraisonRow[])
       setChantiers((cr.data ?? []) as Chantier[])
       setHasSiret(!!(er.data?.siret))
       setLoading(false)
@@ -261,19 +273,25 @@ export function ComptabiliteContent({ defaultTab: defaultTabProp = 'devis' }: { 
     fontFamily: 'var(--font-dm-sans), sans-serif', borderBottom: '1px solid #1E1E1C', verticalAlign: 'middle',
   }
 
+  const filteredLivraisons = selectedChantier
+    ? livraisons.filter(lv => lv.chantier_id === selectedChantier)
+    : livraisons
+
   const tabCounts: Record<Tab, number> = {
-    devis:      filteredDevis.length,
-    factures:   filteredFactures.length,
-    avoirs:     filteredAvoirs.length,
-    acomptes:   filteredAcomptes.length,
-    honoraires: honoraires.length,
+    devis:       filteredDevis.length,
+    factures:    filteredFactures.length,
+    avoirs:      filteredAvoirs.length,
+    acomptes:    filteredAcomptes.length,
+    honoraires:  honoraires.length,
+    livraisons:  filteredLivraisons.length,
   }
   const tabLabels: Record<Tab, string> = {
-    devis:      'Devis',
-    factures:   'Factures',
-    avoirs:     'Avoirs',
-    acomptes:   'Acomptes',
-    honoraires: 'Honoraires',
+    devis:       'Devis',
+    factures:    'Factures',
+    avoirs:      'Avoirs',
+    acomptes:    'Acomptes',
+    honoraires:  'Honoraires',
+    livraisons:  'Livraisons',
   }
 
   return (
@@ -390,6 +408,13 @@ export function ComptabiliteContent({ defaultTab: defaultTabProp = 'devis' }: { 
               >
                 + Devis honoraires
               </Link>
+            ) : tab === 'livraisons' ? (
+              <Link
+                href="/dashboard/livraisons/nouveau"
+                style={{ padding: '9px 16px', backgroundColor: '#ea580c', color: '#0D0D0B', border: 'none', borderRadius: 8, fontSize: 12, fontWeight: 600, textDecoration: 'none', fontFamily: 'var(--font-dm-sans), sans-serif' }}
+              >
+                + Livraison
+              </Link>
             ) : (
               <>
                 <Link
@@ -435,7 +460,7 @@ export function ComptabiliteContent({ defaultTab: defaultTabProp = 'devis' }: { 
 
         {/* Tabs */}
         <div style={{ display: 'flex', gap: 0, marginBottom: 20, borderBottom: '1px solid #1E1E1C', alignItems: 'center' }}>
-          {(['devis', 'factures', 'honoraires', 'acomptes', 'avoirs'] as Tab[]).map(t => {
+          {(['devis', 'factures', 'honoraires', 'acomptes', 'avoirs', 'livraisons'] as Tab[]).map(t => {
             const active = tab === t
             return (
               <button
@@ -692,6 +717,55 @@ export function ComptabiliteContent({ defaultTab: defaultTabProp = 'devis' }: { 
                         </td>
                       </tr>
                     ))}
+                  </tbody>
+                </table>
+                </div>
+              )
+            )}
+
+            {/* LIVRAISONS */}
+            {tab === 'livraisons' && (
+              filteredLivraisons.length === 0 ? (
+                <EmptyState message="Aucune livraison." cta="Créer la première" href="/dashboard/livraisons/nouveau" />
+              ) : (
+                <div style={{ overflowX: 'auto', width: '100%' }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '600px' }}>
+                  <thead><tr>
+                    {['Numéro', 'Chantier', 'Date', 'Statut', 'Actions'].map(h => (
+                      <th key={h} style={thStyle}>{h}</th>
+                    ))}
+                  </tr></thead>
+                  <tbody>
+                    {filteredLivraisons.map(lv => {
+                      const STATUT_LV: Record<string, { label: string; bg: string; color: string }> = {
+                        accepte:          { label: 'Accepté',               bg: 'rgba(74,222,128,0.15)',  color: '#4ade80' },
+                        accepte_reserves: { label: 'Accepté avec réserves', bg: 'rgba(249,115,22,0.15)', color: '#ea580c' },
+                        refuse:           { label: 'Refusé',                bg: 'rgba(232,84,71,0.15)',   color: '#E85447' },
+                      }
+                      const s = STATUT_LV[lv.statut] ?? { label: lv.statut, bg: 'rgba(138,136,128,0.15)', color: '#8A8880' }
+                      const chantierNom = chantiers.find(c => c.id === lv.chantier_id)?.nom ?? '—'
+                      return (
+                        <tr key={lv.id}
+                          onMouseEnter={e => (e.currentTarget.style.background = 'rgba(249,115,22,0.04)')}
+                          onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+                        >
+                          <td style={{ ...tdStyle, fontFamily: 'var(--font-syne), sans-serif', fontWeight: 600, fontSize: 12 }}>{lv.numero ?? '—'}</td>
+                          <td style={tdStyle}>{chantierNom}</td>
+                          <td style={{ ...tdStyle, color: '#8A8880' }}>{fmtDate(lv.date_reception)}</td>
+                          <td style={tdStyle}>
+                            <span style={{ padding: '3px 10px', borderRadius: 20, fontSize: 11, fontWeight: 600, backgroundColor: s.bg, color: s.color, fontFamily: 'var(--font-dm-sans), sans-serif', whiteSpace: 'nowrap' }}>
+                              {s.label}
+                            </span>
+                          </td>
+                          <td style={tdStyle}>
+                            <div style={{ display: 'flex', gap: 6 }}>
+                              <Link href={`/dashboard/livraisons/${lv.id}`} style={actionLink('#ea580c')}>Consulter</Link>
+                              <a href={`/api/livraisons-pdf/${lv.id}`} target="_blank" rel="noreferrer" style={actionLink('#8A8880')}>PDF</a>
+                            </div>
+                          </td>
+                        </tr>
+                      )
+                    })}
                   </tbody>
                 </table>
                 </div>
